@@ -14,6 +14,8 @@ Kotlin Multiplatform · Compose Multiplatform · Android and iOS from one codeba
 
 ## Build it
 
+> **New to Android or Kotlin Multiplatform?** Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md): installing the tools, running the app, testing and sending changes, step by step.
+
 You need JDK 17+, the Android SDK (platform 37), and — for iOS — Xcode 26 on a Mac. Nothing else: without any keys the app builds and runs on a bundled sample menu.
 
 ```bash
