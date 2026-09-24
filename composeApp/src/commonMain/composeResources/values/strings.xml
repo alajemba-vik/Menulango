@@ -1,0 +1,142 @@
+<resources>
+    <string name="app_name">MenuLango</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_retake">Take another photo</string>
+    <string name="action_choose_photo">Choose a photo</string>
+    <string name="separator_dot"> · </string>
+
+    <!-- Capture -->
+    <string name="capture_hint">Photograph the whole menu</string>
+    <string name="capture_shutter">Take photo of the menu</string>
+    <string name="capture_gallery">Choose a photo of a menu</string>
+    <string name="capture_last_menu">Last menu</string>
+    <string name="capture_last_menu_description">Reopen the last menu, %1$d dishes</string>
+    <string name="capture_quota">%1$d of %2$d free scans left this month</string>
+    <string name="capture_quota_none">No free scans left this month</string>
+    <string name="capture_plus">MenuLango Plus</string>
+    <string name="capture_sample">Sample menu</string>
+    <string name="capture_debug_plus_on">Debug: Plus on</string>
+    <string name="capture_debug_plus_off">Debug: Plus off</string>
+    <string name="capture_camera_title">The camera is how MenuLango reads</string>
+    <string name="capture_camera_body">Allow camera access to photograph a menu, or choose a photo you have already taken.</string>
+    <string name="capture_camera_allow">Allow camera</string>
+    <string name="capture_camera_unavailable">This device's camera isn't available right now. You can still choose a photo.</string>
+    <string name="capture_preparing">Preparing the photo…</string>
+    <string name="capture_failed">That photo couldn't be opened. Try another.</string>
+
+    <!-- Menu -->
+    <string name="menu_reading">Reading the menu…</string>
+    <string name="menu_reading_more">Still reading…</string>
+    <string name="menu_context_dishes">%1$d dishes</string>
+    <string name="menu_context_one_dish">1 dish</string>
+    <string name="menu_context_average">avg %1$s</string>
+    <string name="menu_partial">Part of this menu couldn't be read. Everything shown is complete.</string>
+    <string name="menu_truncated">A long menu — these are its most representative dishes.</string>
+    <string name="menu_known">You've read this menu before, so this scan was free.</string>
+    <string name="menu_last_free_scan">That was your last free scan this month. Everything on it stays explained.</string>
+    <string name="menu_choose_title">Help me choose</string>
+    <string name="menu_empty_title">No dishes found</string>
+    <string name="menu_empty_body">We couldn't find a menu in that photo. Good photos are taken straight on, fill the frame with the menu, and are in focus — step closer to a light if the room is dim.</string>
+    <string name="menu_section_other">On the menu</string>
+
+    <!-- Errors -->
+    <string name="error_offline_title">No connection</string>
+    <string name="error_offline_body">Reading a menu needs the internet for a few seconds. Try again when you have signal or wifi.</string>
+    <string name="error_rate_title">One moment</string>
+    <string name="error_rate_body">That was a lot of menus in a short time. Try again in a minute.</string>
+    <string name="error_unreadable_title">That photo couldn't be read</string>
+    <string name="error_unreadable_body">Try again straight on, with the whole menu in the frame and in focus.</string>
+    <string name="error_upstream_title">Something went wrong on our side</string>
+    <string name="error_upstream_body">It isn't your photo. Try again in a moment.</string>
+    <string name="error_malformed_title">The menu came back garbled</string>
+    <string name="error_malformed_body">This happens occasionally with unusual menus. Trying again usually works.</string>
+    <string name="error_config_title">This build can't read menus</string>
+    <string name="error_config_body">It has no proxy address configured. Open the sample menu instead, or set PROXY_URL and rebuild.</string>
+    <string name="error_capture_title">No photo</string>
+    <string name="error_capture_body">The photo couldn't be taken. Try again, or choose one from your photos.</string>
+
+    <!-- Flags -->
+    <string name="flag_offal">Offal</string>
+    <string name="flag_raw">Raw</string>
+    <string name="flag_spicy">Spicy</string>
+    <string name="flag_very_spicy">Very spicy</string>
+    <string name="flag_pork">Pork</string>
+    <string name="flag_vegan">Vegan</string>
+    <string name="flag_vegetarian">Vegetarian</string>
+    <string name="flag_local">Local</string>
+    <string name="flag_large">Large</string>
+    <string name="flag_shareable">To share</string>
+    <string name="flag_best_guess">Best guess</string>
+
+    <!-- Dish -->
+    <string name="dish_what_it_is">What it is</string>
+    <string name="dish_ingredients">Ingredients</string>
+    <string name="dish_how_it_is_made">How it is made</string>
+    <string name="dish_check_before">Check before you order</string>
+    <string name="dish_often_contains">Often contains %1$s.</string>
+    <string name="dish_may_contain">May contain %1$s.</string>
+    <string name="dish_ask_restaurant">Ask the restaurant if you have an allergy.</string>
+    <string name="dish_best_guess_note">We're not certain about this one. Treat it as a best guess and ask your server.</string>
+    <string name="dish_unknown_what">We couldn't tell what this dish is. Worth asking — it may be the most interesting thing here.</string>
+    <string name="dish_unknown_method">We don't know how this one is made, so we won't guess.</string>
+    <string name="dish_eaten">I've had this before</string>
+    <string name="dish_eaten_done">You've had this</string>
+    <string name="dish_sheet_description">Details for %1$s</string>
+    <string name="list_joiner">, </string>
+
+    <!-- Choose -->
+    <string name="choose_title">Help me choose</string>
+    <string name="mode_new">Something new</string>
+    <string name="mode_new_hint">A dish you haven't eaten before</string>
+    <string name="mode_special">Something special</string>
+    <string name="mode_special_hint">The one that takes the most work</string>
+    <string name="mode_only_here">Only here</string>
+    <string name="mode_only_here_hint">You won't find it at home</string>
+    <string name="mode_simple">Keep it simple</string>
+    <string name="mode_simple_hint">The safe choice, for a tired evening</string>
+    <string name="choose_prompt">Pick a mood. We'll pick the dish.</string>
+    <string name="choose_another">Another</string>
+    <string name="choose_read_more">Read about it</string>
+    <string name="choose_have_this">I'll have this</string>
+    <string name="choose_enjoy">Enjoy it. We'll remember you've tried it.</string>
+    <string name="choose_empty_new">You've eaten everything here that we'd call new. That's quite a trip.</string>
+    <string name="choose_empty_special">Nothing on this menu stands out as a labour of love.</string>
+    <string name="choose_empty_only_here">Nothing here is clearly a local speciality — it may be an international menu.</string>
+    <string name="choose_empty_simple">Everything here is a little adventurous. "Something special" might still suit tonight.</string>
+    <string name="choose_empty_menu">There are no dishes to choose from yet.</string>
+    <string name="choose_why">Why this one</string>
+    <string name="choose_selected">Selected</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">Order the dish you came for.</string>
+    <string name="paywall_subtitle">MenuLango Plus chooses with you — the brave dish, the special one, or simply the right one for tonight.</string>
+    <string name="paywall_benefit_scans">Every menu, every night of the trip</string>
+    <string name="paywall_benefit_modes">Four ways to choose: new, special, only here, and simple</string>
+    <string name="paywall_benefit_history">Remembers what you've tried, so new stays new</string>
+    <string name="paywall_trip_pass">7-day Trip Pass</string>
+    <string name="paywall_trip_pass_detail">A week of Plus. Renews weekly until you cancel.</string>
+    <string name="paywall_annual">Annual</string>
+    <string name="paywall_annual_detail">For more than two trips a year. Renews yearly.</string>
+    <string name="paywall_lifetime">Lifetime</string>
+    <string name="paywall_lifetime_detail">Pay once. Plus forever.</string>
+    <string name="paywall_cta_trip">Start my Trip Pass</string>
+    <string name="paywall_cta">Continue</string>
+    <string name="paywall_free_note">Free always includes three menus a month, fully explained — ingredients, how each dish is made, and allergens.</string>
+    <string name="paywall_restore">Restore purchases</string>
+    <string name="paywall_terms">Terms of use</string>
+    <string name="paywall_privacy">Privacy</string>
+    <string name="paywall_unavailable_title">Purchases aren't available here</string>
+    <string name="paywall_unavailable_body">This build has no store connection. Everything free still works.</string>
+    <string name="paywall_offline">You're offline. Plans will appear when you reconnect.</string>
+    <string name="paywall_store_error">The store couldn't be reached. Try again in a moment.</string>
+    <string name="paywall_pending">Your payment is waiting for approval. Plus unlocks as soon as it clears.</string>
+    <string name="paywall_nothing_to_restore">No previous purchase was found for this account.</string>
+    <string name="paywall_unlocked">Welcome to Plus.</string>
+    <string name="paywall_reason_scans">This month's three free menus are used</string>
+    <string name="paywall_reason_choose">Choosing is part of Plus</string>
+    <string name="paywall_selected">Selected plan</string>
+</resources>

@@ -1,0 +1,17 @@
+name = "menulango-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+# The Gemini key is NOT here. Set it once with:  npx wrangler secret put GEMINI_API_KEY
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+SCANS_PER_HOUR = "30"
+
+# Burst protection: at most 4 scans a minute per device. Nobody photographs menus faster.
+[[ratelimits]]
+name = "SCAN_BURST"
+namespace_id = "7301"
+simple = { limit = 4, period = 60 }
+
+[observability]
+enabled = true

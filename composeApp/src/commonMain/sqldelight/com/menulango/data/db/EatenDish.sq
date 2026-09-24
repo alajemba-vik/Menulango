@@ -1,0 +1,14 @@
+-- Dishes the diner has marked as eaten. "Something new" skips them.
+CREATE TABLE eatenDish (
+    dishKey TEXT NOT NULL PRIMARY KEY,
+    eatenAtMillis INTEGER NOT NULL
+);
+
+selectAllKeys:
+SELECT dishKey FROM eatenDish;
+
+insert:
+INSERT OR REPLACE INTO eatenDish(dishKey, eatenAtMillis) VALUES (?, ?);
+
+delete:
+DELETE FROM eatenDish WHERE dishKey = ?;

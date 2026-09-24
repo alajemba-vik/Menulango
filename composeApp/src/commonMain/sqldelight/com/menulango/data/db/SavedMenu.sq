@@ -1,0 +1,37 @@
+-- Menus the diner has scanned, keyed by what is printed on them (see MenuCacheKey).
+CREATE TABLE savedMenu (
+    cacheKey TEXT NOT NULL PRIMARY KEY,
+    fingerprint TEXT NOT NULL,
+    savedAtMillis INTEGER NOT NULL,
+    lastOpenedAtMillis INTEGER NOT NULL,
+    dishCount INTEGER NOT NULL,
+    venueType TEXT,
+    language TEXT,
+    document TEXT NOT NULL,
+    photo BLOB
+);
+
+CREATE INDEX savedMenu_fingerprint ON savedMenu(fingerprint);
+CREATE INDEX savedMenu_lastOpened ON savedMenu(lastOpenedAtMillis);
+
+selectByKey:
+SELECT * FROM savedMenu WHERE cacheKey = ?;
+
+countByFingerprint:
+SELECT COUNT(*) FROM savedMenu WHERE fingerprint = ?;
+
+selectLatestSummary:
+SELECT cacheKey, dishCount, venueType, language, lastOpenedAtMillis
+FROM savedMenu ORDER BY lastOpenedAtMillis DESC LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO savedMenu(cacheKey, fingerprint, savedAtMillis, lastOpenedAtMillis, dishCount, venueType, language, document, photo)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+touch:
+UPDATE savedMenu SET lastOpenedAtMillis = ? WHERE cacheKey = ?;
+
+pruneOldest:
+DELETE FROM savedMenu WHERE cacheKey NOT IN (
+    SELECT cacheKey FROM savedMenu ORDER BY lastOpenedAtMillis DESC LIMIT ?
+);

@@ -1,0 +1,181 @@
+{
+  "menu": { "language": "el", "currency": "EUR", "venueType": "taverna", "truncated": false, "confidence": 0.93 },
+  "dishes": [
+    {
+      "id": "tzatziki", "originalName": "Τζατζίκι", "readableName": "Tzatziki", "section": "Cold starters",
+      "whatItIs": "A thick, cool dip of strained yoghurt with grated cucumber and a lot of garlic, served with bread.",
+      "ingredients": ["strained yoghurt", "cucumber", "garlic", "olive oil", "dill", "white wine vinegar"],
+      "howItIsMade": "The cucumber is grated and squeezed hard in a cloth so it doesn't water down the yoghurt. It is folded into thick strained yoghurt with crushed raw garlic, then left in the fridge for a few hours for the garlic to soften.",
+      "pitch": "The thing every table orders first, for good reason.",
+      "price": { "amount": 5.0, "currency": "EUR", "asPrinted": "5,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97
+    },
+    {
+      "id": "melitzanosalata", "originalName": "Μελιτζανοσαλάτα", "readableName": "Smoky aubergine dip", "section": "Cold starters",
+      "whatItIs": "Aubergine charred until the skin blackens, then mashed with olive oil, garlic and lemon into a rough, smoky spread.",
+      "ingredients": ["aubergine", "olive oil", "garlic", "lemon", "parsley", "red onion"],
+      "howItIsMade": "Whole aubergines are laid directly on the grill or a gas flame and turned until the skin is black and the inside collapses, about twenty minutes. The flesh is scooped out, drained, and chopped by hand with oil and lemon so it keeps some texture.",
+      "pitch": "If you like baba ganoush, this is its rustic Greek cousin.",
+      "price": { "amount": 5.5, "currency": "EUR", "asPrinted": "5,50€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": [], "mayContain": ["sesame"], "note": "Some tavernas stir in tahini or yoghurt." },
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.94
+    },
+    {
+      "id": "horiatiki", "originalName": "Χωριάτικη σαλάτα", "readableName": "Greek village salad", "section": "Salads",
+      "whatItIs": "Tomato, cucumber, onion, peppers and olives in olive oil, with a whole slab of feta on top. No lettuce.",
+      "ingredients": ["tomato", "cucumber", "red onion", "green pepper", "kalamata olives", "feta", "oregano", "olive oil"],
+      "howItIsMade": "Nothing is cooked. The vegetables are cut into large chunks just before serving, dressed only with olive oil and salt, and the feta goes on as one block so you break it yourself.",
+      "pitch": "Ripe summer tomatoes and good oil — simple, and hard to beat.",
+      "price": { "amount": 8.5, "currency": "EUR", "asPrinted": "8,50€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": true, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
+      "adventureLevel": 1, "effortLevel": 1, "confidence": 0.98
+    },
+    {
+      "id": "saganaki", "originalName": "Σαγανάκι", "readableName": "Fried cheese", "section": "Hot starters",
+      "whatItIs": "A thick slice of hard sheep's cheese fried until crisp and golden outside and soft within, served with lemon.",
+      "ingredients": ["kefalograviera cheese", "flour", "olive oil", "lemon"],
+      "howItIsMade": "The cheese is dipped in water, then flour, and dropped into a small two-handled pan of very hot oil — the pan gives the dish its name. It fries for a minute or two a side until it forms a crust.",
+      "pitch": "Salty, squeaky, and best eaten in the first two minutes.",
+      "price": { "amount": 7.0, "currency": "EUR", "asPrinted": "7,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": ["milk", "gluten"], "mayContain": [], "note": null },
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.95
+    },
+    {
+      "id": "gavros-tiganitos", "originalName": "Γαύρος τηγανητός", "readableName": "Fried anchovies", "section": "Hot starters",
+      "whatItIs": "Fresh whole anchovies, lightly floured and fried crisp. You eat them head to tail, bones and all.",
+      "ingredients": ["fresh anchovies", "flour", "olive oil", "lemon", "salt"],
+      "howItIsMade": "The fish are cleaned but left whole, tossed in seasoned flour, and fried in batches in hot oil for barely two minutes until they crackle. Served straight from the pan with a wedge of lemon.",
+      "pitch": "A plate of these with a cold beer is the whole point of a seaside taverna.",
+      "price": { "amount": 9.0, "currency": "EUR", "asPrinted": "9,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": false, "shareable": true, "localSpecialty": true },
+      "allergens": { "likelyContains": ["fish", "gluten"], "mayContain": [], "note": "Fried in shared oil." },
+      "adventureLevel": 3, "effortLevel": 2, "confidence": 0.93
+    },
+    {
+      "id": "htapodi-sti-shara", "originalName": "Χταπόδι στη σχάρα", "readableName": "Grilled octopus", "section": "From the grill",
+      "whatItIs": "Thick pieces of octopus tentacle, tender inside and charred at the edges, dressed with oil, vinegar and oregano.",
+      "ingredients": ["octopus", "olive oil", "red wine vinegar", "oregano", "lemon"],
+      "howItIsMade": "The octopus is first simmered gently in its own juices for about an hour until tender — some islands still sun-dry it on a line first. Then it goes over hot charcoal just long enough to char, and is dressed while still hot.",
+      "pitch": "The dish the island fishermen are proudest of.",
+      "price": { "amount": 16.0, "currency": "EUR", "asPrinted": "16,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": false, "shareable": true, "localSpecialty": true },
+      "allergens": { "likelyContains": ["molluscs"], "mayContain": ["sulphites"], "note": null },
+      "adventureLevel": 3, "effortLevel": 4, "confidence": 0.95
+    },
+    {
+      "id": "souvlaki-hoirino", "originalName": "Σουβλάκι χοιρινό", "readableName": "Pork souvlaki", "section": "From the grill",
+      "whatItIs": "Skewers of marinated pork grilled over charcoal, served with pitta, chips and tzatziki.",
+      "ingredients": ["pork shoulder", "olive oil", "lemon", "oregano", "garlic", "pitta bread", "potatoes"],
+      "howItIsMade": "Cubes of pork shoulder sit overnight in lemon, oil, oregano and garlic. They are threaded onto skewers and turned over glowing charcoal for about ten minutes, basted as they cook.",
+      "pitch": "Comfort food done properly — and the benchmark every Greek judges a grill by.",
+      "price": { "amount": 11.5, "currency": "EUR", "asPrinted": "11,50€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": true, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": false },
+      "allergens": { "likelyContains": ["gluten", "milk"], "mayContain": [], "note": "Milk and gluten come from the pitta and tzatziki on the side." },
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97
+    },
+    {
+      "id": "kokoretsi", "originalName": "Κοκορέτσι", "readableName": "Kokoretsi", "section": "From the grill",
+      "whatItIs": "Lamb offal wrapped in intestine and grilled slowly on a spit over charcoal. Crisp outside, soft inside.",
+      "ingredients": ["lamb liver", "lamb heart", "lamb lung", "lamb intestine", "lemon", "olive oil", "oregano"],
+      "howItIsMade": "The organ meat is cut small and left for hours in lemon and herbs. It is threaded onto a long spit, then the cleaned intestine is wound around it again and again until it forms a thick roll. It turns over charcoal for two to three hours.",
+      "pitch": "The dish Greek families argue about at Easter.",
+      "price": { "amount": 12.5, "currency": "EUR", "asPrinted": "12,50€" },
+      "flags": { "spicy": 0, "raw": false, "offal": true, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": true, "localSpecialty": true },
+      "allergens": { "likelyContains": [], "mayContain": ["sulphites"], "note": "Usually grilled beside other meats." },
+      "adventureLevel": 5, "effortLevel": 5, "confidence": 0.9
+    },
+    {
+      "id": "paidakia", "originalName": "Παϊδάκια", "readableName": "Lamb chops", "section": "From the grill",
+      "whatItIs": "Thin lamb rib chops grilled fast over charcoal, eaten with your hands and a squeeze of lemon.",
+      "ingredients": ["lamb chops", "salt", "oregano", "lemon", "olive oil"],
+      "howItIsMade": "The chops are cut thin, seasoned only with salt and oregano, and cooked over very hot charcoal for a couple of minutes a side, so the fat crisps while the middle stays pink.",
+      "pitch": "Order by the kilo and share — it's how the locals do it.",
+      "price": { "amount": 17.0, "currency": "EUR", "asPrinted": "17,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": [], "mayContain": [], "note": null },
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.96
+    },
+    {
+      "id": "moussakas", "originalName": "Μουσακάς", "readableName": "Moussaka", "section": "From the oven",
+      "whatItIs": "Layers of fried aubergine, potato and spiced minced meat under a deep, golden béchamel, baked and served in a slab.",
+      "ingredients": ["aubergine", "potato", "minced beef", "tomato", "cinnamon", "red wine", "milk", "butter", "flour", "eggs", "kefalotyri cheese"],
+      "howItIsMade": "Aubergine and potato are sliced and fried, the mince is cooked slowly with tomato, wine and a little cinnamon, and a thick béchamel is enriched with egg and cheese. Everything is layered and baked for an hour, then rested so it can be cut cleanly.",
+      "pitch": "A whole afternoon of work on one plate.",
+      "price": { "amount": 13.0, "currency": "EUR", "asPrinted": "13,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": false },
+      "allergens": { "likelyContains": ["milk", "gluten", "eggs"], "mayContain": ["sulphites"], "note": null },
+      "adventureLevel": 1, "effortLevel": 5, "confidence": 0.97
+    },
+    {
+      "id": "kleftiko", "originalName": "Κλέφτικο", "readableName": "Kleftiko", "section": "From the oven",
+      "whatItIs": "Lamb on the bone cooked sealed in paper with potatoes, garlic and cheese until it falls apart.",
+      "ingredients": ["lamb shoulder", "potatoes", "garlic", "lemon", "oregano", "kefalotyri cheese", "olive oil"],
+      "howItIsMade": "The lamb is packed into a parcel of baking paper with the vegetables and cheese, sealed tight so no steam escapes, and cooked very low for four to five hours. The name means 'stolen' — bandits once cooked it buried in a pit so the smoke couldn't give them away.",
+      "pitch": "Slow, fragrant, and the lamb comes away with a fork.",
+      "price": { "amount": 18.0, "currency": "EUR", "asPrinted": "18,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": true },
+      "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
+      "adventureLevel": 2, "effortLevel": 5, "confidence": 0.92
+    },
+    {
+      "id": "gemista", "originalName": "Γεμιστά", "readableName": "Stuffed tomatoes and peppers", "section": "From the oven",
+      "whatItIs": "Tomatoes and peppers hollowed out, filled with herby rice, and baked in olive oil alongside potato wedges.",
+      "ingredients": ["tomatoes", "green peppers", "rice", "onion", "mint", "parsley", "olive oil", "potatoes"],
+      "howItIsMade": "The tomato flesh is scooped out and cooked with rice, onion and a generous amount of herbs and oil. The vegetables are filled, their tops put back on like lids, and they bake slowly for about an hour and a half until the rice is soft and the tops blister.",
+      "pitch": "What Greek grandmothers make in August, when tomatoes are at their best.",
+      "price": { "amount": 10.0, "currency": "EUR", "asPrinted": "10,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": false, "localSpecialty": false },
+      "allergens": { "likelyContains": [], "mayContain": [], "note": null },
+      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95
+    },
+    {
+      "id": "gida-vrasti", "originalName": "Γίδα βραστή", "readableName": "Boiled goat", "section": "From the pot",
+      "whatItIs": "Goat simmered for hours until soft, served in its own clear broth, often with rice cooked in the stock.",
+      "ingredients": ["goat", "onion", "carrot", "celery", "rice", "lemon", "eggs"],
+      "howItIsMade": "A whole cut of goat simmers with vegetables for three hours or more. The broth is thickened at the end with egg and lemon beaten together, and the meat is served beside it.",
+      "pitch": "Deeply savoury, and something you will almost never find on a menu at home.",
+      "price": { "amount": 14.0, "currency": "EUR", "asPrinted": "14,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": true },
+      "allergens": { "likelyContains": ["eggs", "celery"], "mayContain": [], "note": null },
+      "adventureLevel": 4, "effortLevel": 4, "confidence": 0.86
+    },
+    {
+      "id": "sfouggato", "originalName": "Σφουγγάτο", "readableName": "Sfougato", "section": "From the pot",
+      "whatItIs": "Probably a thick baked omelette with courgette and local cheese, as it is made on several islands.",
+      "ingredients": ["eggs", "courgette", "onion", "cheese", "mint"],
+      "howItIsMade": null,
+      "pitch": "Worth asking your server how their island makes it.",
+      "price": { "amount": 8.0, "currency": "EUR", "asPrinted": "8,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": false, "localSpecialty": true },
+      "allergens": { "likelyContains": ["eggs", "milk"], "mayContain": [], "note": null },
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.45
+    },
+    {
+      "id": "galaktoboureko", "originalName": "Γαλακτομπούρεκο", "readableName": "Galaktoboureko", "section": "Sweets",
+      "whatItIs": "A warm semolina custard baked between sheets of crisp filo, then soaked in lemon syrup.",
+      "ingredients": ["milk", "semolina", "eggs", "sugar", "filo pastry", "butter", "lemon"],
+      "howItIsMade": "A thick custard is cooked on the stove, poured over layers of buttered filo, covered with more filo, and baked until golden. Cold syrup goes over the hot pie so the pastry drinks it in but stays crisp on top.",
+      "pitch": "Warm custard, crisp pastry — dessert even if you're full.",
+      "price": { "amount": 6.0, "currency": "EUR", "asPrinted": "6,00€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": ["milk", "gluten", "eggs"], "mayContain": ["nuts"], "note": null },
+      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95
+    },
+    {
+      "id": "loukoumades", "originalName": "Λουκουμάδες", "readableName": "Honey doughnuts", "section": "Sweets",
+      "whatItIs": "Small puffs of fried dough, crisp and airy, drenched in warm honey and dusted with cinnamon and walnuts.",
+      "ingredients": ["flour", "yeast", "honey", "cinnamon", "walnuts", "sunflower oil"],
+      "howItIsMade": "A loose yeasted batter rises for an hour, then is squeezed through the fist into hot oil in small balls, which puff and turn themselves. They are drained and immediately doused in warm honey.",
+      "pitch": "Possibly the oldest dessert in Europe, and still gone in minutes.",
+      "price": { "amount": 5.5, "currency": "EUR", "asPrinted": "5,50€" },
+      "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": true, "localSpecialty": false },
+      "allergens": { "likelyContains": ["gluten", "nuts"], "mayContain": [], "note": null },
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.96
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+package com.menulango
+
+import androidx.compose.ui.window.ComposeUIViewController
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.native.NativeSqliteDriver
+import com.menulango.data.db.MenuLangoDatabase
+import com.menulango.di.AppConfig
+import org.koin.dsl.module
+import platform.UIKit.UIAccessibilityIsReduceMotionEnabled
+import platform.UIKit.UIViewController
+
+/** iOS entry point: call once from the app's `init`, before the first view appears. */
+public fun startMenuLango(
+    proxyUrl: String,
+    revenueCatApiKey: String,
+    isDebug: Boolean,
+) {
+    MenuLango.start(
+        AppConfig(proxyUrl = proxyUrl, revenueCatApiKey = revenueCatApiKey, isDebug = isDebug),
+        module {
+            single<SqlDriver> { NativeSqliteDriver(MenuLangoDatabase.Schema, "menulango.db") }
+        },
+    )
+}
+
+/** The whole app, as a view controller SwiftUI can host. Named as a type because Swift reads it as one. */
+@Suppress("ktlint:standard:function-naming", "FunctionName")
+public fun MainViewController(): UIViewController =
+    ComposeUIViewController {
+        MenuLangoApp(reduceMotion = UIAccessibilityIsReduceMotionEnabled())
+    }
