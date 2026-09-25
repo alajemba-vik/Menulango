@@ -33,8 +33,8 @@ submitted first and stands on its own if iOS slips.
    | Product id | Play Console | App Store Connect | Price |
    |---|---|---|---|
    | `menulango_trip_week` | Subscription, base plan `P1W`, auto-renewing | Auto-renewable subscription, 1 week | €4.99 / $4.99 |
+   | `menulango_monthly` | Subscription, base plan `P1M` | Auto-renewable subscription, 1 month | €9.99 / $9.99 |
    | `menulango_annual` | Subscription, base plan `P1Y` | Auto-renewable subscription, 1 year | €29.99 / $29.99 |
-   | `menulango_lifetime` (optional) | One-time product | Non-consumable | €49.99 / $49.99 |
 
    Put all three subscriptions in one App Store subscription group so upgrading week → month → year works.
 3. Entitlement **`menulango_pro`**, attached to all three products.
