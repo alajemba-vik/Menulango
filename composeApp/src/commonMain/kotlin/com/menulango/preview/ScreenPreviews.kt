@@ -34,7 +34,12 @@ private val menuReady =
 private val paywallReady =
     PaywallUiState.Ready(
         reason = PaywallReason.Choosing,
-        offers = listOf(PlanOffer("trip", PlanKind.TripPass, "€4,99"), PlanOffer("annual", PlanKind.Annual, "€29,99")),
+        offers =
+            listOf(
+                PlanOffer("trip", PlanKind.TripPass, "€4,99"),
+                PlanOffer("monthly", PlanKind.Monthly, "€9,99"),
+                PlanOffer("annual", PlanKind.Annual, "€29,99"),
+            ),
         selectedId = "trip",
         busy = null,
         message = null,

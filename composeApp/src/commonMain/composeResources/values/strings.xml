@@ -119,6 +119,8 @@
     <string name="paywall_benefit_history">Remembers what you've tried, so new stays new</string>
     <string name="paywall_trip_pass">7-day Trip Pass</string>
     <string name="paywall_trip_pass_detail">A week of Plus. Renews weekly until you cancel.</string>
+    <string name="paywall_monthly">Monthly</string>
+    <string name="paywall_monthly_detail">For long trips and months abroad. Renews monthly.</string>
     <string name="paywall_annual">Annual</string>
     <string name="paywall_annual_detail">For more than two trips a year. Renews yearly.</string>
     <string name="paywall_lifetime">Lifetime</string>

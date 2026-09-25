@@ -36,10 +36,10 @@ submitted first and stands on its own if iOS slips.
    | `menulango_annual` | Subscription, base plan `P1Y` | Auto-renewable subscription, 1 year | €29.99 / $29.99 |
    | `menulango_lifetime` (optional) | One-time product | Non-consumable | €49.99 / $49.99 |
 
-   Put both subscriptions in one App Store subscription group so upgrading week → year works.
+   Put all three subscriptions in one App Store subscription group so upgrading week → month → year works.
 3. Entitlement **`menulango_pro`**, attached to all three products.
-4. Offering **`default`** (mark it current) with packages **Weekly** → trip week, **Annual** →
-   annual, **Lifetime** → lifetime. The app maps packages by type, so the package types matter.
+4. Offering **`default`** (mark it current) with packages **Weekly** → trip week, **Monthly** →
+   monthly, **Annual** → annual. The app maps packages by type, so the package types matter.
 5. Copy the public SDK keys into `secrets.properties` / `Secrets.xcconfig` (see README).
 
 ## 3. Google Play (day 4)

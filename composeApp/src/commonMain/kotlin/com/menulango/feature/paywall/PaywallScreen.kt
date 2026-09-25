@@ -64,6 +64,8 @@ import com.menulango.resources.paywall_cta_trip
 import com.menulango.resources.paywall_free_note
 import com.menulango.resources.paywall_lifetime
 import com.menulango.resources.paywall_lifetime_detail
+import com.menulango.resources.paywall_monthly
+import com.menulango.resources.paywall_monthly_detail
 import com.menulango.resources.paywall_nothing_to_restore
 import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
@@ -338,13 +340,14 @@ private fun PlanOption(
 @Composable
 private fun PlanPlaceholders() {
     Column(verticalArrangement = Arrangement.spacedBy(Space.related)) {
-        repeat(2) { Box(Modifier.fillMaxWidth().height(76.dp).paperShimmer()) }
+        repeat(3) { Box(Modifier.fillMaxWidth().height(76.dp).paperShimmer()) }
     }
 }
 
 private fun PlanKind.copy(): Pair<StringResource, StringResource> =
     when (this) {
         PlanKind.TripPass -> Res.string.paywall_trip_pass to Res.string.paywall_trip_pass_detail
+        PlanKind.Monthly -> Res.string.paywall_monthly to Res.string.paywall_monthly_detail
         PlanKind.Annual -> Res.string.paywall_annual to Res.string.paywall_annual_detail
         PlanKind.Lifetime -> Res.string.paywall_lifetime to Res.string.paywall_lifetime_detail
     }

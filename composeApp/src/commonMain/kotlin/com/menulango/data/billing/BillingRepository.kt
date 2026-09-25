@@ -145,6 +145,7 @@ internal class BillingRepository(
 private fun PackageType.toPlanKind(): PlanKind? =
     when (this) {
         PackageType.WEEKLY -> PlanKind.TripPass
+        PackageType.MONTHLY -> PlanKind.Monthly
         PackageType.ANNUAL -> PlanKind.Annual
         PackageType.LIFETIME -> PlanKind.Lifetime
         else -> null

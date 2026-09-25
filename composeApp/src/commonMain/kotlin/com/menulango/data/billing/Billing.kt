@@ -7,6 +7,7 @@ package com.menulango.data.billing
  */
 internal enum class PlanKind {
     TripPass,
+    Monthly,
     Annual,
     Lifetime,
 }
