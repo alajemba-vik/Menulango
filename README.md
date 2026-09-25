@@ -75,7 +75,7 @@ Shipping to the stores — keys, products, signing, listings — is written up s
 ## How it works
 
 ```
- photo ──► resize 1536px, JPEG 80 ──► Worker ──► Gemini 2.5 Flash-Lite (one call, structured JSON, streamed)
+ photo ──► resize 1536px, JPEG 80 ──► Worker ──► Gemini 3.5 Flash-Lite (one call, structured JSON, streamed)
                                         │
  dishes appear one by one ◄── stream scanner ◄── validator ◄──┘
                    │

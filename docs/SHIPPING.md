@@ -21,7 +21,7 @@ submitted first and stands on its own if iOS slips.
    scripts/scan.sh https://menulango-proxy.<you>.workers.dev menu.jpg en-US
    ```
 4. Try real Greek, Japanese and Arabic menus. If a script reads badly, tune `src/prompt.ts` and
-   redeploy — no app release needed. Only move `GEMINI_MODEL` up from `gemini-2.5-flash-lite` if
+   redeploy — no app release needed. Only move `GEMINI_MODEL` up from `gemini-3.5-flash-lite` if
    quality is genuinely insufficient; `npx wrangler tail` shows tokens per scan.
 5. Your privacy policy URL is `https://menulango-proxy.<you>.workers.dev/privacy`.
 

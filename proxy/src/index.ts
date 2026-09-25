@@ -80,7 +80,7 @@ async function scan(request: Request, env: Env, ctx: ExecutionContext): Promise<
           responseSchema: RESPONSE_SCHEMA,
           maxOutputTokens: MAX_OUTPUT_TOKENS,
           temperature: 0.2,
-          thinkingConfig: { thinkingBudget: 0 },
+          thinkingConfig: { thinkingLevel: "minimal" },
         },
       }),
     },

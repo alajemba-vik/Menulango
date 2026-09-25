@@ -1,10 +1,13 @@
 name = "menulango-proxy"
 main = "src/index.ts"
 compatibility_date = "2026-09-01"
+workers_dev = true
+# Preview URLs would expose every uploaded version (and its Gemini spend) at its own address.
+preview_urls = false
 
 # The Gemini key is NOT here. Set it once with:  npx wrangler secret put GEMINI_API_KEY
 [vars]
-GEMINI_MODEL = "gemini-2.5-flash-lite"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 SCANS_PER_HOUR = "30"
 
 # Burst protection: at most 4 scans a minute per device. Nobody photographs menus faster.
