@@ -45,7 +45,7 @@ internal class BillingRepository(
     private val debugUnlock = MutableStateFlow(false)
     private val packagesById = mutableMapOf<String, Package>()
 
-    /** True while the diner holds the "plus" entitlement. The only thing features should read. */
+    /** True while the diner holds the "menulango_pro" entitlement. The only thing features should read. */
     val isPlus: StateFlow<Boolean> =
         combine(entitled, debugUnlock) { real, debug -> real || debug }
             .stateIn(appScope, SharingStarted.Eagerly, false)
@@ -137,7 +137,7 @@ internal class BillingRepository(
     }
 
     private companion object {
-        const val ENTITLEMENT_ID = "plus"
+        const val ENTITLEMENT_ID = "menulango_pro"
         const val OFFERING_ID = "default"
     }
 }
