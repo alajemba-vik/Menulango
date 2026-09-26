@@ -58,6 +58,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -496,10 +499,15 @@ private fun PlusCard(
 ) {
     val colors = Paper.colors
     val stitch = colors.seal.copy(alpha = 0.7f)
+    val ink = rememberPlusCardInk(circleTarget = !isPlus)
+    var cardAt by remember { mutableStateOf(Offset.Zero) }
+    var titleAt by remember { mutableStateOf(Offset.Zero) }
     Column(
         Modifier
             .fillMaxWidth()
+            .onGloballyPositioned { cardAt = it.positionInRoot() }
             .felt(colors.ink, Shapes.card)
+            .plusCardInk(ink, pen = colors.seal, titleOrigin = { titleAt - cardAt })
             .drawBehind {
                 val inset = 7.dp.toPx()
                 drawRoundRect(
@@ -520,10 +528,18 @@ private fun PlusCard(
             stringResource(if (isPlus) Res.string.settings_plus_label_member else Res.string.settings_plus_label),
             color = colors.seal,
         )
-        Text(
+        // Written out by hand each time: an invitation, not a banner.
+        HandwrittenText(
             stringResource(if (isPlus) Res.string.settings_plus_active_title else Res.string.settings_plus_title),
-            style = Paper.type.headline,
+            style =
+                Paper.type.method.copy(
+                    fontSize = Paper.type.headline.fontSize,
+                    lineHeight = Paper.type.headline.lineHeight,
+                ),
             color = colors.paper,
+            nib = colors.seal,
+            ink = ink,
+            modifier = Modifier.onGloballyPositioned { titleAt = it.positionInRoot() },
         )
         Column(verticalArrangement = Arrangement.spacedBy(Space.xs), modifier = Modifier.padding(top = Space.xs)) {
             listOf(
@@ -553,7 +569,10 @@ private fun PlusCard(
             PrimaryButton(
                 stringResource(Res.string.settings_plus_cta),
                 onGetPlus,
-                Modifier.fillMaxWidth().padding(top = Space.sm),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = Space.sm)
+                    .onGloballyPositioned { ink.button = it.boundsInRoot().translate(-cardAt) },
             )
         }
     }
