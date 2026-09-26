@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 internal data class SettingsUiState(
     val isPlus: Boolean,
@@ -97,6 +98,21 @@ internal class SettingsViewModel(
 
     fun setCalmMotion(value: Boolean) = preferences.setCalmMotion(value)
 
+    /**
+     * Whether the Plus card should write itself out this time. Decorative motion is a delight the
+     * first time and a delay the tenth, so it plays at most once every few hours; in between the
+     * card is simply there, already written.
+     */
+    val performPlusCard: Boolean =
+        (Clock.System.now().toEpochMilliseconds()).let { now ->
+            (now - preferences.plusCardPerformedAt >= PLUS_CARD_EVERY_MS).also {
+                if (it) {
+                    preferences.plusCardPerformedAt =
+                        now
+                }
+            }
+        }
+
     fun addAvoid(word: String) {
         val clean = word.trim().lowercase().take(MAX_WORD)
         if (clean.isNotEmpty()) preferences.setAvoid(preferences.avoid.value + clean)
@@ -161,3 +177,5 @@ internal class SettingsViewModel(
         const val BACKUP_FILENAME = "menulango-backup.menulango"
     }
 }
+
+private const val PLUS_CARD_EVERY_MS = 6 * 60 * 60 * 1000L

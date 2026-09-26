@@ -46,11 +46,14 @@ internal class PlusCardInk {
 }
 
 @Composable
-internal fun rememberPlusCardInk(circleTarget: Boolean): PlusCardInk {
+internal fun rememberPlusCardInk(
+    circleTarget: Boolean,
+    perform: Boolean,
+): PlusCardInk {
     val ink = remember { PlusCardInk() }
     val reduceMotion = Paper.reduceMotion
-    LaunchedEffect(reduceMotion, circleTarget) {
-        if (reduceMotion) {
+    LaunchedEffect(reduceMotion, circleTarget, perform) {
+        if (reduceMotion || !perform) {
             ink.writing.snapTo(1f)
             ink.drawing.snapTo(if (circleTarget) 1f else 0f)
             return@LaunchedEffect

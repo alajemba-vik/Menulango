@@ -39,6 +39,11 @@ internal class Preferences(
      */
     val calmMotion: StateFlow<Boolean> = calmMotionState.asStateFlow()
 
+    /** When the Plus card last wrote itself out, so the flourish stays rare. */
+    var plusCardPerformedAt: Long
+        get() = settings.getLong(KEY_PLUS_INK, 0L)
+        set(value) = settings.putLong(KEY_PLUS_INK, value)
+
     fun setCalmMotion(value: Boolean) {
         settings.putBoolean(KEY_CALM_MOTION, value)
         calmMotionState.value = value
@@ -111,6 +116,7 @@ internal class Preferences(
         const val KEY_AVOID = "prefs.avoid"
         const val KEY_FEATURED = "prefs.featured"
         const val KEY_CALM_MOTION = "prefs.calmMotion"
+        const val KEY_PLUS_INK = "prefs.plusInkAt"
 
         /** Words may contain commas ("peppers, green"), never a line break. */
         const val LIST_SEPARATOR = "\n"

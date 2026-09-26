@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -225,6 +227,7 @@ internal fun SettingsScreen(
                 isPlus = state.isPlus,
                 onGetPlus = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
                 onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
+                perform = viewModel.performPlusCard,
             )
             QuietButton(
                 stringResource(Res.string.settings_restore),
@@ -496,10 +499,11 @@ private fun PlusCard(
     isPlus: Boolean,
     onGetPlus: () -> Unit,
     onManage: () -> Unit,
+    perform: Boolean,
 ) {
     val colors = Paper.colors
     val stitch = colors.seal.copy(alpha = 0.7f)
-    val ink = rememberPlusCardInk(circleTarget = !isPlus)
+    val ink = rememberPlusCardInk(circleTarget = !isPlus, perform = perform)
     var cardAt by remember { mutableStateOf(Offset.Zero) }
     var titleAt by remember { mutableStateOf(Offset.Zero) }
     Column(
@@ -566,14 +570,22 @@ private fun PlusCard(
         if (isPlus) {
             QuietButton(stringResource(Res.string.settings_plus_manage), onManage, color = colors.paper)
         } else {
-            PrimaryButton(
-                stringResource(Res.string.settings_plus_cta),
-                onGetPlus,
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = Space.sm)
-                    .onGloballyPositioned { ink.button = it.boundsInRoot().translate(-cardAt) },
-            )
+            // Just the words: the pen's loop is the button. The press squish stays on the text,
+            // while the tap area keeps the 48dp minimum.
+            Box(Modifier.fillMaxWidth().padding(top = Space.sm), contentAlignment = Alignment.Center) {
+                Text(
+                    stringResource(Res.string.settings_plus_cta),
+                    style = Paper.type.button.copy(fontSize = Paper.type.title.fontSize),
+                    color = colors.paper,
+                    modifier =
+                        Modifier
+                            .onGloballyPositioned { ink.button = it.boundsInRoot().translate(-cardAt) }
+                            .pressable(onGetPlus)
+                            .defaultMinSize(minHeight = Space.touchTarget)
+                            .wrapContentHeight(Alignment.CenterVertically)
+                            .padding(horizontal = Space.md),
+                )
+            }
         }
     }
 }
