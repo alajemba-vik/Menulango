@@ -5,5 +5,6 @@ platform :ios, '15.0'
 use_frameworks! :linkage => :static
 
 target 'iosApp' do
-  pod 'GoogleMLKit/Translate', '8.0.0'
+  # ML Kit 7+ requires iOS 15.5. Keep the app's existing iOS 15.0 support baseline.
+  pod 'GoogleMLKit/Translate', '6.0.0'
 end
