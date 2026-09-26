@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarDuration
@@ -27,11 +28,14 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
@@ -49,6 +53,7 @@ import com.menulango.core.design.Space
 import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PrimaryButton
+import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
@@ -108,8 +113,14 @@ internal fun MenusScreen(
 
     Box(Modifier.fillMaxSize().felt(colors.paper)) {
         val ready = state as? MenusUiState.Ready ?: return@Box
+        val list = rememberLazyListState()
+        val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
+        val collapsed by remember {
+            derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > titleGone }
+        }
         LazyColumn(
             Modifier.fillMaxSize(),
+            state = list,
             contentPadding = PaddingValues(start = Space.gutter, end = Space.gutter, bottom = bottomInset),
             verticalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
@@ -153,6 +164,7 @@ internal fun MenusScreen(
                 }
             }
         }
+        ScrollTitleBar(stringResource(Res.string.menus_title), collapsed, Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -266,3 +278,6 @@ private fun savedAgo(
 }
 
 private const val DAY_MILLIS = 24L * 60 * 60 * 1000
+
+/** How far the big title scrolls before the small one appears in the bar. */
+private val TITLE_SCROLL_AWAY = 72.dp

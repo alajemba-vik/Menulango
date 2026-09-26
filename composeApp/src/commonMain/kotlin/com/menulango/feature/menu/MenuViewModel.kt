@@ -23,6 +23,7 @@ import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.dishHistoryKey
 import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.TableOrder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -31,7 +32,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 

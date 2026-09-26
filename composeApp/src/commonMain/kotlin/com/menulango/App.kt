@@ -31,12 +31,12 @@ import com.menulango.core.ui.TipHost
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tips
-import com.menulango.platform.SystemBarsFollow
 import com.menulango.feature.capture.CaptureScreen
 import com.menulango.feature.choose.ChooseScreen
 import com.menulango.feature.home.HomeScreen
 import com.menulango.feature.menu.MenuScreen
 import com.menulango.feature.paywall.PaywallScreen
+import com.menulango.platform.SystemBarsFollow
 import org.koin.compose.koinInject
 
 /**

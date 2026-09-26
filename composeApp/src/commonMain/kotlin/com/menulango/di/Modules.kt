@@ -79,7 +79,9 @@ internal fun sharedModule(config: AppConfig): Module =
         single { Tips(get()) }
         single { OrderBook(get()) }
         single<NoteTranslator> { onDeviceNoteTranslator() }
-        viewModel { params -> MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope)) }
+        viewModel { params ->
+            MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope))
+        }
         viewModel { MenusViewModel(get(), ::nowMillis) }
         viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }
         viewModel { params -> ChooseViewModel(params.get(), params.get(), params.get(), get(), get(), get()) }

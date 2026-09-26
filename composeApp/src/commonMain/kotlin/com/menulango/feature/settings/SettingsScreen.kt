@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -79,6 +81,7 @@ import com.menulango.core.design.Space
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
+import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
@@ -102,8 +105,6 @@ import com.menulango.resources.paywall_terms
 import com.menulango.resources.settings_about
 import com.menulango.resources.settings_ai_note
 import com.menulango.resources.settings_appearance
-import com.menulango.resources.settings_calm_motion
-import com.menulango.resources.settings_calm_motion_body
 import com.menulango.resources.settings_appearance_dark
 import com.menulango.resources.settings_appearance_light
 import com.menulango.resources.settings_appearance_system
@@ -123,6 +124,8 @@ import com.menulango.resources.settings_backup_restored
 import com.menulango.resources.settings_backup_title
 import com.menulango.resources.settings_backup_unsupported
 import com.menulango.resources.settings_backup_wrong_passphrase
+import com.menulango.resources.settings_calm_motion
+import com.menulango.resources.settings_calm_motion_body
 import com.menulango.resources.settings_cancel
 import com.menulango.resources.settings_data
 import com.menulango.resources.settings_delete_menus
@@ -195,61 +198,116 @@ internal fun SettingsScreen(
         viewModel.backupShare.collect { backupFiles.share(it.filename, it.contents) }
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .felt(colors.paper)
-            .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
-            .padding(horizontal = Space.gutter)
-            .widthIn(max = Space.readingWidth),
-    ) {
-        Text(
-            stringResource(Res.string.settings_title),
-            style = Paper.type.hero,
-            color = colors.ink,
-            modifier = Modifier.padding(top = Space.xl, bottom = Space.gutter).semantics { heading() },
-        )
+    val scroll = rememberScrollState()
+    val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
+    val collapsed by remember { derivedStateOf { scroll.value > titleGone } }
+    Box(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .felt(colors.paper)
+                .verticalScroll(scroll)
+                .statusBarsPadding()
+                .padding(horizontal = Space.gutter)
+                .widthIn(max = Space.readingWidth),
+        ) {
+            Text(
+                stringResource(Res.string.settings_title),
+                style = Paper.type.hero,
+                color = colors.ink,
+                modifier = Modifier.padding(top = Space.xl, bottom = Space.gutter).semantics { heading() },
+            )
 
-        PlusCard(
-            isPlus = state.isPlus,
-            onGetPlus = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
-            onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
-        )
-        QuietButton(
-            stringResource(Res.string.settings_restore),
-            viewModel::restore,
-            color = colors.sealInk,
-        )
+            PlusCard(
+                isPlus = state.isPlus,
+                onGetPlus = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
+                onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
+            )
+            QuietButton(
+                stringResource(Res.string.settings_restore),
+                viewModel::restore,
+                color = colors.sealInk,
+            )
 
-        if (viewModel.showsTestTools) {
-            Section(stringResource(Res.string.settings_tester)) {
-                SettingsRow(stringResource(Res.string.settings_tester_sample)) {
-                    navigate(Route.Menu(MenuSource.Sample))
+            if (viewModel.showsTestTools) {
+                Section(stringResource(Res.string.settings_tester)) {
+                    SettingsRow(stringResource(Res.string.settings_tester_sample)) {
+                        navigate(Route.Menu(MenuSource.Sample))
+                    }
+                    SwitchRow(
+                        title = stringResource(Res.string.settings_tester_plus),
+                        body = stringResource(Res.string.settings_tester_plus_body),
+                        checked = state.isPlus,
+                        onChange = viewModel::setTestPlus,
+                        modifier = Modifier.tipTarget(Tip.TesterPlus),
+                    )
                 }
+            }
+
+            Section(stringResource(Res.string.settings_appearance)) {
+                AppearancePicker(state.appearance, viewModel::setAppearance)
+                val calm by viewModel.calmMotion.collectAsStateWithLifecycle()
+                SwitchRow(
+                    title = stringResource(Res.string.settings_calm_motion),
+                    body = stringResource(Res.string.settings_calm_motion_body),
+                    checked = calm,
+                    onChange = viewModel::setCalmMotion,
+                    modifier = Modifier.padding(top = Space.sm),
+                )
+            }
+
+            Section(stringResource(Res.string.settings_dietary)) {
+                Text(
+                    stringResource(Res.string.settings_dietary_body),
+                    style = Paper.type.caption,
+                    color = colors.inkMuted,
+                )
+                Spacer(Modifier.height(Space.sm))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Space.related),
+                    verticalArrangement = Arrangement.spacedBy(Space.related),
+                ) {
+                    DietaryFilters.forEach { filter ->
+                        FilterPill(
+                            text = filter.label(),
+                            selected = filter in state.dietary,
+                            onClick = { viewModel.toggleDietary(filter) },
+                            unselected = colors.sunk,
+                        )
+                    }
+                }
+            }
+
+            Section(stringResource(Res.string.settings_avoid)) {
+                AvoidWords(state.avoid, viewModel::addAvoid, viewModel::removeAvoid)
+            }
+
+            Section(stringResource(Res.string.settings_menus)) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .tipTarget(Tip.TesterPlus)
-                        .toggleable(value = state.isPlus, role = Role.Switch, onValueChange = viewModel::setTestPlus)
-                        .padding(vertical = Space.xs),
+                        .toggleable(
+                            value = state.showFeatured,
+                            role = Role.Switch,
+                            onValueChange = viewModel::setShowFeatured,
+                        ).padding(vertical = Space.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            stringResource(Res.string.settings_tester_plus),
+                            stringResource(Res.string.settings_featured),
                             style = Paper.type.body,
                             color = colors.ink,
                         )
                         Text(
-                            stringResource(Res.string.settings_tester_plus_body),
+                            stringResource(Res.string.settings_featured_body),
                             style = Paper.type.caption,
                             color = colors.inkMuted,
                         )
                     }
                     Spacer(Modifier.width(Space.sm))
                     Switch(
-                        checked = state.isPlus,
+                        checked = state.showFeatured,
                         onCheckedChange = null,
                         colors =
                             SwitchDefaults.colors(
@@ -262,159 +320,99 @@ internal fun SettingsScreen(
                     )
                 }
             }
-        }
 
-        Section(stringResource(Res.string.settings_appearance)) {
-            AppearancePicker(state.appearance, viewModel::setAppearance)
-            val calm by viewModel.calmMotion.collectAsStateWithLifecycle()
-            SwitchRow(
-                title = stringResource(Res.string.settings_calm_motion),
-                body = stringResource(Res.string.settings_calm_motion_body),
-                checked = calm,
-                onChange = viewModel::setCalmMotion,
-                modifier = Modifier.padding(top = Space.sm),
-            )
-        }
-
-        Section(stringResource(Res.string.settings_dietary)) {
-            Text(stringResource(Res.string.settings_dietary_body), style = Paper.type.caption, color = colors.inkMuted)
-            Spacer(Modifier.height(Space.sm))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(Space.related),
-                verticalArrangement = Arrangement.spacedBy(Space.related),
-            ) {
-                DietaryFilters.forEach { filter ->
-                    FilterPill(
-                        text = filter.label(),
-                        selected = filter in state.dietary,
-                        onClick = { viewModel.toggleDietary(filter) },
-                        unselected = colors.sunk,
-                    )
-                }
-            }
-        }
-
-        Section(stringResource(Res.string.settings_avoid)) {
-            AvoidWords(state.avoid, viewModel::addAvoid, viewModel::removeAvoid)
-        }
-
-        Section(stringResource(Res.string.settings_menus)) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .toggleable(
-                        value = state.showFeatured,
-                        role = Role.Switch,
-                        onValueChange = viewModel::setShowFeatured,
-                    ).padding(vertical = Space.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(Res.string.settings_featured), style = Paper.type.body, color = colors.ink)
-                    Text(
-                        stringResource(Res.string.settings_featured_body),
-                        style = Paper.type.caption,
-                        color = colors.inkMuted,
-                    )
-                }
-                Spacer(Modifier.width(Space.sm))
-                Switch(
-                    checked = state.showFeatured,
-                    onCheckedChange = null,
-                    colors =
-                        SwitchDefaults.colors(
-                            checkedTrackColor = colors.seal,
-                            checkedThumbColor = colors.onSeal,
-                            uncheckedTrackColor = colors.sunk,
-                            uncheckedThumbColor = colors.inkFaint,
-                            uncheckedBorderColor = colors.rule,
-                        ),
+            Section(stringResource(Res.string.settings_data)) {
+                Text(
+                    stringResource(Res.string.settings_backup_body),
+                    style = Paper.type.caption,
+                    color = colors.inkMuted,
                 )
-            }
-        }
-
-        Section(stringResource(Res.string.settings_data)) {
-            Text(stringResource(Res.string.settings_backup_body), style = Paper.type.caption, color = colors.inkMuted)
-            SettingsRow(stringResource(Res.string.settings_backup)) { backupDialog = BackupDialog.Export }
-            SettingsRow(stringResource(Res.string.settings_restore_backup)) {
-                backupFiles.pick { contents ->
-                    if (contents == null) {
-                        viewModel.backupFileWasNotOpened()
-                    } else {
-                        importedBackup = contents
-                        backupDialog = BackupDialog.Restore
+                SettingsRow(stringResource(Res.string.settings_backup)) {
+                    backupDialog = BackupDialog.Export
+                }
+                SettingsRow(stringResource(Res.string.settings_restore_backup)) {
+                    backupFiles.pick { contents ->
+                        if (contents == null) {
+                            viewModel.backupFileWasNotOpened()
+                        } else {
+                            importedBackup = contents
+                            backupDialog = BackupDialog.Restore
+                        }
                     }
                 }
+                SettingsRow(stringResource(Res.string.settings_delete_menus), colors.alarm) { confirmDelete = true }
             }
-            SettingsRow(stringResource(Res.string.settings_delete_menus), colors.alarm) { confirmDelete = true }
+
+            Section(stringResource(Res.string.settings_about)) {
+                SettingsRow(stringResource(Res.string.settings_something_wrong)) {
+                    uriHandler.openUri(feedbackMailUri())
+                }
+                config.privacyPolicyUrl?.let { url ->
+                    SettingsRow(stringResource(Res.string.paywall_privacy)) { uriHandler.openUri(url) }
+                }
+                SettingsRow(stringResource(Res.string.paywall_terms)) { uriHandler.openUri(TERMS_URL) }
+                SettingsRow(stringResource(Res.string.settings_show_tips)) {
+                    tips.reset()
+                    scope.launch { snackbar.showSnackbar(tipsReset) }
+                }
+                Text(
+                    stringResource(Res.string.settings_ai_note),
+                    style = Paper.type.caption,
+                    color = colors.inkMuted,
+                    modifier = Modifier.padding(top = Space.sm),
+                )
+            }
+            Spacer(Modifier.height(bottomInset))
         }
 
-        Section(stringResource(Res.string.settings_about)) {
-            SettingsRow(stringResource(Res.string.settings_something_wrong)) { uriHandler.openUri(feedbackMailUri()) }
-            config.privacyPolicyUrl?.let { url ->
-                SettingsRow(stringResource(Res.string.paywall_privacy)) { uriHandler.openUri(url) }
-            }
-            SettingsRow(stringResource(Res.string.paywall_terms)) { uriHandler.openUri(TERMS_URL) }
-            SettingsRow(stringResource(Res.string.settings_show_tips)) {
-                tips.reset()
-                scope.launch { snackbar.showSnackbar(tipsReset) }
-            }
-            Text(
-                stringResource(Res.string.settings_ai_note),
-                style = Paper.type.caption,
-                color = colors.inkMuted,
-                modifier = Modifier.padding(top = Space.sm),
+        if (confirmDelete) {
+            AlertDialog(
+                onDismissRequest = { confirmDelete = false },
+                containerColor = colors.raised,
+                title = {
+                    Text(
+                        stringResource(Res.string.settings_delete_menus_confirm_title),
+                        style = Paper.type.dishName,
+                    )
+                },
+                text = {
+                    Text(
+                        stringResource(Res.string.settings_delete_menus_confirm_body),
+                        style = Paper.type.bodySmall,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmDelete = false
+                        viewModel.deleteSavedMenus()
+                    }) { Text(stringResource(Res.string.settings_delete_menus), color = colors.alarm) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmDelete = false }) {
+                        Text(stringResource(Res.string.settings_cancel), color = colors.ink)
+                    }
+                },
             )
         }
-        Spacer(Modifier.height(bottomInset))
-    }
 
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            containerColor = colors.raised,
-            title = {
-                Text(
-                    stringResource(Res.string.settings_delete_menus_confirm_title),
-                    style = Paper.type.dishName,
-                )
-            },
-            text = {
-                Text(
-                    stringResource(Res.string.settings_delete_menus_confirm_body),
-                    style = Paper.type.bodySmall,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    viewModel.deleteSavedMenus()
-                }) { Text(stringResource(Res.string.settings_delete_menus), color = colors.alarm) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) {
-                    Text(stringResource(Res.string.settings_cancel), color = colors.ink)
-                }
-            },
-        )
-    }
-
-    backupDialog?.let { action ->
-        BackupPassphraseDialog(
-            action = action,
-            onDismiss = {
-                backupDialog = null
-                importedBackup = null
-            },
-            onConfirm = { passphrase ->
-                when (action) {
-                    BackupDialog.Export -> viewModel.createBackup(passphrase)
-                    BackupDialog.Restore -> importedBackup?.let { viewModel.restoreBackup(it, passphrase) }
-                }
-                backupDialog = null
-                importedBackup = null
-            },
-        )
+        backupDialog?.let { action ->
+            BackupPassphraseDialog(
+                action = action,
+                onDismiss = {
+                    backupDialog = null
+                    importedBackup = null
+                },
+                onConfirm = { passphrase ->
+                    when (action) {
+                        BackupDialog.Export -> viewModel.createBackup(passphrase)
+                        BackupDialog.Restore -> importedBackup?.let { viewModel.restoreBackup(it, passphrase) }
+                    }
+                    backupDialog = null
+                    importedBackup = null
+                },
+            )
+        }
+        ScrollTitleBar(stringResource(Res.string.settings_title), collapsed, Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -618,7 +616,11 @@ private fun AvoidWords(
         onAdd(draft)
         draft = ""
     }
-    Text(stringResource(Res.string.settings_avoid_body), style = Paper.type.caption, color = colors.inkMuted)
+    Text(
+        stringResource(Res.string.settings_avoid_body),
+        style = Paper.type.caption,
+        color = colors.inkMuted,
+    )
     Spacer(Modifier.height(Space.sm))
     Row(verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
@@ -773,3 +775,6 @@ private fun Appearance.label(): StringResource =
         Appearance.Light -> Res.string.settings_appearance_light
         Appearance.Dark -> Res.string.settings_appearance_dark
     }
+
+/** How far the big title scrolls before the small one appears in the bar. */
+private val TITLE_SCROLL_AWAY = 72.dp

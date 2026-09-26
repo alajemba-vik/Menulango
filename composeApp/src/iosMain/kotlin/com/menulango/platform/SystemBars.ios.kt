@@ -11,7 +11,11 @@ import platform.UIKit.UIWindow
 internal actual fun SystemBarsFollow(darkTheme: Boolean) {
     SideEffect {
         val style =
-            if (darkTheme) UIUserInterfaceStyle.UIUserInterfaceStyleDark else UIUserInterfaceStyle.UIUserInterfaceStyleLight
+            if (darkTheme) {
+                UIUserInterfaceStyle.UIUserInterfaceStyleDark
+            } else {
+                UIUserInterfaceStyle.UIUserInterfaceStyleLight
+            }
         @Suppress("DEPRECATION")
         UIApplication.sharedApplication.windows.forEach { (it as? UIWindow)?.overrideUserInterfaceStyle = style }
     }
