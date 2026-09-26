@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A folded menu card on seal green: printed rules, and one ember mark for "the dish to try". -->
+<!-- A cream menu card tilted on coral felt: printed lines, one highlighted as the pick. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FAF8F3"
-        android:pathData="M38,30h32a1.5,1.5 0 0,1 1.5,1.5v45a1.5,1.5 0 0,1 -1.5,1.5h-32a1.5,1.5 0 0,1 -1.5,-1.5v-45a1.5,1.5 0 0,1 1.5,-1.5z" />
-    <path android:strokeColor="#1A1D17" android:strokeWidth="1.6" android:strokeLineCap="round"
-        android:pathData="M43,40h22M43,47h16M43,61h19M43,68h13" />
-    <path android:fillColor="#A3670F"
-        android:pathData="M42,52.5h24a1,1 0 0,1 1,1v2a1,1 0 0,1 -1,1h-24a1,1 0 0,1 -1,-1v-2a1,1 0 0,1 1,-1z" />
+    <group android:rotation="8" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#FAF6F0"
+            android:pathData="M40,32h28a4,4 0 0,1 4,4v36a4,4 0 0,1 -4,4h-28a4,4 0 0,1 -4,-4v-36a4,4 0 0,1 4,-4z" />
+        <path android:strokeColor="#201917" android:strokeWidth="2" android:strokeLineCap="round"
+            android:pathData="M43,41h19M43,46.5h13M43,62h16M43,67.5h10" />
+        <path android:fillColor="#FBEBA8"
+            android:pathData="M42,51h24a3,3 0 0,1 3,3v0a3,3 0 0,1 -3,3h-24a3,3 0 0,1 -3,-3v0a3,3 0 0,1 3,-3z" />
+        <path android:strokeColor="#201917" android:strokeWidth="1.8" android:strokeLineCap="round"
+            android:pathData="M43.5,54h12" />
+        <path android:fillColor="#E4572E"
+            android:pathData="M64,54m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+    </group>
 </vector>
