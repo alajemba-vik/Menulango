@@ -21,5 +21,6 @@ iosApp/Configuration/Secrets.xcconfig
 node_modules
 .wrangler
 .dev.vars
+iosApp/Pods/
 *.jks
 *.keystore

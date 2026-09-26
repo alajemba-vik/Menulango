@@ -16,13 +16,16 @@ Kotlin Multiplatform · Compose Multiplatform · Android and iOS from one codeba
 
 > **New to Android or Kotlin Multiplatform?** Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md): installing the tools, running the app, testing and sending changes, step by step.
 
-You need JDK 17+, the Android SDK (platform 37), and — for iOS — Xcode 26 on a Mac. Nothing else: without any keys the app builds and runs on a bundled sample menu.
+You need JDK 17+, the Android SDK (platform 37), and — for iOS — Xcode 26 and CocoaPods on a Mac. Nothing else: without any keys the app builds and runs on a bundled sample menu.
 
 ```bash
 git clone <this repo> && cd Menulango
 ./gradlew :androidApp:installDebug      # Android, on a connected device or emulator
-open iosApp/iosApp.xcodeproj            # iOS: pick a simulator or device, press Run
+cd iosApp && pod install && open iosApp.xcworkspace
+# iOS: pick a connected iPhone and press Run
 ```
+
+Open the generated `.xcworkspace`, not `iosApp.xcodeproj`. Waiter-note translation uses Google's on-device ML Kit models. Its iOS library supports physical iPhones but excludes Apple-silicon simulators, so test that flow on a device. The rest of the shared app remains covered by the iOS test target.
 
 In debug builds the capture screen has a **Sample menu** button (a Greek taverna, streamed exactly like a real scan) and a **Debug: Plus** toggle that unlocks the paid screens without a purchase.
 

@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -35,8 +35,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,8 +46,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Elevation
@@ -92,9 +92,9 @@ import com.menulango.resources.order_title
 import com.menulango.resources.order_total
 import com.menulango.resources.order_total_note
 import com.menulango.resources.order_view
-import com.menulango.resources.order_waiter_hint
 import com.menulango.resources.order_waiter_for_me
 import com.menulango.resources.order_waiter_for_restaurant
+import com.menulango.resources.order_waiter_hint
 import com.menulango.resources.order_waiter_preparing
 import com.menulango.resources.order_waiter_translated_by_google
 import com.menulango.resources.order_waiter_unavailable
@@ -488,9 +488,10 @@ internal fun WaiterView(
     val targetLanguageTag = restaurantLanguageTag?.takeIf(::isLanguageTag)
     val notes =
         remember(order.lines) {
-            order.lines.mapNotNull { line ->
-                line.note?.let { TableOrder.noteKey(line.dish.id, line.dinerId) to it }
-            }.toMap()
+            order.lines
+                .mapNotNull { line ->
+                    line.note?.let { TableOrder.noteKey(line.dish.id, line.dinerId) to it }
+                }.toMap()
         }
     val missingTranslations =
         remember(notes, order.waiterTranslations) {
@@ -501,12 +502,19 @@ internal fun WaiterView(
 
     LaunchedEffect(missingTranslations, dinerLanguageTag, targetLanguageTag) {
         when {
-            missingTranslations.isEmpty() || notes.isEmpty() -> translationState = WaiterTranslationState.Ready
-            targetLanguageTag == null -> translationState = WaiterTranslationState.Unavailable
+            missingTranslations.isEmpty() || notes.isEmpty() -> {
+                translationState = WaiterTranslationState.Ready
+            }
+
+            targetLanguageTag == null -> {
+                translationState = WaiterTranslationState.Unavailable
+            }
+
             sameLanguage(dinerLanguageTag, targetLanguageTag) -> {
                 onTranslationsReady(missingTranslations)
                 translationState = WaiterTranslationState.Ready
             }
+
             else -> {
                 translationState = WaiterTranslationState.Preparing
                 translationState =
@@ -515,7 +523,10 @@ internal fun WaiterView(
                             onTranslationsReady(result.translations)
                             WaiterTranslationState.Ready
                         }
-                        NoteTranslationResult.Unavailable -> WaiterTranslationState.Unavailable
+
+                        NoteTranslationResult.Unavailable -> {
+                            WaiterTranslationState.Unavailable
+                        }
                     }
             }
         }
@@ -569,11 +580,21 @@ internal fun WaiterView(
             }
             when (translationState) {
                 WaiterTranslationState.Preparing -> {
-                    Text(stringResource(Res.string.order_waiter_preparing), style = type.caption, color = colors.inkMuted)
+                    Text(
+                        stringResource(Res.string.order_waiter_preparing),
+                        style = type.caption,
+                        color = colors.inkMuted,
+                    )
                 }
+
                 WaiterTranslationState.Unavailable -> {
-                    Text(stringResource(Res.string.order_waiter_unavailable), style = type.caption, color = colors.sealInk)
+                    Text(
+                        stringResource(Res.string.order_waiter_unavailable),
+                        style = type.caption,
+                        color = colors.sealInk,
+                    )
                 }
+
                 WaiterTranslationState.Ready -> {
                     if (notes.isNotEmpty()) {
                         Text(
@@ -583,7 +604,10 @@ internal fun WaiterView(
                         )
                     }
                 }
-                WaiterTranslationState.NotNeeded -> Unit
+
+                WaiterTranslationState.NotNeeded -> {
+                    Unit
+                }
             }
             order.diners.filter { order.linesFor(it.id).isNotEmpty() }.forEach { diner ->
                 Column(
@@ -676,8 +700,10 @@ private enum class WaiterTranslationState { NotNeeded, Preparing, Ready, Unavail
 
 private fun isLanguageTag(tag: String): Boolean = LANGUAGE_TAG.matches(tag)
 
-private fun sameLanguage(first: String, second: String): Boolean =
-    first.substringBefore('-').equals(second.substringBefore('-'), ignoreCase = true)
+private fun sameLanguage(
+    first: String,
+    second: String,
+): Boolean = first.substringBefore('-').equals(second.substringBefore('-'), ignoreCase = true)
 
 private val LANGUAGE_TAG = Regex("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$")
 

@@ -7,6 +7,9 @@ package com.menulango.feature.order
  * unsupported language never replaces the diner's original note.
  */
 internal interface NoteTranslator {
+    /** Starts a Wi-Fi-only download for the restaurant language, without delaying the menu. */
+    fun prefetchTargetLanguage(targetLanguageTag: String)
+
     suspend fun translate(
         notes: Map<String, String>,
         sourceLanguageTag: String,
@@ -44,6 +47,9 @@ public interface IosNoteTranslationCallback {
 }
 
 public interface IosNoteTranslationBridge {
+    /** Starts a Wi-Fi-only model download. Completion is intentionally not needed by the UI. */
+    public fun prefetch(targetLanguageTag: String)
+
     public fun translate(
         notes: List<IosTranslationNote>,
         sourceLanguageTag: String,

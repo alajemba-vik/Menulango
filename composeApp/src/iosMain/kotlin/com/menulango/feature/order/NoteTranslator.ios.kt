@@ -13,6 +13,10 @@ public fun installIosNoteTranslationBridge(value: IosNoteTranslationBridge) {
 internal actual fun onDeviceNoteTranslator(): NoteTranslator = IosBridgeNoteTranslator
 
 private object IosBridgeNoteTranslator : NoteTranslator {
+    override fun prefetchTargetLanguage(targetLanguageTag: String) {
+        bridge?.prefetch(targetLanguageTag)
+    }
+
     override suspend fun translate(
         notes: Map<String, String>,
         sourceLanguageTag: String,
@@ -34,7 +38,10 @@ private object IosBridgeNoteTranslator : NoteTranslator {
                             if (continuation.isActive) {
                                 continuation.resume(
                                     NoteTranslationResult.Ready(
-                                        translations.associate { it.key to it.text.trim() }.filterValues { it.isNotEmpty() },
+                                        translations.associate { it.key to it.text.trim() }.filterValues {
+                                            it
+                                                .isNotEmpty()
+                                        },
                                     ),
                                 )
                             }
@@ -46,3 +53,4 @@ private object IosBridgeNoteTranslator : NoteTranslator {
                     },
             )
         }
+}

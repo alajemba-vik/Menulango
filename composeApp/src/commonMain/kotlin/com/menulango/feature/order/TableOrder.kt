@@ -136,7 +136,10 @@ internal data class TableOrder(
     fun saveWaiterTranslations(translations: Map<String, String>): TableOrder =
         copy(waiterTranslations = waiterTranslations + translations)
 
-    fun waiterNote(dishId: String, dinerId: Int): String? = waiterTranslations[noteKey(dishId, dinerId)]
+    fun waiterNote(
+        dishId: String,
+        dinerId: Int,
+    ): String? = waiterTranslations[noteKey(dishId, dinerId)]
 
     /** Every pick gone; the people at the table stay, ready for the next round. */
     fun cleared(): TableOrder = copy(lines = emptyList())
@@ -147,7 +150,10 @@ internal data class TableOrder(
     companion object {
         const val OWNER: Int = 1
 
-        fun noteKey(dishId: String, dinerId: Int): String = "$dinerId:$dishId"
+        fun noteKey(
+            dishId: String,
+            dinerId: Int,
+        ): String = "$dinerId:$dishId"
     }
 }
 

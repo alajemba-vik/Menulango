@@ -18,8 +18,8 @@ import com.menulango.feature.choose.ChooseViewModel
 import com.menulango.feature.menu.MenuViewModel
 import com.menulango.feature.menu.PageInbox
 import com.menulango.feature.menus.MenusViewModel
-import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.NoteTranslator
+import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.onDeviceNoteTranslator
 import com.menulango.feature.paywall.PaywallViewModel
 import com.menulango.feature.settings.SettingsViewModel

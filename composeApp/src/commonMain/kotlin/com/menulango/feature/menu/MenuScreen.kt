@@ -141,6 +141,7 @@ import com.menulango.feature.dish.DishOrderControl
 import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.order.AddToOrderBadge
 import com.menulango.feature.order.NoteEditor
+import com.menulango.feature.order.NoteTranslator
 import com.menulango.feature.order.OrderBar
 import com.menulango.feature.order.OrderSheet
 import com.menulango.feature.order.TableOrder
@@ -211,6 +212,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.math.PI
@@ -225,6 +227,7 @@ internal fun MenuScreen(
     navigate: (Route) -> Unit,
 ) {
     val viewModel = koinViewModel<MenuViewModel> { parametersOf(source) }
+    val translator = koinInject<NoteTranslator>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val order by viewModel.order.collectAsStateWithLifecycle()
     val tone by viewModel.headerTone.collectAsStateWithLifecycle()
@@ -237,6 +240,7 @@ internal fun MenuScreen(
         tone = tone,
         order = order,
         onOrderChange = viewModel::updateOrder,
+        prefetchRestaurantLanguage = translator::prefetchTargetLanguage,
         actions =
             MenuActions(
                 onBack = onBack,
@@ -283,7 +287,15 @@ internal fun MenuContent(
     tone: HeaderTone = HeaderTone.Brand,
     order: TableOrder = TableOrder(),
     onOrderChange: ((TableOrder) -> TableOrder) -> Unit = {},
+    prefetchRestaurantLanguage: (String) -> Unit = {},
 ) {
+    val restaurantLanguageTag =
+        (state as? MenuUiState.Ready)?.meta?.languageTag
+            ?: (state as? MenuUiState.Ready)?.meta?.language?.takeIf { it.isLanguageTag() }
+    // This is deliberately best-effort and Wi-Fi-only. The menu is immediately usable either way.
+    LaunchedEffect(restaurantLanguageTag) {
+        restaurantLanguageTag?.let(prefetchRestaurantLanguage)
+    }
     val ready = state as? MenuUiState.Ready
     val selected = ready?.selectedDish
     val reduceMotion = Paper.reduceMotion
@@ -523,7 +535,8 @@ internal fun MenuContent(
                     order = order,
                     // Older saved menus may have only a two-letter value in `language`; fresh
                     // scans carry a proper tag. Never guess from a human-readable label.
-                    restaurantLanguageTag = ready?.meta?.languageTag ?: ready?.meta?.language?.takeIf { it.isLanguageTag() },
+                    restaurantLanguageTag =
+                        ready?.meta?.languageTag ?: ready?.meta?.language?.takeIf { it.isLanguageTag() },
                     onTranslationsReady = { translations -> onOrderChange { it.saveWaiterTranslations(translations) } },
                     onClose = { showingWaiter = false },
                 )

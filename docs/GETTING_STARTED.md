@@ -53,6 +53,7 @@ The file tree in the [README](../README.md#layout) says what each folder under `
 6. **Xcode** from the Mac App Store. It's large, so start the download early. Open it once so it can
    install its components, including the **iOS platform/simulator**.
 7. In Terminal: `sudo xcode-select -s /Applications/Xcode.app` (it asks for your Mac password).
+8. Install CocoaPods: `sudo gem install cocoapods` (or `brew install cocoapods` if you use Homebrew).
 
 Windows and Linux can't build the iPhone app. That's fine: work on Android, and because the code is
 shared the iPhone app gets your change too. CI checks the iOS side for you (see section 6).
@@ -105,14 +106,16 @@ built-in **sample menu** (a Greek taverna).
 
 Or from a terminal: `./gradlew :androidApp:installDebug`
 
-### On an iPhone simulator (Mac only)
+### On an iPhone (Mac only)
 
-- **From Android Studio:** choose **iosApp** in the run-configuration dropdown, pick a simulator and
-  click **▶ Run**.
-- **Or from Xcode:** `open iosApp/iosApp.xcodeproj`, pick an iPhone simulator at the top and press
-  **⌘R**. The first build is slow because it compiles all the shared Kotlin code.
+- First run `cd iosApp && pod install`, then open the generated workspace with
+  `open iosApp.xcworkspace`. Do not open `iosApp.xcodeproj` directly.
+- In Xcode, pick your connected iPhone and press **⌘R**. The first build is slow because it compiles
+  all the shared Kotlin code.
 
-A real iPhone also needs an Apple developer account and a `TEAM_ID`. Ask Alajemba.
+A real iPhone also needs an Apple developer account and a `TEAM_ID`. Ask Alajemba. Waiter-note
+translation uses ML Kit models on the phone; that library deliberately excludes Apple-silicon
+simulators, so translation must be tried on an iPhone.
 
 ### Things to try once it's running
 
