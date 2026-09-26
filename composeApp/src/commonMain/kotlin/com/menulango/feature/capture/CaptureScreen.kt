@@ -3,10 +3,12 @@ package com.menulango.feature.capture
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -47,7 +49,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -368,7 +373,12 @@ private fun AllowanceLine(
     )
 }
 
-/** A white ring around a coral button: the brand colour where the thumb lands. It presses in, never bounces. */
+/**
+ * MenuLango's own shutter, the app icon in the thumb's reach: a coral felt disc edged with a
+ * stitched seam, holding a small tilted menu card. The seam turns slowly while the camera waits;
+ * pressing squashes the disc and straightens the card, as if laying the menu flat to read.
+ * The white outer ring keeps it unmistakably a shutter. Still under reduce motion.
+ */
 @Composable
 private fun Shutter(
     enabled: Boolean,
@@ -377,15 +387,35 @@ private fun Shutter(
     val colors = Paper.colors
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val reduceMotion = Paper.reduceMotion
     val scale by animateFloatAsState(
-        if (pressed) 0.92f else 1f,
+        if (pressed) 0.9f else 1f,
         tween(Motion.QUICK_MS, easing = Motion.standard),
         label = "shutter",
     )
+    val tilt by animateFloatAsState(
+        if (pressed || reduceMotion) 0f else -12f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "shutter-card",
+    )
+    val seam =
+        if (reduceMotion) {
+            null
+        } else {
+            rememberInfiniteTransition(label = "seam").animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(tween(SEAM_TURN_MS, easing = LinearEasing)),
+                label = "seam-turn",
+            )
+        }
     val description = stringResource(Res.string.capture_shutter)
+    val card = colors.paper
+    val print = colors.seal.copy(alpha = 0.55f)
+    val stitch = colors.onSeal.copy(alpha = 0.75f)
     Box(
         Modifier
-            .size(76.dp)
+            .size(80.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -400,9 +430,53 @@ private fun Shutter(
             ).semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.size(60.dp).background(colors.seal, CircleShape))
+        Canvas(
+            Modifier
+                .size(66.dp)
+                .clip(CircleShape)
+                .felt(colors.seal),
+        ) {
+            // The stitched seam, just inside the disc's edge.
+            rotate(seam?.value ?: 0f) {
+                drawCircle(
+                    stitch,
+                    radius = size.minDimension / 2 - 5.dp.toPx(),
+                    style =
+                        Stroke(
+                            width = 1.4.dp.toPx(),
+                            cap = StrokeCap.Round,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.5.dp.toPx())),
+                        ),
+                )
+            }
+            // A little menu card: a heading and three lines of dishes.
+            val w = 20.dp.toPx()
+            val h = 26.dp.toPx()
+            rotate(tilt) {
+                val topLeft = Offset(center.x - w / 2, center.y - h / 2)
+                drawRoundRect(card, topLeft, Size(w, h), CornerRadius(3.dp.toPx()))
+                val pad = 4.dp.toPx()
+                val line = 2.dp.toPx()
+                drawRoundRect(
+                    print,
+                    Offset(topLeft.x + pad, topLeft.y + pad),
+                    Size(w * 0.5f, line * 1.2f),
+                    CornerRadius(line),
+                )
+                listOf(0.62f, 0.5f, 0.66f).forEachIndexed { row, width ->
+                    drawRoundRect(
+                        print,
+                        Offset(topLeft.x + pad, topLeft.y + pad + line * 3.2f + row * line * 2.4f),
+                        Size((w - pad * 2) * width, line),
+                        CornerRadius(line / 2),
+                    )
+                }
+            }
+        }
     }
 }
+
+private const val SEAM_TURN_MS = 14_000
 
 @Composable
 private fun ChromeButton(

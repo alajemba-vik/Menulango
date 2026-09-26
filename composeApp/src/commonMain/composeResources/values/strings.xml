@@ -82,6 +82,9 @@
     <!-- Menus -->
     <string name="menus_title">Your menus</string>
     <string name="menus_subtitle">Every menu you've read, even offline.</string>
+    <string name="menus_reading_title">New menu</string>
+    <string name="menus_reading_body">Reading the menu…</string>
+    <string name="menus_reading_page">Reading page %1$d of %2$d…</string>
     <string name="menus_empty_title">No menus yet</string>
     <string name="menus_empty_body">Photograph a menu and it stays here. You can open it again without signal.</string>
     <string name="menus_empty_action">Scan a menu</string>

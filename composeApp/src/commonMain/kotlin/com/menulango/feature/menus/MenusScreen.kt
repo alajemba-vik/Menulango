@@ -47,9 +47,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -72,6 +75,7 @@ import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
+import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.local.SavedMenuItem
 import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
@@ -87,6 +91,9 @@ import com.menulango.resources.menus_deleted
 import com.menulango.resources.menus_empty_action
 import com.menulango.resources.menus_empty_body
 import com.menulango.resources.menus_empty_title
+import com.menulango.resources.menus_reading_body
+import com.menulango.resources.menus_reading_page
+import com.menulango.resources.menus_reading_title
 import com.menulango.resources.menus_subtitle
 import com.menulango.resources.menus_title
 import com.menulango.resources.menus_today
@@ -138,6 +145,15 @@ internal fun MenusScreen(
 
     Box(Modifier.fillMaxSize().felt(colors.paper)) {
         val ready = state as? MenusUiState.Ready ?: return@Box
+        // Scans still reading: before their first page is saved they get a card of their own;
+        // after, their saved card says it is still being read.
+        val scans =
+            koinInject<ActiveScans>()
+                .scans
+                .collectAsState()
+                .value.values
+                .filter { it.pagesRead < it.pagesTotal }
+        val readingKeys = scans.mapNotNull { it.cacheKey }.toSet()
         // Search is local: by each menu's title, and by the dishes inside only with the tag on.
         var searching by rememberSaveable { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
@@ -237,6 +253,9 @@ internal fun MenusScreen(
                     }
                 }
             }
+            items(scans.filter { it.cacheKey == null }, key = { "scan-${it.id}" }) { scan ->
+                ReadingMenuCard(scan, Modifier.animateItem())
+            }
             items(shown, key = { it.cacheKey }) { menu ->
                 SwipeToDelete(
                     onDelete = { onDelete(menu.cacheKey) },
@@ -247,6 +266,7 @@ internal fun MenusScreen(
                     SavedMenuCard(
                         menu = menu,
                         nowMillis = ready.nowMillis,
+                        stillReading = menu.cacheKey in readingKeys,
                         onOpen = { navigate(Route.Menu(MenuSource.Saved(menu.cacheKey))) },
                         onDelete = { onDelete(menu.cacheKey) },
                     )
@@ -305,6 +325,7 @@ private fun SwipeToDelete(
 private fun SavedMenuCard(
     menu: SavedMenuItem,
     nowMillis: Long,
+    stillReading: Boolean = false,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -358,6 +379,7 @@ private fun SavedMenuCard(
                 style = Paper.type.caption,
                 color = colors.inkMuted,
             )
+            if (stillReading) ReadingNote(Modifier.padding(top = Space.xs))
         }
         Icon(
             PaperIcons.ChevronRight,
@@ -390,3 +412,62 @@ private val PEEK = 88.dp
 private const val PEEK_DELAY_MS = 900L
 private const val PEEK_OUT_MS = 380
 private const val PEEK_HOLD_MS = 450L
+
+/** A menu left while its first page was still being read: its photo, and what is happening. */
+@Composable
+private fun ReadingMenuCard(
+    scan: ActiveScans.Scan,
+    modifier: Modifier = Modifier,
+) {
+    val colors = Paper.colors
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(Shapes.card)
+            .paper(colors.raised)
+            .heightIn(min = 104.dp)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }
+            .padding(Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        scan.cover?.let {
+            MenuSnapshot(
+                it,
+                pages = scan.pagesTotal,
+                description = stringResource(Res.string.menu_snapshot_description),
+            )
+        }
+        Spacer(Modifier.width(Space.md))
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(Res.string.menus_reading_title),
+                style = Paper.type.dishName,
+                color = colors.ink,
+            )
+            ReadingNote(Modifier.padding(top = Space.xs), scan)
+        }
+    }
+}
+
+/** "Reading the menu…", or which page it is on for longer menus. */
+@Composable
+private fun ReadingNote(
+    modifier: Modifier = Modifier,
+    scan: ActiveScans.Scan? = null,
+) {
+    val colors = Paper.colors
+    Text(
+        if (scan != null && scan.pagesTotal > 1) {
+            stringResource(Res.string.menus_reading_page, scan.pagesRead + 1, scan.pagesTotal)
+        } else {
+            stringResource(Res.string.menus_reading_body)
+        },
+        style = Paper.type.caption.copy(fontWeight = FontWeight.SemiBold),
+        color = colors.sealInk,
+        modifier =
+            modifier
+                .clip(Shapes.chip)
+                .background(colors.sealWash)
+                .padding(horizontal = Space.sm, vertical = 4.dp),
+    )
+}

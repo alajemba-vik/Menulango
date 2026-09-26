@@ -1038,7 +1038,7 @@ private fun AddPageButton(onClick: () -> Unit) {
     val description = stringResource(Res.string.menu_add_page_description)
     Row(
         Modifier
-            .padding(end = Space.sm)
+            // Flush with the gutter: the header row already stops at the app's right margin.
             .heightIn(min = Space.touchTarget)
             .pressable(onClick)
             .clip(Shapes.button)

@@ -10,6 +10,7 @@ import com.menulango.core.result.AppError
 import com.menulango.core.ui.menuColourOf
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.history.EatenHistory
+import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.menu.PageMerger
 import com.menulango.data.menu.PageProgress
@@ -165,6 +166,7 @@ internal class MenuViewModel(
     private val orders: OrderBook,
     /** Outlives this screen: a menu being read keeps reading, and is saved, after the diner leaves. */
     private val appScope: CoroutineScope,
+    private val activeScans: ActiveScans,
 ) : ViewModel() {
     private val reading = MutableStateFlow<Reading>(Reading.Loading)
     private val selectedDishId = MutableStateFlow<String?>(null)
@@ -349,7 +351,15 @@ internal class MenuViewModel(
                     is MenuSource.Photos -> {
                         pages.restart(source.pages)
                         readTone(source.pages.first())
-                        for (index in pages.queue) readPage(index)
+                        try {
+                            reportScan()
+                            for (index in pages.queue) {
+                                readPage(index)
+                                reportScan()
+                            }
+                        } finally {
+                            activeScans.finish(sessionId)
+                        }
                     }
 
                     MenuSource.Sample -> {
@@ -357,6 +367,27 @@ internal class MenuViewModel(
                     }
                 }
             }
+    }
+
+    /**
+     * Leaving the screen: pages already queued are still read and saved in the app's scope, but
+     * no new ones can arrive, so the reading ends instead of waiting forever.
+     */
+    override fun onCleared() {
+        if (source is MenuSource.Photos) pages.closeQueue()
+    }
+
+    /** Tells Menus how far this scan has got, so it can show it while the diner is elsewhere. */
+    private fun reportScan() {
+        activeScans.update(
+            ActiveScans.Scan(
+                id = sessionId,
+                cover = pages.cover,
+                cacheKey = pages.cacheKey,
+                pagesRead = pages.finished,
+                pagesTotal = pages.count,
+            ),
+        )
     }
 
     /** Null when there is no limit (Plus), otherwise how many more pages a free menu may take. */
@@ -367,6 +398,7 @@ internal class MenuViewModel(
         if (source !is MenuSource.Photos) return
         val accepted = pagesLeft()?.let { photos.take(it) } ?: photos
         accepted.forEach(pages::add)
+        reportScan()
         publishPages()
     }
 
@@ -559,6 +591,11 @@ private class PageSession {
     val cover: ByteArray? get() = photos.firstOrNull()
 
     fun photo(index: Int): ByteArray = photos[index]
+
+    /** No more pages can join: the reading loop finishes what is queued, then ends. */
+    fun closeQueue() {
+        queue.close()
+    }
 
     fun restart(first: List<ByteArray>) {
         queue.close()
