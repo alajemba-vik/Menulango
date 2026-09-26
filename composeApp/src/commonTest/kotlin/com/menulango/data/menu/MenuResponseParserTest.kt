@@ -6,6 +6,7 @@ import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.remote.MenuAssembler
 import com.menulango.data.menu.remote.MenuContractViolation
 import com.menulango.data.menu.remote.MenuResponseParser
+import com.menulango.data.menu.remote.prose
 import com.menulango.data.menu.remote.toDocument
 import com.menulango.dishJson
 import com.menulango.menuDocument
@@ -129,5 +130,25 @@ class MenuResponseParserTest {
 
         assertEquals(MenuAssembler.MAX_DISHES, menu.dishes.size)
         assertEquals(listOf("same", "same-2", "same-3"), menu.dishes.take(3).map { it.id })
+    }
+}
+
+class ProseTest {
+    @Test
+    fun dashesBecomeCommas() {
+        assertEquals(
+            "Warm custard, crisp pastry, dessert even if you're full.",
+            "Warm custard — crisp pastry – dessert even if you're full.".prose(),
+        )
+    }
+
+    @Test
+    fun dashBeforePunctuationLeavesNoStrayComma() {
+        assertEquals("Slow-cooked lamb.", "Slow-cooked lamb —.".prose())
+    }
+
+    @Test
+    fun hyphensInsideWordsStay() {
+        assertEquals("Sun-dried tomatoes", "Sun-dried tomatoes".prose())
     }
 }

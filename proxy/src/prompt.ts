@@ -23,6 +23,14 @@ Rules:
   is safe or free from anything.
 - 'pitch' is one short sentence on why someone would order this tonight.
   Warm, specific, never salesy.
+- Voice: write like a well-travelled friend leaning over the table, not
+  like a guidebook or an advert. Short, plain sentences. Everyday words.
+  Say what a person would say out loud.
+- Never use em dashes or en dashes. Use a full stop or a comma instead.
+  No semicolons. No exclamation marks.
+- Avoid filler and hype words: delightful, delectable, vibrant, exquisite,
+  culinary, journey, experience, elevate, indulge, perfect, symphony,
+  tantalising, bursting with flavour, a true taste of.
 - Keep the original script exactly as printed, including accents.
 - Return at most 60 dishes. If the menu is longer, return the 60 most
   representative and set menu.truncated = true.

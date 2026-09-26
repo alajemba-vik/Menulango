@@ -161,11 +161,11 @@ private fun DishDto.toDomain(): Dish {
         id = id.required("id"),
         originalName = originalName.required("originalName"),
         readableName = readableName.required("readableName"),
-        section = section.cleaned(),
-        whatItIs = whatItIs.cleaned(),
+        section = section.prose(),
+        whatItIs = whatItIs.prose(),
         ingredients = ingredients.cleanedList(),
-        howItIsMade = howItIsMade.cleaned(),
-        pitch = pitch.cleaned(),
+        howItIsMade = howItIsMade.prose(),
+        pitch = pitch.prose(),
         price = price?.toDomain(),
         flags = flags.toDomain(),
         allergens = allergens.toDomain(),
@@ -235,5 +235,20 @@ private fun MenuMetaDto.toDomain(): MenuMeta {
 private fun String?.required(field: String): String = requireNotNull(cleaned()) { "$field missing or blank" }
 
 private fun String?.cleaned(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
+
+/**
+ * Text the diner reads as sentences. Models love a dash where a person would use a comma or a full
+ * stop; it reads machine-written, so any that slip past the prompt become a plain comma.
+ */
+internal fun String?.prose(): String? =
+    cleaned()
+        ?.replace(DASH, ", ")
+        ?.replace(Regex(",\\s*([,.;:!?])"), "$1")
+        ?.trim()
+        ?.trimStart(',')
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+private val DASH = Regex("\\s*[\u2014\u2013]\\s*")
 
 private fun List<String>?.cleanedList(): List<String> = orEmpty().mapNotNull { it.cleaned() }

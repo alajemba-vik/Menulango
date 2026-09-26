@@ -57,7 +57,7 @@ internal object PreviewDishes {
             whatItIs = "Tomato, cucumber, onion, peppers and olives in olive oil, with a whole slab of feta on top.",
             ingredients = listOf("tomato", "cucumber", "red onion", "feta", "olives"),
             howItIsMade = "Nothing is cooked. The vegetables are cut into large chunks just before serving.",
-            pitch = "Ripe summer tomatoes and good oil — simple, and hard to beat.",
+            pitch = "Ripe summer tomatoes and good oil. Simple and hard to beat.",
             price = Price(8.5, "EUR", "8,50€"),
             flags = DishFlags.None.copy(vegetarian = true, shareable = true),
             allergens = Allergens(listOf("milk"), emptyList(), null),
