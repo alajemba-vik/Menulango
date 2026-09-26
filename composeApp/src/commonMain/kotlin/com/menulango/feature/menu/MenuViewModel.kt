@@ -283,6 +283,15 @@ internal class MenuViewModel(
         search.value = DishSearch()
     }
 
+    fun openSearch() {
+        search.value = search.value.copy(open = true)
+    }
+
+    /** Cancel: the field goes and so does what it was narrowing, as iOS's search does. */
+    fun closeSearch() {
+        search.value = DishSearch()
+    }
+
     fun setSearchQuery(query: String) {
         search.value = search.value.copy(query = query.take(MAX_QUERY))
     }

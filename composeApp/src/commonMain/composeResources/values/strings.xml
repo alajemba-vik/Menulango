@@ -181,8 +181,9 @@
     <string name="menu_plus_badge">Plus</string>
     <string name="search_menu_hint">Search dishes</string>
     <string name="search_menus_hint">Search your menus</string>
-    <string name="search_tags">Add tags</string>
-    <string name="search_hide_tags">Hide tags</string>
+    <string name="search_tags">Search tags</string>
+    <string name="search_cancel">Cancel</string>
+    <string name="search_open">Search</string>
     <string name="search_clear">Clear search</string>
     <string name="search_tag_ingredients">Ingredients</string>
     <string name="search_tag_description">Description</string>

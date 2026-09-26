@@ -215,6 +215,7 @@ import com.menulango.resources.note_added
 import com.menulango.resources.note_hint_once
 import com.menulango.resources.order_cleared
 import com.menulango.resources.search_menu_hint
+import com.menulango.resources.search_open
 import com.menulango.resources.search_tag_description
 import com.menulango.resources.search_tag_ingredients
 import com.menulango.resources.separator_dot
@@ -262,6 +263,8 @@ internal fun MenuScreen(
                 onChoose = { mode -> viewModel.routeForMode(mode)?.let(navigate) },
                 onToggleFilter = viewModel::toggleFilter,
                 onSearch = viewModel::setSearchQuery,
+                onOpenSearch = viewModel::openSearch,
+                onCloseSearch = viewModel::closeSearch,
                 onToggleSearchTag = viewModel::toggleSearchTag,
                 onClearFilters = viewModel::clearFilters,
                 onDropAvoid = viewModel::dropAvoid,
@@ -284,6 +287,8 @@ internal data class MenuActions(
     val onAddPage: () -> Unit,
     val onSearch: (String) -> Unit = {},
     val onToggleSearchTag: (DishSearchTag) -> Unit = {},
+    val onOpenSearch: () -> Unit = {},
+    val onCloseSearch: () -> Unit = {},
 ) {
     companion object {
         val Preview = MenuActions({}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {})
@@ -625,8 +630,7 @@ private fun DishList(
     val dishes = state.visibleDishes
     val sections = remember(dishes) { dishes.map { it.section } }
     val gutter = Modifier.padding(horizontal = Space.gutter)
-    // The bar is always there once dishes are: it carries the search as well as the filters.
-    val hasFilters = true
+    val hasFilters = state.filterOptions.isNotEmpty() || state.avoid.isNotEmpty() || state.search.open
     val featured = remember(state.dishes) { state.dishes.filter { it.flags.localSpecialty }.take(FEATURED_MAX) }
     // The picks are only fair once the whole menu is read, so they arrive once, at the end, rather
     // than jumping in above dishes the diner is already reading.
@@ -773,24 +777,26 @@ private fun FilterBar(
 ) {
     val colors = Paper.colors
     Column(Modifier.fillMaxWidth().felt(colors.paper).padding(top = Space.gutter, bottom = Space.sm)) {
-        SearchField(
-            query = state.search.query,
-            onQuery = actions.onSearch,
-            placeholder = stringResource(Res.string.search_menu_hint),
-            tags =
-                listOf(
-                    SearchTag(
-                        stringResource(Res.string.search_tag_ingredients),
-                        DishSearchTag.Ingredients in state.search.tags,
-                    ) { actions.onToggleSearchTag(DishSearchTag.Ingredients) },
-                    SearchTag(
-                        stringResource(Res.string.search_tag_description),
-                        DishSearchTag.Description in state.search.tags,
-                    ) { actions.onToggleSearchTag(DishSearchTag.Description) },
-                ),
-            pill = { FilterPill(it.label, it.selected, it.onToggle) },
-            modifier = Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.sm),
-        )
+        if (state.search.open) {
+            SearchField(
+                query = state.search.query,
+                onQuery = actions.onSearch,
+                placeholder = stringResource(Res.string.search_menu_hint),
+                tags =
+                    listOf(
+                        SearchTag(
+                            stringResource(Res.string.search_tag_ingredients),
+                            DishSearchTag.Ingredients in state.search.tags,
+                        ) { actions.onToggleSearchTag(DishSearchTag.Ingredients) },
+                        SearchTag(
+                            stringResource(Res.string.search_tag_description),
+                            DishSearchTag.Description in state.search.tags,
+                        ) { actions.onToggleSearchTag(DishSearchTag.Description) },
+                    ),
+                onCancel = actions.onCloseSearch,
+                modifier = Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.sm),
+            )
+        }
         Row(
             Modifier
                 .fillMaxWidth()
@@ -979,6 +985,15 @@ private fun MenuHeader(
                             .graphicsLayer { alpha = ((header.progress - 0.6f) / 0.4f).coerceIn(0f, 1f) }
                             .clearAndSetSemantics { },
                 )
+                if (ready != null && !ready.search.open) {
+                    IconAction(
+                        icon = PaperIcons.Search,
+                        label = stringResource(Res.string.search_open),
+                        onClick = actions.onOpenSearch,
+                        tint = colors.ink,
+                        background = colors.raised.copy(alpha = 0.92f),
+                    )
+                }
                 if (ready?.pages != null) AddPageButton(actions.onAddPage)
             }
             Spacer(Modifier.height(Space.md))
@@ -1000,7 +1015,6 @@ private fun MenuHeader(
                     )
                     ready?.let {
                         MenuFacts(it, onHeader)
-                        FloatingPlates(it.dishes, Modifier.padding(top = Space.sm))
                     }
                 }
                 state.photo?.let { photo ->
@@ -1173,7 +1187,11 @@ private fun MorePagesCard(
     }
 }
 
-/** Three dishes from this menu under its name: a taste of what is on it before a word is read. */
+/**
+ * Three dishes from this menu: a taste of what is on it before a word is read. Not shown for now;
+ * kept for the coming restaurant summary, which will present these plates.
+ */
+@Suppress("unused")
 @Composable
 private fun FloatingPlates(
     dishes: List<Dish>,

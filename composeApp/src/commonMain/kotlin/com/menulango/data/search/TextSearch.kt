@@ -42,6 +42,8 @@ internal object TextSearch {
 internal enum class DishSearchTag { Ingredients, Description }
 
 internal data class DishSearch(
+    /** Whether the search field is showing; it stays out of the way until the icon is tapped. */
+    val open: Boolean = false,
     val query: String = "",
     val tags: Set<DishSearchTag> = emptySet(),
 ) {

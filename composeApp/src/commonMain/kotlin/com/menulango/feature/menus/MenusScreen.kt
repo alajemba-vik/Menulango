@@ -62,6 +62,7 @@ import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.DishPlate
+import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.ScrollTitleBar
@@ -75,7 +76,6 @@ import com.menulango.data.menu.local.SavedMenuItem
 import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
-import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.menuTitle
 import com.menulango.resources.Res
 import com.menulango.resources.menu_context_dishes
@@ -94,6 +94,7 @@ import com.menulango.resources.menus_undo
 import com.menulango.resources.menus_yesterday
 import com.menulango.resources.search_menus_hint
 import com.menulango.resources.search_menus_none
+import com.menulango.resources.search_open
 import com.menulango.resources.search_tag_dishes
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.delay
@@ -138,6 +139,7 @@ internal fun MenusScreen(
     Box(Modifier.fillMaxSize().felt(colors.paper)) {
         val ready = state as? MenusUiState.Ready ?: return@Box
         // Search is local: by each menu's title, and by the dishes inside only with the tag on.
+        var searching by rememberSaveable { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
         var searchDishes by rememberSaveable { mutableStateOf(false) }
         val dishNames by viewModel.dishNames.collectAsState()
@@ -168,12 +170,24 @@ internal fun MenusScreen(
         ) {
             item(key = "title") {
                 Column(Modifier.statusBarsPadding().padding(top = Space.xl, bottom = Space.sm)) {
-                    Text(
-                        stringResource(Res.string.menus_title),
-                        style = Paper.type.hero,
-                        color = colors.ink,
-                        modifier = Modifier.semantics { heading() },
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(Res.string.menus_title),
+                            style = Paper.type.hero,
+                            color = colors.ink,
+                            modifier = Modifier.weight(1f).semantics { heading() },
+                        )
+                        // Search waits behind its icon until wanted, as in Mail or Notes.
+                        if (ready.menus.isNotEmpty() && !searching) {
+                            IconAction(
+                                PaperIcons.Search,
+                                stringResource(Res.string.search_open),
+                                { searching = true },
+                                tint = colors.ink,
+                                background = colors.raised,
+                            )
+                        }
+                    }
                     Text(
                         stringResource(Res.string.menus_subtitle),
                         style = Paper.type.bodySmall,
@@ -181,7 +195,7 @@ internal fun MenusScreen(
                     )
                 }
             }
-            if (ready.menus.isNotEmpty()) {
+            if (searching) {
                 item(key = "search") {
                     SearchField(
                         query = query,
@@ -193,7 +207,11 @@ internal fun MenusScreen(
                                     searchDishes = !searchDishes
                                 },
                             ),
-                        pill = { FilterPill(it.label, it.selected, it.onToggle) },
+                        onCancel = {
+                            searching = false
+                            query = ""
+                            searchDishes = false
+                        },
                         modifier = Modifier.padding(bottom = Space.xs),
                     )
                 }
