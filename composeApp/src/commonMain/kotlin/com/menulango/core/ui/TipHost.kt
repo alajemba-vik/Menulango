@@ -122,7 +122,7 @@ internal fun TipHost(
     CompositionLocalProvider(LocalTipAnchors provides anchors) {
         Box(Modifier.fillMaxSize()) {
             content()
-            val next = Tip.entries.firstOrNull { it !in seen && anchors.bounds[it] != null }
+            val next = Tip.entries.firstOrNull { it !in seen && it != Tip.SwipeToDelete && anchors.bounds[it] != null }
             var shown by remember { mutableStateOf<Tip?>(null) }
             // Let the screen settle before a note appears, and leave a breath between notes.
             LaunchedEffect(next) {
@@ -266,6 +266,7 @@ private fun Tip.text(): StringResource =
         Tip.AddDish -> Res.string.tip_add_dish
         Tip.HelpChoose -> Res.string.tip_help_choose
         Tip.Picks -> Res.string.tip_picks
+        Tip.SwipeToDelete -> Res.string.tip_picks
     }
 
 private const val TIP_DELAY_MS = 700L

@@ -18,6 +18,9 @@ internal enum class Tip {
     AddDish,
     HelpChoose,
     Picks,
+
+    /** Not a note: the first saved menu slides aside once to show it can be swiped away. */
+    SwipeToDelete,
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */
