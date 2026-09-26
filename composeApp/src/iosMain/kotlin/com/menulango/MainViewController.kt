@@ -14,9 +14,10 @@ public fun startMenuLango(
     proxyUrl: String,
     revenueCatApiKey: String,
     isDebug: Boolean,
+    betaTools: Boolean,
 ) {
     MenuLango.start(
-        AppConfig(proxyUrl = proxyUrl, revenueCatApiKey = revenueCatApiKey, isDebug = isDebug),
+        AppConfig(proxyUrl = proxyUrl, revenueCatApiKey = revenueCatApiKey, isDebug = isDebug, betaTools = betaTools),
         module {
             single<SqlDriver> { NativeSqliteDriver(MenuLangoDatabase.Schema, "menulango.db") }
         },

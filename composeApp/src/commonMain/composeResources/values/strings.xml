@@ -20,9 +20,6 @@
     <string name="capture_quota">%1$d of %2$d free scans left this month</string>
     <string name="capture_quota_none">No free scans left this month</string>
     <string name="capture_plus">MenuLango Plus</string>
-    <string name="capture_sample">Sample menu</string>
-    <string name="capture_debug_plus_on">Debug: Plus on</string>
-    <string name="capture_debug_plus_off">Debug: Plus off</string>
     <string name="capture_camera_title">The camera is how MenuLango reads</string>
     <string name="capture_camera_body">Allow camera access to photograph a menu, or choose a photo you have already taken.</string>
     <string name="capture_camera_allow">Allow camera</string>
@@ -241,6 +238,12 @@
     <string name="tip_help_choose">Can't decide? Choose a mood and MenuLango picks a dish for you.</string>
     <string name="tip_picks">Your picks live here. Open them and show the waiter, in their language.</string>
     <string name="tip_got_it">Got it</string>
+    <string name="settings_tester">Tester tools</string>
+    <string name="settings_tester_sample">Open the sample menu</string>
+    <string name="settings_tester_plus">Free Plus for testing</string>
+    <string name="settings_tester_plus_body">Unlocks every Plus feature without paying. Only in test builds.</string>
+    <string name="tip_tester_plus">Testing MenuLango? Go to Settings and switch on Free Plus to try every paid feature.</string>
+    <string name="tip_tester_plus_here">Switch this on to try every Plus feature for free.</string>
     <string name="settings_show_tips">Show tips again</string>
     <string name="settings_tips_reset">Tips will appear again as you use the app.</string>
     <string name="choose_prompt">What are you in the mood for?</string>

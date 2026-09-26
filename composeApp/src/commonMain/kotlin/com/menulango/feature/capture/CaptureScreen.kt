@@ -92,8 +92,6 @@ import com.menulango.resources.capture_camera_allow
 import com.menulango.resources.capture_camera_body
 import com.menulango.resources.capture_camera_title
 import com.menulango.resources.capture_camera_unavailable
-import com.menulango.resources.capture_debug_plus_off
-import com.menulango.resources.capture_debug_plus_on
 import com.menulango.resources.capture_failed
 import com.menulango.resources.capture_gallery
 import com.menulango.resources.capture_hint
@@ -104,7 +102,6 @@ import com.menulango.resources.capture_plus
 import com.menulango.resources.capture_preparing
 import com.menulango.resources.capture_quota
 import com.menulango.resources.capture_quota_none
-import com.menulango.resources.capture_sample
 import com.menulango.resources.capture_shutter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -175,8 +172,6 @@ internal fun CaptureScreen(
                 onGallery = { gate()?.let(navigate) ?: picker(addPage?.maxPages ?: viewModel.galleryLimit()) },
                 onLastMenu = { key -> navigate(Route.Menu(MenuSource.Saved(key))) },
                 onAllowance = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
-                onSample = { navigate(Route.Menu(MenuSource.Sample)) },
-                onToggleDebugPlus = viewModel::toggleDebugPlus,
                 onBack = if (addPage != null) onPagesAdded else null,
             ),
     )
@@ -187,13 +182,11 @@ internal data class CaptureActions(
     val onGallery: () -> Unit,
     val onLastMenu: (String) -> Unit,
     val onAllowance: () -> Unit,
-    val onSample: () -> Unit,
-    val onToggleDebugPlus: () -> Unit,
     /** Present only when adding a page: back to the menu without one. */
     val onBack: (() -> Unit)? = null,
 ) {
     companion object {
-        val Preview = CaptureActions({}, {}, {}, {}, {}, {})
+        val Preview = CaptureActions({}, {}, {}, {})
     }
 }
 
@@ -212,7 +205,7 @@ internal fun CaptureContent(
 ) {
     val colors = Paper.colors
     // Adding a page to a menu already being read: no counter, no "last menu", a different hint.
-    val ready = (state as? CaptureUiState.Ready)?.let { if (addingPage) it.copy(lastMenu = null, debug = null) else it }
+    val ready = (state as? CaptureUiState.Ready)?.let { if (addingPage) it.copy(lastMenu = null) else it }
     val title = stringResource(if (addingPage) Res.string.capture_add_page_title else Res.string.app_name)
     Box(Modifier.fillMaxSize().background(colors.scrim)) {
         viewfinder()
@@ -234,7 +227,7 @@ internal fun CaptureContent(
                 state = ready,
                 actions = actions,
             )
-            TopChrome(title, ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.ink)
+            TopChrome(title, actions, Modifier.align(Alignment.TopCenter), tint = colors.ink)
             return@Box
         }
         if (camera.state == CameraState.Ready) FrameGuide(Modifier.align(Alignment.Center))
@@ -248,7 +241,7 @@ internal fun CaptureContent(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, colors.scrim.copy(alpha = 0.72f)))),
         )
 
-        TopChrome(title, ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.onPhoto)
+        TopChrome(title, actions, Modifier.align(Alignment.TopCenter), tint = colors.onPhoto)
 
         Column(
             Modifier
@@ -301,7 +294,6 @@ internal fun CaptureContent(
 @Composable
 private fun TopChrome(
     title: String,
-    debug: DebugTools?,
     actions: CaptureActions,
     modifier: Modifier = Modifier,
     tint: Color,
@@ -327,37 +319,7 @@ private fun TopChrome(
             maxLines = 1,
             modifier = Modifier.weight(1f),
         )
-        if (debug != null) {
-            DebugChip(stringResource(Res.string.capture_sample), actions.onSample, tint)
-            Spacer(Modifier.width(Space.related))
-            DebugChip(
-                stringResource(
-                    if (debug.plusUnlocked) Res.string.capture_debug_plus_on else Res.string.capture_debug_plus_off,
-                ),
-                actions.onToggleDebugPlus,
-                tint,
-            )
-        }
     }
-}
-
-@Composable
-private fun DebugChip(
-    text: String,
-    onClick: () -> Unit,
-    tint: Color,
-) {
-    Text(
-        text.uppercase(),
-        style = Paper.type.label,
-        color = tint,
-        modifier =
-            Modifier
-                .clip(Shapes.chip)
-                .border(Space.hairline, tint.copy(alpha = 0.5f), Shapes.chip)
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(horizontal = Space.related, vertical = 6.dp),
-    )
 }
 
 /** "2 of 3 free scans left this month" — visible before the shutter, so the wall is never a surprise. */

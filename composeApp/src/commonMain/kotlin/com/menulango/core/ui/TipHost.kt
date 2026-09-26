@@ -71,6 +71,8 @@ import com.menulango.resources.tip_help_choose
 import com.menulango.resources.tip_picks
 import com.menulango.resources.tip_scan
 import com.menulango.resources.tip_tap_dish
+import com.menulango.resources.tip_tester_plus
+import com.menulango.resources.tip_tester_plus_here
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -258,6 +260,8 @@ private fun NoteBubble(
 
 private fun Tip.text(): StringResource =
     when (this) {
+        Tip.TesterSettings -> Res.string.tip_tester_plus
+        Tip.TesterPlus -> Res.string.tip_tester_plus_here
         Tip.Scan -> Res.string.tip_scan
         Tip.TapDish -> Res.string.tip_tap_dish
         Tip.AddDish -> Res.string.tip_add_dish

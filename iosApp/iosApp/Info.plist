@@ -6,6 +6,8 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>MenuLangoBetaTools</key>
+	<string>$(BETA_TOOLS)</string>
 	<key>MenuLangoProxyURL</key>
 	<string>$(PROXY_URL)</string>
 	<key>MenuLangoRevenueCatKey</key>

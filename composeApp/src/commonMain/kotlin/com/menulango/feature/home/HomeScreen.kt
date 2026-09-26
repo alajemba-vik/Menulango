@@ -46,6 +46,9 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.ui.tipTarget
+import com.menulango.data.tips.Tip
+import com.menulango.di.AppConfig
 import com.menulango.feature.capture.CaptureScreen
 import com.menulango.feature.menus.MenusScreen
 import com.menulango.feature.settings.SettingsScreen
@@ -55,6 +58,7 @@ import com.menulango.resources.tab_scan
 import com.menulango.resources.tab_settings
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 internal enum class HomeTab { Scan, Menus, Settings }
 
@@ -105,6 +109,7 @@ private fun TabBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
+    val testBuild = koinInject<AppConfig>().showsTestTools
     Row(
         modifier
             .navigationBarsPadding()
@@ -120,7 +125,20 @@ private fun TabBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         HomeTab.entries.forEach { tab ->
-            TabItem(tab.icon(), stringResource(tab.label()), tab == selected, onClick = { onSelect(tab) })
+            TabItem(
+                tab.icon(),
+                stringResource(tab.label()),
+                tab == selected,
+                onClick = { onSelect(tab) },
+                modifier =
+                    if (testBuild &&
+                        tab == HomeTab.Settings
+                    ) {
+                        Modifier.tipTarget(Tip.TesterSettings)
+                    } else {
+                        Modifier
+                    },
+            )
         }
     }
 }
@@ -131,11 +149,12 @@ private fun TabItem(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
     val tint = if (selected) colors.sealInk else colors.inkMuted
     Row(
-        Modifier
+        modifier
             .widthIn(min = 96.dp)
             .heightIn(min = TAB_BAR_HEIGHT - 12.dp)
             .clip(Shapes.pill)

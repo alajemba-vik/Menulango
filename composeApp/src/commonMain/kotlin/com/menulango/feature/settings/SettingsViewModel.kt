@@ -7,6 +7,7 @@ import com.menulango.data.billing.PurchaseOutcome
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
+import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DishFilter
 import com.menulango.feature.menu.toFilters
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,7 +35,13 @@ internal class SettingsViewModel(
     private val preferences: Preferences,
     private val billing: BillingRepository,
     private val repository: MenuRepository,
+    config: AppConfig,
 ) : ViewModel() {
+    /** Test builds only: the sample menu and a free Plus switch live in Settings. */
+    val showsTestTools: Boolean = config.showsTestTools
+
+    fun setTestPlus(on: Boolean) = billing.setDebugUnlock(on)
+
     private val messages = MutableSharedFlow<SettingsMessage>(extraBufferCapacity = 1)
     val message: SharedFlow<SettingsMessage> = messages.asSharedFlow()
 

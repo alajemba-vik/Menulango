@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.menulango.MenuSource
 import com.menulango.PaywallReason
 import com.menulango.Route
 import com.menulango.core.design.Elevation
@@ -72,7 +73,9 @@ import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
+import com.menulango.core.ui.tipTarget
 import com.menulango.data.preferences.Appearance
+import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DietaryFilters
@@ -120,6 +123,10 @@ import com.menulango.resources.settings_restore
 import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
 import com.menulango.resources.settings_show_tips
+import com.menulango.resources.settings_tester
+import com.menulango.resources.settings_tester_plus
+import com.menulango.resources.settings_tester_plus_body
+import com.menulango.resources.settings_tester_sample
 import com.menulango.resources.settings_tips_reset
 import com.menulango.resources.settings_title
 import kotlinx.coroutines.launch
@@ -176,6 +183,48 @@ internal fun SettingsScreen(
         )
         if (!state.isPlus) {
             QuietButton(stringResource(Res.string.settings_restore), viewModel::restore, color = colors.sealInk)
+        }
+
+        if (viewModel.showsTestTools) {
+            Section(stringResource(Res.string.settings_tester)) {
+                SettingsRow(stringResource(Res.string.settings_tester_sample)) {
+                    navigate(Route.Menu(MenuSource.Sample))
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .tipTarget(Tip.TesterPlus)
+                        .toggleable(value = state.isPlus, role = Role.Switch, onValueChange = viewModel::setTestPlus)
+                        .padding(vertical = Space.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            stringResource(Res.string.settings_tester_plus),
+                            style = Paper.type.body,
+                            color = colors.ink,
+                        )
+                        Text(
+                            stringResource(Res.string.settings_tester_plus_body),
+                            style = Paper.type.caption,
+                            color = colors.inkMuted,
+                        )
+                    }
+                    Spacer(Modifier.width(Space.sm))
+                    Switch(
+                        checked = state.isPlus,
+                        onCheckedChange = null,
+                        colors =
+                            SwitchDefaults.colors(
+                                checkedTrackColor = colors.seal,
+                                checkedThumbColor = colors.onSeal,
+                                uncheckedTrackColor = colors.sunk,
+                                uncheckedThumbColor = colors.inkFaint,
+                                uncheckedBorderColor = colors.rule,
+                            ),
+                    )
+                }
+            }
         }
 
         Section(stringResource(Res.string.settings_appearance)) {

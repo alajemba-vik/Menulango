@@ -36,10 +36,16 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.0"
         buildConfigField("String", "PROXY_URL", "\"${secret("PROXY_URL")}\"")
         buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"${secret("REVENUECAT_ANDROID_KEY")}\"")
+        // Test builds for friends only: sample menu + Plus toggle. Never true for a store release.
+        buildConfigField(
+            "boolean",
+            "BETA_TOOLS",
+            secret("MENULANGO_BETA_TOOLS").equals("true", ignoreCase = true).toString(),
+        )
     }
 
     signingConfigs {

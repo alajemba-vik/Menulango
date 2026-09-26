@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * meets them. Each is shown once, where it is useful, never as a carousel up front.
  */
 internal enum class Tip {
+    /** Test builds only: points testers at the free Plus switch. */
+    TesterSettings,
+    TesterPlus,
     Scan,
     TapDish,
     AddDish,

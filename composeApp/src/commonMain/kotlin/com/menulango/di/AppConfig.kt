@@ -12,7 +12,15 @@ public data class AppConfig(
     val proxyUrl: String,
     val revenueCatApiKey: String,
     val isDebug: Boolean,
+    /**
+     * Test builds for friends (TestFlight, Play testing) set this to get the sample menu and the
+     * Plus toggle while store purchases are not live yet. Never set for a store release.
+     */
+    val betaTools: Boolean = false,
 ) {
+    /** Whether the sample menu and the Plus toggle are offered. */
+    val showsTestTools: Boolean get() = isDebug || betaTools
+
     val hasProxy: Boolean get() = proxyUrl.isNotBlank()
     val hasBilling: Boolean get() = revenueCatApiKey.isNotBlank()
 

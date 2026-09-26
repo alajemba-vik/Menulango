@@ -16,6 +16,7 @@ class MenuLangoApplication : Application() {
                     proxyUrl = BuildConfig.PROXY_URL,
                     revenueCatApiKey = BuildConfig.REVENUECAT_ANDROID_KEY,
                     isDebug = BuildConfig.DEBUG,
+                    betaTools = BuildConfig.BETA_TOOLS,
                 ),
         )
     }

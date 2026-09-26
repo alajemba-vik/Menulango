@@ -26,7 +26,6 @@ internal sealed interface CaptureUiState {
         val lastMenu: CachedMenuSummary?,
         val isPreparingPhoto: Boolean,
         val photoProblem: Boolean,
-        val debug: DebugTools?,
     ) : CaptureUiState
 }
 
@@ -38,11 +37,6 @@ internal sealed interface Allowance {
         val quota: QuotaState,
     ) : Allowance
 }
-
-/** Only present in debug builds. */
-internal data class DebugTools(
-    val plusUnlocked: Boolean,
-)
 
 /**
  * Decides whether a scan may start, and says so before the photo is taken — never mid-scan.
@@ -62,7 +56,6 @@ internal class CaptureViewModel(
                 lastMenu = last,
                 isPreparingPhoto = photo == PhotoStatus.Preparing,
                 photoProblem = photo == PhotoStatus.Unreadable,
-                debug = if (config.isDebug) DebugTools(plusUnlocked = isPlus) else null,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), CaptureUiState.Loading)
 
@@ -91,10 +84,6 @@ internal class CaptureViewModel(
 
     fun onPhotoCancelled() {
         photoStatus.value = PhotoStatus.Idle
-    }
-
-    fun toggleDebugPlus() {
-        billing.setDebugUnlock(!billing.isPlus.value)
     }
 
     private enum class PhotoStatus { Idle, Preparing, Unreadable }

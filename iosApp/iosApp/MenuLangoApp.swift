@@ -14,7 +14,8 @@ struct MenuLangoApp: App {
         MainViewControllerKt.startMenuLango(
             proxyUrl: info["MenuLangoProxyURL"] as? String ?? "",
             revenueCatApiKey: info["MenuLangoRevenueCatKey"] as? String ?? "",
-            isDebug: isDebug
+            isDebug: isDebug,
+            betaTools: (info["MenuLangoBetaTools"] as? String) == "YES"
         )
     }
 

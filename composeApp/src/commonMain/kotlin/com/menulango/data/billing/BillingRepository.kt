@@ -125,7 +125,7 @@ internal class BillingRepository(
 
     /** Debug builds only: unlock Plus without a purchase, to work on the choosing screens. */
     fun setDebugUnlock(enabled: Boolean) {
-        if (config.isDebug) debugUnlock.value = enabled
+        if (config.showsTestTools) debugUnlock.value = enabled
     }
 
     private fun update(info: CustomerInfo) {
