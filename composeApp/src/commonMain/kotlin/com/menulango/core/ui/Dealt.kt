@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import kotlin.time.Duration.Companion.milliseconds
@@ -64,8 +66,14 @@ internal fun Modifier.dealtIn(
         }
     }
     val rise = with(LocalDensity.current) { Motion.riseDistance.toPx() }
+    val focus = with(LocalDensity.current) { DEAL_BLUR.toPx() }
     return graphicsLayer {
         alpha = progress.value
         translationY = if (reduceMotion) 0f else (1f - progress.value) * rise
+        // Each dish sharpens into place as it lands, as if developing out of the menu photo.
+        val soft = (1f - progress.value) * focus
+        renderEffect = if (!reduceMotion && soft > 0.5f) BlurEffect(soft, soft) else null
     }
 }
+
+private val DEAL_BLUR = 6.dp

@@ -2,12 +2,14 @@ package com.menulango
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -21,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.menulango.core.design.MenuLangoTheme
 import com.menulango.core.design.Motion
@@ -72,9 +76,17 @@ public fun MenuLangoApp(reduceMotion: Boolean = false) {
                         transitionSpec = { screenTransition(initialState, targetState, navigator, reduceMotion) },
                         label = "screens",
                     ) { entry ->
+                        // Each page comes into focus as it arrives and softens as it leaves, like a
+                        // photo developing. A plain fade under reduce motion.
+                        val blur by transition.animateDp(
+                            transitionSpec = { tween(Motion.SCREEN_MS, easing = Motion.standard) },
+                            label = "screen-focus",
+                        ) { state -> if (state == EnterExitState.Visible || reduceMotion) 0.dp else SCREEN_BLUR }
                         saveableState.SaveableStateProvider(entry.id) {
                             CompositionLocalProvider(LocalViewModelStoreOwner provides entry) {
-                                Screen(entry.route, navigator)
+                                Box(Modifier.fillMaxSize().then(if (blur > 0.dp) Modifier.blur(blur) else Modifier)) {
+                                    Screen(entry.route, navigator)
+                                }
                             }
                         }
                     }
@@ -127,8 +139,9 @@ private fun Screen(
 }
 
 /**
- * Pushes slide in from the trailing edge with the previous screen easing a third of the way out,
- * as iOS navigation does; the paywall rises from the bottom like a sheet. Nothing overshoots.
+ * Material's shared-axis Z: forward, the new page grows into place from slightly small while the
+ * old one grows away and fades; back is the same in reverse. Combined with the focus blur above it
+ * reads as the page developing into view. The paywall still rises from the bottom like a sheet.
  */
 private fun screenTransition(
     from: BackStackEntry,
@@ -140,24 +153,31 @@ private fun screenTransition(
     if (reduceMotion) return fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
     val forward = navigator.entries.any { it.id == from.id } && to.id > from.id
     val sheetLike = (if (forward) to.route else from.route) is Route.Paywall
-    val spec = tween<androidx.compose.ui.unit.IntOffset>(duration, easing = Motion.standard)
+    val slide = tween<androidx.compose.ui.unit.IntOffset>(duration, easing = Motion.standard)
+    val grow = tween<Float>(duration, easing = Motion.standard)
+    // The outgoing page leaves quickly; the incoming one waits a beat, so they never muddle.
+    val leave = tween<Float>(duration / 3, easing = Motion.standard)
+    val arrive = tween<Float>(duration - duration / 4, delayMillis = duration / 4, easing = Motion.standard)
     return when {
         sheetLike && forward -> {
-            slideInVertically(spec) { it } togetherWith fadeOut(tween(duration))
+            slideInVertically(slide) { it } togetherWith fadeOut(tween(duration))
         }
 
         sheetLike -> {
-            fadeIn(tween(duration)) togetherWith slideOutVertically(spec) { it }
+            fadeIn(tween(duration)) togetherWith slideOutVertically(slide) { it }
         }
 
         forward -> {
-            slideInHorizontally(spec) { it } togetherWith
-                slideOutHorizontally(spec) { -it / 3 } + fadeOut(tween(duration))
+            (fadeIn(arrive) + scaleIn(grow, initialScale = 0.94f)) togetherWith
+                (fadeOut(leave) + scaleOut(grow, targetScale = 1.04f))
         }
 
         else -> {
-            slideInHorizontally(spec) { -it / 3 } + fadeIn(tween(duration)) togetherWith
-                slideOutHorizontally(spec) { it }
+            (fadeIn(arrive) + scaleIn(grow, initialScale = 1.04f)) togetherWith
+                (fadeOut(leave) + scaleOut(grow, targetScale = 0.94f))
         }
-    }.apply { targetContentZIndex = if (forward) 1f else -1f }
+    }
 }
+
+/** How out of focus a page is at the start of its arrival and the end of its exit. */
+private val SCREEN_BLUR = 12.dp

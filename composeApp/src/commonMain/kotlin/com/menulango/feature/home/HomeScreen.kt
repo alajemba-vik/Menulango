@@ -1,7 +1,11 @@
 package com.menulango.feature.home
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +86,24 @@ internal fun HomeScreen(
     // Room above the floating bar: the camera adds the navigation bar itself, lists do not.
     val aboveBar = TAB_BAR_HEIGHT + Space.md * 2
     Box(Modifier.fillMaxSize().background(Paper.colors.paper)) {
-        Crossfade(tab, animationSpec = tween(Motion.QUICK_MS), label = "tabs") { current ->
+        // Material's fade-through for peer tabs: the old tab is gone in a blink, the new one fades
+        // up and settles from a hair smaller. Soft, and never a slide between equals.
+        val reduceMotion = Paper.reduceMotion
+        AnimatedContent(
+            targetState = tab,
+            transitionSpec = {
+                if (reduceMotion) {
+                    fadeIn(tween(Motion.QUICK_MS)) togetherWith fadeOut(tween(Motion.QUICK_MS))
+                } else {
+                    (
+                        fadeIn(tween(TAB_IN_MS, delayMillis = TAB_OUT_MS)) +
+                            scaleIn(tween(TAB_IN_MS, delayMillis = TAB_OUT_MS), 0.97f)
+                    ) togetherWith
+                        fadeOut(tween(TAB_OUT_MS))
+                }
+            },
+            label = "tabs",
+        ) { current ->
             when (current) {
                 HomeTab.Scan -> CaptureScreen(navigate = navigate, bottomInset = aboveBar)
                 HomeTab.Menus -> MenusScreen(navigate, { tab = HomeTab.Scan }, snackbar, aboveBar + navigationBar)
@@ -200,3 +221,6 @@ private fun HomeTab.label(): StringResource =
     }
 
 private val TAB_BAR_HEIGHT: Dp = 64.dp
+
+private const val TAB_OUT_MS = 90
+private const val TAB_IN_MS = 210
