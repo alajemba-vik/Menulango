@@ -59,6 +59,7 @@ import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
+import com.menulango.core.ui.SegmentedControl
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
@@ -566,7 +567,7 @@ internal fun WaiterView(
             IconAction(PaperIcons.Close, stringResource(Res.string.action_close), onClose, background = colors.raised)
             Text(
                 stringResource(Res.string.order_show_waiter),
-                style = type.title,
+                style = type.dishName,
                 color = colors.ink,
                 modifier = Modifier.padding(start = Space.sm),
             )
@@ -583,19 +584,17 @@ internal fun WaiterView(
                 style = type.bodySmall,
                 color = colors.inkMuted,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.related)) {
-                WaiterLanguageToggle(
-                    text = stringResource(Res.string.order_waiter_for_me),
-                    selected = !restaurantCopy,
-                    onClick = { restaurantCopy = false },
-                )
-                WaiterLanguageToggle(
-                    text = stringResource(Res.string.order_waiter_for_restaurant),
-                    selected = restaurantCopy,
-                    enabled = restaurantCopyAvailable,
-                    onClick = { restaurantCopy = true },
-                )
-            }
+            // Two views of the same order, not a filter: a segmented control, like iOS uses.
+            SegmentedControl(
+                options =
+                    listOf(
+                        stringResource(Res.string.order_waiter_for_me),
+                        stringResource(Res.string.order_waiter_for_restaurant),
+                    ),
+                selected = if (restaurantCopy) 1 else 0,
+                onSelect = { restaurantCopy = it == 1 },
+                enabled = { it == 0 || restaurantCopyAvailable },
+            )
             when (translationState) {
                 WaiterTranslationState.Preparing -> {
                     Text(
@@ -665,15 +664,11 @@ private fun WaiterLine(
             modifier = Modifier.widthIn(min = 56.dp),
         )
         Column(Modifier.weight(1f)) {
+            // One name: the printed one for the waiter to find on their menu, yours for you.
             Text(
                 if (restaurantCopy) dish.originalName else dish.readableName,
                 style = Paper.type.dishTitle,
                 color = colors.ink,
-            )
-            Text(
-                if (restaurantCopy) dish.readableName else dish.originalName,
-                style = Paper.type.bodySmall,
-                color = colors.inkMuted,
             )
             (if (restaurantCopy) restaurantNote else dinerNote)?.let {
                 Text(
@@ -684,31 +679,6 @@ private fun WaiterLine(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun WaiterLanguageToggle(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-) {
-    val colors = Paper.colors
-    Row(
-        Modifier
-            .heightIn(min = 40.dp)
-            .clip(Shapes.chip)
-            .background(if (selected) colors.seal else colors.sunk)
-            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = Space.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text,
-            style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
-            color = if (selected) colors.onSeal else colors.inkMuted,
-        )
     }
 }
 

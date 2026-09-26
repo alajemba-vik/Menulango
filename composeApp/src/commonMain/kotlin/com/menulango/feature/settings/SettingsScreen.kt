@@ -88,6 +88,7 @@ import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.SectionLabel
+import com.menulango.core.ui.SegmentedControl
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
@@ -708,59 +709,12 @@ private fun AppearancePicker(
     selected: Appearance,
     onSelect: (Appearance) -> Unit,
 ) {
-    val colors = Paper.colors
     val options = Appearance.entries
-    // One lens that slides to the chosen option, like iOS's segmented control, instead of the
-    // highlight jumping between cells.
-    BoxWithConstraints(
-        Modifier
-            .fillMaxWidth()
-            .clip(Shapes.button)
-            .background(colors.sunk)
-            .padding(4.dp),
-    ) {
-        val segment = maxWidth / options.size
-        val offset by animateDpAsState(
-            targetValue = segment * options.indexOf(selected),
-            animationSpec =
-                if (Paper.reduceMotion) {
-                    tween(0)
-                } else {
-                    spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)
-                },
-            label = "appearance-lens",
-        )
-        Box(
-            Modifier
-                .matchParentSize()
-                .padding(end = maxWidth - segment)
-                .offset(x = offset)
-                .shadow(Elevation.resting, Shapes.chip)
-                .clip(Shapes.chip)
-                .background(colors.raised),
-        )
-        Row(Modifier.fillMaxWidth().selectableGroup()) {
-            options.forEach { option ->
-                val isSelected = option == selected
-                val tint by animateColorAsState(
-                    if (isSelected) colors.ink else colors.inkMuted,
-                    label = "appearance-text",
-                )
-                Text(
-                    stringResource(option.label()),
-                    style = Paper.type.button.copy(fontSize = Paper.type.bodySmall.fontSize),
-                    color = tint,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .clip(Shapes.chip)
-                            .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(option) })
-                            .padding(vertical = Space.sm),
-                )
-            }
-        }
-    }
+    SegmentedControl(
+        options = options.map { stringResource(it.label()) },
+        selected = options.indexOf(selected),
+        onSelect = { onSelect(options[it]) },
+    )
 }
 
 /** A setting that is on or off: the whole row toggles, and reads as one switch to a screen reader. */

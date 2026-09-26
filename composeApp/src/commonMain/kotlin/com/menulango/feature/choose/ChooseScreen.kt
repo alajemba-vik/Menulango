@@ -170,7 +170,12 @@ internal fun ChooseContent(
                     background = colors.raised,
                     modifier = Modifier.padding(vertical = Space.xs),
                 )
-                SectionHeading(stringResource(Res.string.choose_title), Modifier.padding(start = Space.sm))
+                Text(
+                    stringResource(Res.string.choose_title),
+                    style = Paper.type.dishName,
+                    color = Paper.colors.ink,
+                    modifier = Modifier.padding(start = Space.sm).semantics { heading() },
+                )
             }
             when (state) {
                 ChooseUiState.Loading -> {

@@ -546,6 +546,7 @@ internal fun MenuContent(
             ) { data ->
                 Snackbar(
                     data,
+                    modifier = Modifier.fillMaxWidth(),
                     shape = Shapes.tile,
                     containerColor = Paper.colors.ink,
                     contentColor = Paper.colors.paper,
@@ -1535,9 +1536,12 @@ private fun ChooseButton(
     onClick: () -> Unit,
 ) {
     val colors = Paper.colors
+    // Full width inside the gutters, like the picks bar that replaces it once something is picked.
     Row(
         Modifier
+            .fillMaxWidth()
             .navigationBarsPadding()
+            .padding(horizontal = Space.gutter)
             .padding(bottom = Space.md)
             .tipTarget(Tip.HelpChoose)
             .pressable(onClick)
@@ -1547,7 +1551,7 @@ private fun ChooseButton(
             .heightIn(min = 56.dp)
             .padding(start = Space.gutter, end = if (isPlus) Space.gutter else Space.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.related),
+        horizontalArrangement = Arrangement.spacedBy(Space.related, Alignment.CenterHorizontally),
     ) {
         Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.seal, modifier = Modifier.size(24.dp))
         Text(stringResource(Res.string.menu_choose_title), style = Paper.type.button, color = colors.paper)
