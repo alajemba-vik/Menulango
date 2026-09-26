@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -30,7 +32,7 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 
-/** The one filled button style: a stamp of seal ink. Used for the single primary action on a screen. */
+/** The one filled button style: a coral pill. Used for the single primary action on a screen. */
 @Composable
 internal fun PrimaryButton(
     text: String,
@@ -43,8 +45,9 @@ internal fun PrimaryButton(
     Box(
         modifier =
             modifier
-                .heightIn(min = 52.dp)
-                .background(colors.seal, Shapes.card)
+                .heightIn(min = 56.dp)
+                .clip(Shapes.button)
+                .suede(colors.seal)
                 .alpha(if (enabled) 1f else 0.5f)
                 .clickable(enabled = enabled && !busy, role = Role.Button, onClick = onClick)
                 .padding(horizontal = Space.gutter, vertical = Space.sm),
@@ -58,7 +61,7 @@ internal fun PrimaryButton(
     }
 }
 
-/** A hairline-bordered button for secondary actions. Never competes with [PrimaryButton]. */
+/** A white pill for secondary actions. Never competes with [PrimaryButton]. */
 @Composable
 internal fun SecondaryButton(
     text: String,
@@ -70,11 +73,12 @@ internal fun SecondaryButton(
     Row(
         modifier =
             modifier
-                .heightIn(min = Space.touchTarget)
-                .border(BorderStroke(Space.hairline, colors.rule), Shapes.card)
-                .background(colors.raised, Shapes.card)
+                .heightIn(min = 52.dp)
+                .clip(Shapes.button)
+                .border(BorderStroke(Space.hairline, colors.rule), Shapes.button)
+                .background(colors.raised)
                 .clickable(role = Role.Button, onClick = onClick)
-                .padding(horizontal = Space.md, vertical = Space.sm),
+                .padding(horizontal = Space.gutter, vertical = Space.sm),
         horizontalArrangement = Arrangement.spacedBy(Space.related, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -95,6 +99,7 @@ internal fun QuietButton(
         modifier =
             modifier
                 .defaultMinSize(minHeight = Space.touchTarget)
+                .clip(Shapes.button)
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = Space.sm),
         contentAlignment = Alignment.Center,
@@ -103,7 +108,7 @@ internal fun QuietButton(
     }
 }
 
-/** A 48dp icon target. [label] is read by TalkBack and VoiceOver. */
+/** A 48dp round icon target. [label] is read by TalkBack and VoiceOver. */
 @Composable
 internal fun IconAction(
     icon: ImageVector,
@@ -117,7 +122,8 @@ internal fun IconAction(
         modifier =
             modifier
                 .size(Space.touchTarget)
-                .background(background, Shapes.card)
+                .clip(CircleShape)
+                .background(background)
                 .clickable(role = Role.Button, onClick = onClick)
                 .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,

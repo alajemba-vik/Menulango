@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,13 +28,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.menulango.PaywallReason
 import com.menulango.core.design.Paper
@@ -41,12 +46,13 @@ import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.ErrorMessage
-import com.menulango.core.ui.Hairline
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.StateMessage
+import com.menulango.core.ui.felt
+import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperShimmer
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
@@ -71,6 +77,7 @@ import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
 import com.menulango.resources.paywall_privacy
 import com.menulango.resources.paywall_reason_choose
+import com.menulango.resources.paywall_reason_pages
 import com.menulango.resources.paywall_reason_scans
 import com.menulango.resources.paywall_restore
 import com.menulango.resources.paywall_store_error
@@ -137,7 +144,7 @@ internal data class PaywallActions(
 }
 
 /**
- * Built by hand, on the same paper as the rest of the app. It shows what Plus gives, never what
+ * Built by hand, on the same cream and white cards as the rest of the app. It shows what Plus gives, never what
  * the diner loses; the Trip Pass is selected because it fits how the app is used; and it says,
  * in one honest sentence, what stays free.
  */
@@ -151,7 +158,7 @@ internal fun PaywallContent(
     Column(
         Modifier
             .fillMaxSize()
-            .background(colors.paper)
+            .felt(colors.paper)
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
@@ -159,7 +166,8 @@ internal fun PaywallContent(
             PaperIcons.Close,
             stringResource(Res.string.action_close),
             actions.onClose,
-            modifier = Modifier.padding(start = Space.sm, top = Space.xs),
+            background = colors.raised,
+            modifier = Modifier.padding(start = Space.md, top = Space.xs),
         )
         Column(
             Modifier
@@ -168,7 +176,7 @@ internal fun PaywallContent(
                 .padding(horizontal = Space.gutter)
                 .widthIn(max = Space.readingWidth),
         ) {
-            state.reason.label()?.let { SectionLabel(stringResource(it), color = colors.ember) }
+            state.reason.label()?.let { SectionLabel(stringResource(it), color = colors.sealInk) }
             Spacer(Modifier.height(Space.sm))
             Text(
                 stringResource(
@@ -237,7 +245,7 @@ internal fun PaywallContent(
                 Text(
                     stringResource(Res.string.paywall_unlocked),
                     style = type.title,
-                    color = colors.seal,
+                    color = colors.sealInk,
                     modifier = Modifier.padding(vertical = Space.md).semantics { liveRegion = LiveRegionMode.Polite },
                 )
             } else if (ready != null) {
@@ -275,20 +283,28 @@ internal fun PaywallContent(
 @Composable
 private fun Benefits() {
     val colors = Paper.colors
-    Column {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .paper(colors.raised, Shapes.card)
+            .padding(horizontal = Space.cardPadding, vertical = Space.sm),
+    ) {
         listOf(
-            Res.string.paywall_benefit_scans,
-            Res.string.paywall_benefit_modes,
-            Res.string.paywall_benefit_history,
-        ).forEach { benefit ->
-            Hairline()
+            Res.string.paywall_benefit_scans to "📸",
+            Res.string.paywall_benefit_modes to "🍽️",
+            Res.string.paywall_benefit_history to "📖",
+        ).forEach { (benefit, emoji) ->
             Row(Modifier.padding(vertical = Space.sm), verticalAlignment = Alignment.CenterVertically) {
-                Icon(PaperIcons.Check, contentDescription = null, tint = colors.seal, modifier = Modifier.size(20.dp))
+                Box(
+                    Modifier.size(44.dp).background(colors.sealWash, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(emoji, fontSize = 20.sp, modifier = Modifier.clearAndSetSemantics { })
+                }
                 Spacer(Modifier.width(Space.sm))
                 Text(stringResource(benefit), style = Paper.type.bodySmall, color = colors.ink)
             }
         }
-        Hairline()
     }
 }
 
@@ -315,20 +331,18 @@ private fun PlanOption(
     Row(
         Modifier
             .fillMaxWidth()
-            .background(if (isSelected) colors.raised else colors.paper, Shapes.card)
-            .border(
-                if (isSelected) 1.5.dp else Space.hairline,
-                if (isSelected) colors.seal else colors.rule,
-                Shapes.card,
-            ).selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
-            .padding(Space.md),
+            .clip(Shapes.card)
+            .background(if (isSelected) colors.sealWash else colors.raised)
+            .border(2.dp, if (isSelected) colors.seal else Color.Transparent, Shapes.card)
+            .selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
+            .padding(Space.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 stringResource(title),
                 style = Paper.type.dishName,
-                color = if (isSelected) colors.seal else colors.ink,
+                color = if (isSelected) colors.sealInk else colors.ink,
             )
             Text(stringResource(detail), style = Paper.type.caption, color = colors.inkMuted)
         }
@@ -340,7 +354,15 @@ private fun PlanOption(
 @Composable
 private fun PlanPlaceholders() {
     Column(verticalArrangement = Arrangement.spacedBy(Space.related)) {
-        repeat(3) { Box(Modifier.fillMaxWidth().height(76.dp).paperShimmer()) }
+        repeat(3) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .clip(Shapes.card)
+                    .paperShimmer(),
+            )
+        }
     }
 }
 
@@ -356,6 +378,7 @@ private fun PaywallReason.label(): StringResource? =
     when (this) {
         PaywallReason.OutOfScans -> Res.string.paywall_reason_scans
         PaywallReason.Choosing -> Res.string.paywall_reason_choose
+        PaywallReason.MorePages -> Res.string.paywall_reason_pages
         PaywallReason.Upgrade -> null
     }
 
@@ -368,7 +391,7 @@ private fun PaywallMessage.text(): StringResource =
     }
 
 /** Apple's standard licence agreement; the subscription terms both stores already show at purchase. */
-private const val TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+internal const val TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
 
 /** Long enough to read "Welcome to Plus", short enough not to feel like a delay. */
 private const val UNLOCKED_PAUSE_MS = 900L

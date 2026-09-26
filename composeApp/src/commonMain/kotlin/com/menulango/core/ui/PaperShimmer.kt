@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -28,8 +29,8 @@ import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 
 /**
- * A soft, low-contrast sheen that drifts across placeholder shapes — the feel of light moving over
- * paper grain, not a bright loading sweep. With reduce-motion it is a still tone.
+ * A soft, low-contrast sheen that drifts across rounded placeholder shapes — light moving over a
+ * tablecloth, not a bright loading sweep. With reduce-motion it is a still tone.
  */
 @Composable
 internal fun Modifier.paperShimmer(): Modifier {
@@ -43,7 +44,7 @@ internal fun Modifier.paperShimmer(): Modifier {
         animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart),
         label = "shimmer-progress",
     )
-    return drawWithCache {
+    return clip(Shapes.chip).drawWithCache {
         val width = size.width
         onDrawBehind {
             val x = width * progress
@@ -58,13 +59,19 @@ internal fun Modifier.paperShimmer(): Modifier {
     }
 }
 
-/** Placeholder for one dish row while the menu is being read. */
+/** Placeholder for one dish card while the menu is being read. */
 @Composable
 internal fun DishRowPlaceholder(
     modifier: Modifier = Modifier,
     nameWidth: Dp = 180.dp,
 ) {
-    Column(modifier.padding(vertical = Space.md), verticalArrangement = Arrangement.spacedBy(Space.related)) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .paper(Paper.colors.raised, Shapes.card)
+            .padding(Space.cardPadding),
+        verticalArrangement = Arrangement.spacedBy(Space.related),
+    ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Box(Modifier.width(nameWidth).height(18.dp).paperShimmer())
             Box(Modifier.width(44.dp).height(14.dp).paperShimmer())

@@ -66,5 +66,11 @@ internal class ScanQuota(
 
     companion object {
         const val FREE_SCANS_PER_MONTH: Int = 3
+
+        /**
+         * A free menu may have this many pages, and still counts as one scan. Plus reads menus of
+         * any length. Every page is a model call, so this is what keeps the free tier's cost flat.
+         */
+        const val FREE_PAGES_PER_MENU: Int = 3
     }
 }

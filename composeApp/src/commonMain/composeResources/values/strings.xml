@@ -11,6 +11,8 @@
 
     <!-- Capture -->
     <string name="capture_hint">Photograph the whole menu</string>
+    <string name="capture_hint_next_page">Now the next page. Fill the frame with it.</string>
+    <string name="capture_add_page_title">Add a page</string>
     <string name="capture_shutter">Take photo of the menu</string>
     <string name="capture_gallery">Choose a photo of a menu</string>
     <string name="capture_last_menu">Last menu</string>
@@ -28,17 +30,140 @@
     <string name="capture_preparing">Preparing the photo…</string>
     <string name="capture_failed">That photo couldn't be opened. Try another.</string>
 
+    <!-- Home tabs -->
+    <string name="tab_menus">Menus</string>
+    <string name="tab_scan">Scan</string>
+    <string name="tab_scan_shutter">Take a photo of the menu</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Table order -->
+    <string name="order_add">Add to your picks</string>
+    <string name="order_add_another">Add another (%1$d picked)</string>
+    <string name="order_clear">Clear all picks</string>
+    <string name="order_cleared">Picks cleared.</string>
+    <string name="note_add">Add a note</string>
+    <string name="note_added">Added to your picks.</string>
+    <string name="note_title">How should the %1$s come?</string>
+    <string name="note_hint">No onions, sauce on the side…</string>
+    <string name="note_no">No</string>
+    <string name="note_allergic">Allergic to</string>
+    <string name="note_waiter">Note: %1$s</string>
+    <string name="order_view">Your picks</string>
+    <string name="order_count">%1$d</string>
+    <string name="order_title">Your picks</string>
+    <string name="order_for">Adding for %1$s</string>
+    <string name="order_you">You</string>
+    <string name="order_guest">Guest %1$d</string>
+    <string name="order_add_person">+ Person</string>
+    <string name="order_rename_hint">Tap a selected name to change it.</string>
+    <string name="order_rename">Their name</string>
+    <string name="order_save">Save</string>
+    <string name="order_remove_person">Remove</string>
+    <string name="order_empty_person">Nothing yet.</string>
+    <string name="order_less">One fewer</string>
+    <string name="order_more">One more</string>
+    <string name="order_total">Menu prices add up to</string>
+    <string name="order_total_note">Prices as printed on the menu. The bill may add tax, service or a cover charge, and MenuLango doesn't place orders: the restaurant does.</string>
+    <string name="order_show_waiter">Show the waiter</string>
+    <string name="order_waiter_hint">Turn the phone round to the waiter.</string>
+
+    <!-- Menus -->
+    <string name="menus_title">Your menus</string>
+    <string name="menus_subtitle">Every menu you've read, ready offline.</string>
+    <string name="menus_empty_title">No menus yet</string>
+    <string name="menus_empty_body">Photograph a menu and it will be kept here, ready to open again without a signal.</string>
+    <string name="menus_empty_action">Scan a menu</string>
+    <string name="menus_today">Today</string>
+    <string name="menus_yesterday">Yesterday</string>
+    <string name="menus_days_ago">%1$d days ago</string>
+    <string name="menus_deleted">Menu deleted</string>
+    <string name="menus_undo">Undo</string>
+    <string name="menus_delete">Delete</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_plus_label">MenuLango Plus</string>
+    <string name="settings_plus_label_member">Plus member</string>
+    <string name="settings_plus_title">Order like a regular</string>
+    <string name="settings_plus_active_title">You're a regular</string>
+    <string name="settings_plus_benefit_pages">Menus of any length</string>
+    <string name="settings_plus_benefit_choose">Help choosing, for the whole table</string>
+    <string name="settings_plus_benefit_memory">A record of what you've tried</string>
+    <string name="settings_plus_manage">Manage subscription</string>
+    <string name="settings_plus_cta">See Plus</string>
+    <string name="settings_restore">Restore purchases</string>
+    <string name="settings_restored">Plus is restored.</string>
+    <string name="settings_nothing_to_restore">There was nothing to restore on this account.</string>
+    <string name="settings_restore_failed">The store couldn't be reached. Try again in a moment.</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_system">System</string>
+    <string name="settings_appearance_light">Light</string>
+    <string name="settings_appearance_dark">Dark</string>
+    <string name="settings_dietary">Always apply</string>
+    <string name="settings_dietary_body">Applied to every menu as it opens. You can still turn them off on the menu.</string>
+    <string name="settings_avoid">Leave out</string>
+    <string name="settings_avoid_body">Dishes that mention these words in their name or ingredients are hidden on every menu. It only knows what the menu says, so always ask about allergies.</string>
+    <string name="settings_avoid_hint">coriander, mushroom…</string>
+    <string name="settings_avoid_add">Add word</string>
+    <string name="settings_avoid_remove_hint">Tap a word to stop leaving it out.</string>
+    <string name="settings_menus">Menus</string>
+    <string name="settings_featured">Suggest dishes not to miss</string>
+    <string name="settings_featured_body">Shows the local specialities at the top of each menu.</string>
+    <string name="settings_data">Your data</string>
+    <string name="settings_delete_menus">Delete saved menus</string>
+    <string name="settings_delete_menus_confirm_title">Delete every saved menu?</string>
+    <string name="settings_delete_menus_confirm_body">Their photos and explanations are removed from this phone. This can't be undone.</string>
+    <string name="settings_delete_menus_done">Saved menus deleted.</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="settings_about">About</string>
+    <string name="settings_ai_note">Explanations are written by AI from your photo. Always check with the restaurant, especially about allergies.</string>
+
     <!-- Menu -->
     <string name="menu_reading">Reading the menu…</string>
     <string name="menu_reading_more">Still reading…</string>
+    <string name="menu_reading_page">Reading page %1$d of %2$d…</string>
+    <string name="menu_page_marker">Page %1$d</string>
+    <string name="menu_page_position">Page %1$d of %2$d</string>
+    <string name="menu_page_jump">Go to page %1$d</string>
+    <string name="menu_reading_waiting">Taking a breath before the next page…</string>
+    <string name="menu_context_pages">%1$d pages</string>
+    <string name="menu_add_page">Add page</string>
+    <string name="menu_snapshot_description">Your photo of the menu</string>
+    <string name="menu_add_page_description">Add another page of this menu</string>
+    <string name="menu_more_pages_title">Is there another page?</string>
+    <string name="menu_more_pages_body">Photograph it and its dishes join this menu.</string>
+    <string name="menu_more_pages_action">Add a page</string>
+    <string name="menu_more_pages_plus">Free menus can have up to %1$d pages. Plus reads menus of any length.</string>
+    <string name="menu_page_unreadable">Page %1$s couldn't be read. Try adding it again, straight on and in focus.</string>
     <string name="menu_context_dishes">%1$d dishes</string>
     <string name="menu_context_one_dish">1 dish</string>
     <string name="menu_context_average">avg %1$s</string>
+    <!-- The header title: cuisine (from the menu's language) then the kind of place, e.g. "Greek taverna". -->
+    <string name="menu_title_venue">%1$s %2$s</string>
+    <string name="menu_title_language">%1$s menu</string>
+    <string name="menu_title_unknown">Your menu</string>
     <string name="menu_partial">Part of this menu couldn't be read. Everything shown is complete.</string>
     <string name="menu_truncated">A long menu — these are its most representative dishes.</string>
     <string name="menu_known">You've read this menu before, so this scan was free.</string>
     <string name="menu_last_free_scan">That was your last free scan this month. Everything on it stays explained.</string>
     <string name="menu_choose_title">Help me choose</string>
+    <string name="menu_featured_title">Don't leave without trying</string>
+    <string name="menu_featured_why">Local specialities: dishes that are hard to find outside this region.</string>
+    <string name="menu_plus_badge">Plus</string>
+    <string name="filter_vegetarian">Vegetarian</string>
+    <string name="filter_vegan">Vegan</string>
+    <string name="filter_no_pork">No pork</string>
+    <string name="filter_not_spicy">Not spicy</string>
+    <string name="filter_nothing_raw">Nothing raw</string>
+    <string name="filter_no_offal">No offal</string>
+    <string name="filter_local">Local</string>
+    <string name="filter_to_share">Good for sharing</string>
+    <string name="filter_budget">Up to %1$s</string>
+    <string name="filter_count">%1$d of %2$d dishes</string>
+    <string name="filter_avoid">No %1$s</string>
+    <string name="filter_clear">Clear</string>
+    <string name="filter_none_title">Nothing fits all of those</string>
+    <string name="filter_none_body">Turn off a filter to see more of the menu.</string>
     <string name="menu_empty_title">No dishes found</string>
     <string name="menu_empty_body">We couldn't find a menu in that photo. Good photos are taken straight on, fill the frame with the menu, and are in focus — step closer to a light if the room is dim.</string>
     <string name="menu_section_other">On the menu</string>
@@ -69,7 +194,7 @@
     <string name="flag_vegetarian">Vegetarian</string>
     <string name="flag_local">Local</string>
     <string name="flag_large">Large</string>
-    <string name="flag_shareable">To share</string>
+    <string name="flag_shareable">Good for sharing</string>
     <string name="flag_best_guess">Best guess</string>
 
     <!-- Dish -->
@@ -98,18 +223,19 @@
     <string name="mode_only_here_hint">You won't find it at home</string>
     <string name="mode_simple">Keep it simple</string>
     <string name="mode_simple_hint">The safe choice, for a tired evening</string>
-    <string name="choose_prompt">Pick a mood. We'll pick the dish.</string>
-    <string name="choose_another">Another</string>
+    <string name="choose_keep">Add to picks</string>
+    <string name="choose_pass">Not this one</string>
+    <string name="choose_swipe_hint">Swipe right to add it to your picks, left for another.</string>
+    <string name="choose_picked_for">%1$d picked · next one is for %2$s</string>
+    <string name="choose_next_person">Next person</string>
+    <string name="choose_prompt">What are you in the mood for?</string>
     <string name="choose_read_more">Read about it</string>
-    <string name="choose_have_this">I'll have this</string>
-    <string name="choose_enjoy">Enjoy it. We'll remember you've tried it.</string>
     <string name="choose_empty_new">You've eaten everything here that we'd call new. That's quite a trip.</string>
     <string name="choose_empty_special">Nothing on this menu stands out as a labour of love.</string>
     <string name="choose_empty_only_here">Nothing here is clearly a local speciality — it may be an international menu.</string>
     <string name="choose_empty_simple">Everything here is a little adventurous. "Something special" might still suit tonight.</string>
     <string name="choose_empty_menu">There are no dishes to choose from yet.</string>
     <string name="choose_why">Why this one</string>
-    <string name="choose_selected">Selected</string>
 
     <!-- Paywall -->
     <string name="paywall_title">Order the dish you came for.</string>
@@ -140,5 +266,6 @@
     <string name="paywall_unlocked">Welcome to Plus.</string>
     <string name="paywall_reason_scans">This month's three free menus are used</string>
     <string name="paywall_reason_choose">Choosing is part of Plus</string>
+    <string name="paywall_reason_pages">Longer menus are part of Plus</string>
     <string name="paywall_selected">Selected plan</string>
 </resources>

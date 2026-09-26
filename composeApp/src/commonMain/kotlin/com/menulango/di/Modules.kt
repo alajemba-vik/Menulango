@@ -9,12 +9,17 @@ import com.menulango.data.menu.local.MenuCache
 import com.menulango.data.menu.remote.MenuApi
 import com.menulango.data.menu.remote.MenuResponseParser
 import com.menulango.data.menu.remote.ProxyMenuApi
+import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.QuotaStorage
 import com.menulango.data.quota.ScanQuota
 import com.menulango.feature.capture.CaptureViewModel
 import com.menulango.feature.choose.ChooseViewModel
 import com.menulango.feature.menu.MenuViewModel
+import com.menulango.feature.menu.PageInbox
+import com.menulango.feature.menus.MenusViewModel
+import com.menulango.feature.order.OrderBook
 import com.menulango.feature.paywall.PaywallViewModel
+import com.menulango.feature.settings.SettingsViewModel
 import com.menulango.resources.Res
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
@@ -64,8 +69,13 @@ internal fun sharedModule(config: AppConfig): Module =
         single { BillingRepository(get(), get(AppScope)) }
 
         viewModel { CaptureViewModel(get(), get(), get(), get()) }
-        viewModel { params -> MenuViewModel(params.get(), get(), get(), get(), get()) }
-        viewModel { params -> ChooseViewModel(params.get(), params.get(), get(), get()) }
+        single { PageInbox() }
+        single { Preferences(get()) }
+        single { OrderBook() }
+        viewModel { params -> MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get()) }
+        viewModel { MenusViewModel(get(), ::nowMillis) }
+        viewModel { SettingsViewModel(get(), get(), get()) }
+        viewModel { params -> ChooseViewModel(params.get(), params.get(), params.get(), get(), get(), get()) }
         viewModel { params -> PaywallViewModel(params.get(), get()) }
     }
 

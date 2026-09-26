@@ -32,6 +32,8 @@ Field guide:
 - readableName: how a traveller would say the dish; transliterate non-Latin
   scripts (Kokoretsi, Tonkotsu ramen, Mansaf).
 - section: the menu heading the dish sits under, explained, if there is one.
+- emoji: one food emoji that best pictures what arrives (🐙 for grilled
+  octopus, 🥣 for a yoghurt dip). A single emoji, never text.
 - price.amount: a plain number (12,50 becomes 12.5). Omit price if none is printed.
 - adventureLevel 1-5: 1 is familiar anywhere (grilled chicken, chips);
   5 is challenging for most visitors (offal, raw, unusual textures).
@@ -71,6 +73,7 @@ const dish = {
     id: str,
     originalName: str,
     readableName: str,
+    emoji: str,
     section: str,
     whatItIs: str,
     ingredients: strList,
@@ -100,7 +103,7 @@ const dish = {
   // Names first: the app shows each dish the moment its object closes, so order barely matters
   // for speed, but it keeps partial output useful if the stream is cut.
   propertyOrdering: [
-    "id", "originalName", "readableName", "section", "whatItIs", "ingredients", "howItIsMade",
+    "id", "originalName", "readableName", "emoji", "section", "whatItIs", "ingredients", "howItIsMade",
     "pitch", "price", "flags", "allergens", "adventureLevel", "effortLevel", "confidence",
   ],
 };

@@ -30,8 +30,8 @@ import org.jetbrains.compose.resources.Font
 /**
  * MenuLango's type roles.
  *
- * Dish names are Petrona and large — they are the content, so they are set like headlines.
- * Everything else is Figtree and quiet. Scale: 40 / 30 / 24 / 20 / 17 / 15 / 13 / 11.
+ * Dish names and headings are Petrona Bold and large — they are the content, so they are set like
+ * headlines. Everything else is Figtree and quiet. Scale: 40 / 30 / 24 / 20 / 17 / 15 / 13 / 11.
  */
 @Immutable
 internal data class PaperType(
@@ -51,6 +51,8 @@ internal data class PaperType(
     /** Tabular figures so prices align down the column. */
     val price: TextStyle,
     val button: TextStyle,
+    /** Pill chips: sentence case, never shouted. */
+    val chip: TextStyle,
 )
 
 private val tightLines =
@@ -82,9 +84,15 @@ private fun rememberPaperType(): PaperType {
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.01).em,
                 ),
-            dishTitle = serif.copy(fontSize = 30.sp, lineHeight = 35.sp, letterSpacing = (-0.005).em),
-            headline = serif.copy(fontSize = 24.sp, lineHeight = 29.sp),
-            dishName = serif.copy(fontSize = 20.sp, lineHeight = 25.sp),
+            dishTitle =
+                serif.copy(
+                    fontSize = 30.sp,
+                    lineHeight = 35.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.01).em,
+                ),
+            headline = serif.copy(fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold),
+            dishName = serif.copy(fontSize = 20.sp, lineHeight = 25.sp, fontWeight = FontWeight.Bold),
             method =
                 serif.copy(
                     fontSize = 20.sp,
@@ -113,11 +121,12 @@ private fun rememberPaperType(): PaperType {
                 ),
             button =
                 sans.copy(
-                    fontSize = 15.sp,
+                    fontSize = 16.sp,
                     lineHeight = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.01.em,
                 ),
+            chip = sans.copy(fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
         )
     }
 }
@@ -148,7 +157,7 @@ internal object Paper {
  *
  * Material 3 is kept only for its text, ripple and accessibility plumbing. Its tonal elevation
  * overlay is neutralised by tinting surfaces with their own colour — otherwise every raised
- * surface would pick up a green cast and the app would look like a stock Android app.
+ * surface would pick up a coral cast and the app would look like a stock Android app.
  */
 @Composable
 internal fun MenuLangoTheme(

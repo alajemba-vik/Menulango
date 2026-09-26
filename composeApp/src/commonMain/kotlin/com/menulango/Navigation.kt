@@ -8,10 +8,14 @@ import com.menulango.feature.choose.ChoiceMode
 
 /** Where a menu screen gets its menu from. */
 internal sealed interface MenuSource {
-    /** A fresh photograph, upload-ready. */
-    class Photo(
-        val jpeg: ByteArray,
-    ) : MenuSource
+    /** Fresh photographs of a menu's pages, upload-ready, in reading order. More can follow. */
+    class Photos(
+        val pages: List<ByteArray>,
+    ) : MenuSource {
+        init {
+            require(pages.isNotEmpty()) { "a menu needs at least one page" }
+        }
+    }
 
     /** A menu already on the device. Free to reopen, offline. */
     data class Saved(
@@ -23,19 +27,32 @@ internal sealed interface MenuSource {
 }
 
 /** Why the paywall opened, so its first line can say so honestly. */
-internal enum class PaywallReason { OutOfScans, Choosing, Upgrade }
+internal enum class PaywallReason { OutOfScans, Choosing, MorePages, Upgrade }
 
-/** The five screens. The dish detail is a sheet inside [Menu] and [Choose], not a sixth screen. */
+/** The screens; adding a page reuses the capture screen. The dish detail is a sheet inside [Menu] and [Choose], not a sixth screen. */
 internal sealed interface Route {
-    data object Capture : Route
+    /** The camera, the saved menus and settings, under the tab bar. Always the root. */
+    data object Home : Route
 
     data class Menu(
         val source: MenuSource,
     ) : Route
 
+    /**
+     * The camera again, to add pages to the menu being read in [sessionId].
+     *
+     * @param maxPages how many more pages this menu may take; null for no limit (Plus).
+     */
+    data class AddPage(
+        val sessionId: Long,
+        val maxPages: Int?,
+    ) : Route
+
+    /** @param orderKey the table order a pick joins, shared with the menu it came from. */
     data class Choose(
         val dishes: List<Dish>,
         val mode: ChoiceMode,
+        val orderKey: String,
     ) : Route
 
     data class Paywall(
@@ -62,7 +79,7 @@ internal class BackStackEntry(
  */
 internal class Navigator {
     private var nextId = 0L
-    val entries = mutableStateListOf(BackStackEntry(Route.Capture, nextId++))
+    val entries = mutableStateListOf(BackStackEntry(Route.Home, nextId++))
 
     val current: BackStackEntry get() = entries.last()
     val canGoBack: Boolean get() = entries.size > 1

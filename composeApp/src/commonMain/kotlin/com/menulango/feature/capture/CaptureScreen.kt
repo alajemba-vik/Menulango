@@ -1,6 +1,7 @@
 package com.menulango.feature.capture
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -37,39 +39,53 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.menulango.MenuSource
 import com.menulango.PaywallReason
 import com.menulango.Route
+import com.menulango.core.design.Elevation
 import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.ui.DishPlate
+import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.StateMessage
+import com.menulango.core.ui.felt
+import com.menulango.core.ui.paper
 import com.menulango.data.menu.local.CachedMenuSummary
+import com.menulango.feature.menu.PageInbox
 import com.menulango.platform.CameraController
 import com.menulango.platform.CameraState
 import com.menulango.platform.CameraViewfinder
 import com.menulango.platform.PickedPhoto
 import com.menulango.platform.rememberPhotoPicker
 import com.menulango.resources.Res
+import com.menulango.resources.action_back
 import com.menulango.resources.action_choose_photo
 import com.menulango.resources.app_name
+import com.menulango.resources.capture_add_page_title
 import com.menulango.resources.capture_camera_allow
 import com.menulango.resources.capture_camera_body
 import com.menulango.resources.capture_camera_title
@@ -79,6 +95,7 @@ import com.menulango.resources.capture_debug_plus_on
 import com.menulango.resources.capture_failed
 import com.menulango.resources.capture_gallery
 import com.menulango.resources.capture_hint
+import com.menulango.resources.capture_hint_next_page
 import com.menulango.resources.capture_last_menu
 import com.menulango.resources.capture_last_menu_description
 import com.menulango.resources.capture_plus
@@ -89,11 +106,24 @@ import com.menulango.resources.capture_sample
 import com.menulango.resources.capture_shutter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.PI
+import kotlin.math.sin
 
+/**
+ * @param addPage set when the camera is adding pages to a menu already being read; the photos go
+ *   back to that menu through the [PageInbox] and [onPagesAdded] returns there.
+ */
 @Composable
-internal fun CaptureScreen(navigate: (Route) -> Unit) {
+internal fun CaptureScreen(
+    navigate: (Route) -> Unit,
+    addPage: Route.AddPage? = null,
+    onPagesAdded: () -> Unit = {},
+    bottomInset: Dp = 0.dp,
+) {
     val viewModel = koinViewModel<CaptureViewModel>()
+    val inbox = koinInject<PageInbox>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val camera = remember { CameraController() }
     val scope = rememberCoroutineScope()
@@ -103,35 +133,49 @@ internal fun CaptureScreen(navigate: (Route) -> Unit) {
         onPauseOrDispose { }
     }
 
+    // New photos start a menu, or join the one being read when adding pages.
+    val onPhotos: (List<ByteArray>?) -> Unit = { pages ->
+        if (addPage != null && !pages.isNullOrEmpty()) {
+            inbox.deliver(addPage.sessionId, pages.take(addPage.maxPages ?: pages.size))
+            onPagesAdded()
+        } else {
+            viewModel.onPhotosReady(pages)?.let(navigate)
+        }
+    }
     val picker =
         rememberPhotoPicker { picked ->
             when (picked) {
-                is PickedPhoto.Chosen -> viewModel.onPhotoReady(picked.jpeg)?.let(navigate)
+                is PickedPhoto.Chosen -> onPhotos(picked.pages)
                 PickedPhoto.Cancelled -> viewModel.onPhotoCancelled()
-                PickedPhoto.Unreadable -> viewModel.onPhotoReady(null)
+                PickedPhoto.Unreadable -> onPhotos(null)
             }
         }
+    // The menu being added to has already passed the free-scan gate.
+    val gate: () -> Route? = { if (addPage != null) null else viewModel.gateForScan() }
 
     CaptureContent(
         state = state,
+        addingPage = addPage != null,
+        bottomInset = bottomInset,
         camera = camera,
         viewfinder = { CameraViewfinder(camera, Modifier.fillMaxSize()) },
         actions =
             CaptureActions(
                 onShutter = {
-                    val gate = viewModel.gateForScan()
-                    if (gate != null) {
-                        navigate(gate)
+                    val blocked = gate()
+                    if (blocked != null) {
+                        navigate(blocked)
                     } else {
                         viewModel.onPreparingPhoto()
-                        scope.launch { viewModel.onPhotoReady(camera.capture())?.let(navigate) }
+                        scope.launch { onPhotos(camera.capture()?.let(::listOf)) }
                     }
                 },
-                onGallery = { viewModel.gateForScan()?.let(navigate) ?: picker() },
+                onGallery = { gate()?.let(navigate) ?: picker(addPage?.maxPages ?: viewModel.galleryLimit()) },
                 onLastMenu = { key -> navigate(Route.Menu(MenuSource.Saved(key))) },
                 onAllowance = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
                 onSample = { navigate(Route.Menu(MenuSource.Sample)) },
                 onToggleDebugPlus = viewModel::toggleDebugPlus,
+                onBack = if (addPage != null) onPagesAdded else null,
             ),
     )
 }
@@ -143,6 +187,8 @@ internal data class CaptureActions(
     val onAllowance: () -> Unit,
     val onSample: () -> Unit,
     val onToggleDebugPlus: () -> Unit,
+    /** Present only when adding a page: back to the menu without one. */
+    val onBack: (() -> Unit)? = null,
 ) {
     companion object {
         val Preview = CaptureActions({}, {}, {}, {}, {}, {})
@@ -156,12 +202,16 @@ internal data class CaptureActions(
 @Composable
 internal fun CaptureContent(
     state: CaptureUiState,
+    addingPage: Boolean = false,
+    bottomInset: Dp = 0.dp,
     camera: CameraController,
     viewfinder: @Composable () -> Unit,
     actions: CaptureActions,
 ) {
     val colors = Paper.colors
-    val ready = state as? CaptureUiState.Ready
+    // Adding a page to a menu already being read: no counter, no "last menu", a different hint.
+    val ready = (state as? CaptureUiState.Ready)?.let { if (addingPage) it.copy(lastMenu = null, debug = null) else it }
+    val title = stringResource(if (addingPage) Res.string.capture_add_page_title else Res.string.app_name)
     Box(Modifier.fillMaxSize().background(colors.scrim)) {
         viewfinder()
 
@@ -169,6 +219,7 @@ internal fun CaptureContent(
         if (blocked) {
             // Without a camera this is a page, not a viewfinder: paper, ink, and the other way in.
             CameraProblem(
+                addingPage = addingPage,
                 body =
                     stringResource(
                         if (camera.state == CameraState.PermissionDenied) {
@@ -181,7 +232,7 @@ internal fun CaptureContent(
                 state = ready,
                 actions = actions,
             )
-            TopChrome(ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.ink)
+            TopChrome(title, ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.ink)
             return@Box
         }
         if (camera.state == CameraState.Ready) FrameGuide(Modifier.align(Alignment.Center))
@@ -195,13 +246,14 @@ internal fun CaptureContent(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, colors.scrim.copy(alpha = 0.72f)))),
         )
 
-        TopChrome(ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.onPhoto)
+        TopChrome(title, ready?.debug, actions, Modifier.align(Alignment.TopCenter), tint = colors.onPhoto)
 
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
+                .padding(bottom = bottomInset)
                 .padding(horizontal = Space.gutter, vertical = Space.gutter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -209,6 +261,7 @@ internal fun CaptureContent(
                 when {
                     ready?.isPreparingPhoto == true -> Res.string.capture_preparing
                     ready?.photoProblem == true -> Res.string.capture_failed
+                    addingPage -> Res.string.capture_hint_next_page
                     else -> Res.string.capture_hint
                 }
             Text(
@@ -218,7 +271,7 @@ internal fun CaptureContent(
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(Space.xs))
-            ready?.allowance?.let { AllowanceLine(it, actions.onAllowance, colors.onPhoto) }
+            if (!addingPage) ready?.allowance?.let { AllowanceLine(it, actions.onAllowance, colors.onPhoto) }
             Spacer(Modifier.height(Space.md))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
@@ -243,6 +296,7 @@ internal fun CaptureContent(
 
 @Composable
 private fun TopChrome(
+    title: String,
     debug: DebugTools?,
     actions: CaptureActions,
     modifier: Modifier = Modifier,
@@ -252,10 +306,21 @@ private fun TopChrome(
         modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = Space.gutter, vertical = Space.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        actions.onBack?.let { onBack ->
+            IconAction(
+                PaperIcons.Back,
+                stringResource(Res.string.action_back),
+                onBack,
+                tint = Paper.colors.ink,
+                background = Paper.colors.raised.copy(alpha = 0.92f),
+                modifier = Modifier.padding(end = Space.sm),
+            )
+        }
         Text(
-            stringResource(Res.string.app_name),
+            title,
             style = Paper.type.dishName,
             color = tint,
+            maxLines = 1,
             modifier = Modifier.weight(1f),
         )
         if (debug != null) {
@@ -284,6 +349,7 @@ private fun DebugChip(
         color = tint,
         modifier =
             Modifier
+                .clip(Shapes.chip)
                 .border(Space.hairline, tint.copy(alpha = 0.5f), Shapes.chip)
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = Space.related, vertical = 6.dp),
@@ -322,7 +388,7 @@ private fun AllowanceLine(
     )
 }
 
-/** The one round thing in the app. It presses in, never bounces. */
+/** A white ring around a coral button: the brand colour where the thumb lands. It presses in, never bounces. */
 @Composable
 private fun Shutter(
     enabled: Boolean,
@@ -354,7 +420,7 @@ private fun Shutter(
             ).semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.size(60.dp).background(colors.onPhoto, CircleShape))
+        Box(Modifier.size(60.dp).background(colors.seal, CircleShape))
     }
 }
 
@@ -368,13 +434,14 @@ private fun ChromeButton(
     val colors = Paper.colors
     Column(
         Modifier
+            .clip(Shapes.tile)
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = description }
             .padding(Space.xs),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(Space.touchTarget).background(colors.scrim.copy(alpha = 0.45f), Shapes.card),
+            Modifier.size(52.dp).background(colors.scrim.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(icon, contentDescription = null, tint = colors.onPhoto)
@@ -440,23 +507,36 @@ private fun FrameGuide(modifier: Modifier = Modifier) {
 
 @Composable
 private fun CameraProblem(
+    addingPage: Boolean,
     body: String,
     onAllow: (() -> Unit)?,
     state: CaptureUiState.Ready?,
     actions: CaptureActions,
 ) {
     val colors = Paper.colors
-    Box(Modifier.fillMaxSize().background(colors.paper), contentAlignment = Alignment.Center) {
+    Column(
+        Modifier.fillMaxSize().felt(colors.paper),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        PlateCluster()
         StateMessage(title = stringResource(Res.string.capture_camera_title), body = body) {
             if (onAllow != null) {
                 PrimaryButton(stringResource(Res.string.capture_camera_allow), onAllow, Modifier.fillMaxWidth())
+                SecondaryButton(
+                    stringResource(Res.string.action_choose_photo),
+                    actions.onGallery,
+                    Modifier.fillMaxWidth(),
+                    icon = PaperIcons.Gallery,
+                )
+            } else {
+                // With no camera to allow, the photo library is the way in.
+                PrimaryButton(
+                    stringResource(Res.string.action_choose_photo),
+                    actions.onGallery,
+                    Modifier.fillMaxWidth(),
+                )
             }
-            SecondaryButton(
-                stringResource(Res.string.action_choose_photo),
-                actions.onGallery,
-                Modifier.fillMaxWidth(),
-                icon = PaperIcons.Gallery,
-            )
             state?.lastMenu?.let { last ->
                 SecondaryButton(
                     stringResource(Res.string.capture_last_menu_description, last.dishCount),
@@ -465,7 +545,105 @@ private fun CameraProblem(
                     icon = PaperIcons.Menu,
                 )
             }
-            state?.allowance?.let { AllowanceLine(it, actions.onAllowance, colors.inkMuted) }
+            if (!addingPage) state?.allowance?.let { AllowanceLine(it, actions.onAllowance, colors.inkMuted) }
         }
     }
 }
+
+/**
+ * What MenuLango does, shown rather than told: a menu pinned to the felt, printed in a language
+ * you can't read, and a coral line reading down it. Each line it passes gains a small note in your
+ * own words. Motion that explains, never motion for its own sake; still under reduce-motion.
+ */
+@Composable
+private fun PlateCluster() {
+    val colors = Paper.colors
+    val reduceMotion = Paper.reduceMotion
+    val progress =
+        if (reduceMotion) {
+            null
+        } else {
+            rememberInfiniteTransition(label = "reading").animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(tween(READ_CYCLE_MS, easing = LinearEasing)),
+                label = "reading-line",
+            )
+        }
+    // Soft linen rather than bright white, and print in a warm pencil-brown rather than grey:
+    // an impression of a menu, not a diagram of one.
+    val sheet = lerp(colors.raised, colors.paper, 0.6f)
+    val print = colors.inkMuted.copy(alpha = 0.3f)
+    val heading = colors.inkMuted.copy(alpha = 0.42f)
+    val note = colors.seal.copy(alpha = 0.45f)
+    Box(Modifier.padding(top = Space.xl, bottom = Space.md).size(220.dp, 260.dp), contentAlignment = Alignment.Center) {
+        // A second sheet behind, as menus have pages.
+        Box(
+            Modifier
+                .size(170.dp, 220.dp)
+                .graphicsLayer { rotationZ = -7f }
+                .shadow(Elevation.resting, Shapes.tile)
+                .paper(sheet, Shapes.tile),
+        )
+        Canvas(
+            Modifier
+                .size(170.dp, 220.dp)
+                .graphicsLayer { rotationZ = 4f }
+                .shadow(Elevation.raised, Shapes.tile)
+                .paper(sheet, Shapes.tile),
+        ) {
+            val pad = 18.dp.toPx()
+            val line = 7.dp.toPx()
+            val gap = 22.dp.toPx()
+            // All the way down and a pause at the bottom, then round again.
+            val reach = (progress?.value ?: 1f).let { (it * 1.25f).coerceAtMost(1f) }
+            val scanY = pad + (size.height - pad * 2) * reach
+            // A heading in the restaurant's print, then lines of dishes with prices.
+            drawRoundRect(heading, Offset(pad, pad), Size(size.width * 0.45f, line * 1.4f), CornerRadius(line))
+            var y = pad + gap * 1.6f
+            var row = 0
+            while (y < size.height - pad) {
+                val width = (size.width - pad * 2) * (if (row % 3 == 1) 0.55f else 0.7f)
+                drawRoundRect(print, Offset(pad, y), Size(width, line), CornerRadius(line / 2))
+                drawRoundRect(
+                    print,
+                    Offset(size.width - pad - line * 3, y),
+                    Size(line * 3, line),
+                    CornerRadius(line / 2),
+                )
+                // Read lines gain a note in the diner's language beneath them.
+                if (y < scanY) {
+                    drawRoundRect(
+                        note,
+                        Offset(pad, y + line * 1.5f),
+                        Size(width * 0.7f, line * 0.6f),
+                        CornerRadius(line / 2),
+                    )
+                }
+                y += gap
+                row++
+            }
+            if (progress != null && reach < 1f) {
+                drawLine(
+                    colors.seal,
+                    Offset(pad / 2, scanY),
+                    Offset(size.width - pad / 2, scanY),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                drawRect(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, colors.seal.copy(alpha = 0.08f)),
+                        startY =
+                            scanY - 28.dp.toPx(),
+                        endY = scanY,
+                    ),
+                    topLeft = Offset(0f, scanY - 28.dp.toPx()),
+                    size = Size(size.width, 28.dp.toPx()),
+                )
+            }
+        }
+    }
+}
+
+private const val READ_CYCLE_MS = 5200

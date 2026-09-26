@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,7 +36,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -50,11 +53,14 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.FlagChips
 import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.chips
+import com.menulango.core.ui.foodGroup
 import com.menulango.data.menu.model.Allergens
 import com.menulango.data.menu.model.Dish
 import com.menulango.resources.Res
@@ -73,12 +79,14 @@ import com.menulango.resources.dish_unknown_method
 import com.menulango.resources.dish_unknown_what
 import com.menulango.resources.dish_what_it_is
 import com.menulango.resources.list_joiner
+import com.menulango.resources.order_add
+import com.menulango.resources.order_add_another
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
 /**
- * The dish, explained — long-form reading on an opaque sheet.
+ * The dish, explained — long-form reading on a rounded white sheet.
  *
  * Rises to most of the screen and drags up to full height. Everything a nervous diner needs is
  * here, in the order they need it: what arrives, what is in it, how it is made (given the most
@@ -94,6 +102,7 @@ internal fun DishSheet(
     modifier: Modifier = Modifier,
     nameModifier: Modifier = Modifier,
     history: DishHistoryControl? = null,
+    order: DishOrderControl? = null,
 ) {
     BoxWithConstraints(modifier.fillMaxSize()) {
         val fullHeight = maxHeight
@@ -140,7 +149,8 @@ internal fun DishSheet(
                 .height(height)
                 .offset { IntOffset(0, drag.value.coerceAtLeast(0f).roundToInt()) }
                 .shadow(Elevation.sheet, Shapes.sheet, clip = false)
-                .background(Paper.colors.raised, Shapes.sheet)
+                .clip(Shapes.sheet)
+                .background(Paper.colors.raised)
                 .semantics {
                     paneTitle = sheetDescription
                     customActions =
@@ -153,10 +163,16 @@ internal fun DishSheet(
                 },
         ) {
             SheetHeader(dish, dragToResize, nameModifier, onDismiss)
-            SheetBody(dish, history)
+            SheetBody(dish, history, order)
         }
     }
 }
+
+/** Lets the sheet add a dish to the table's order without knowing how orders are kept. */
+internal data class DishOrderControl(
+    val quantity: Int,
+    val onAdd: () -> Unit,
+)
 
 /** Lets the sheet mark a dish as eaten without knowing where history is stored. */
 internal data class DishHistoryControl(
@@ -176,30 +192,39 @@ private fun SheetHeader(
     Column(dragToResize.fillMaxWidth().padding(horizontal = Space.gutter)) {
         Box(
             Modifier
-                .padding(top = Space.related)
+                .padding(top = Space.sm)
                 .align(Alignment.CenterHorizontally)
-                .width(32.dp)
-                .height(4.dp)
-                .background(colors.rule, Shapes.chip),
+                .width(40.dp)
+                .height(5.dp)
+                .background(colors.rule, Shapes.pill),
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = dish.originalName,
-                style = type.original,
-                color = colors.inkFaint,
-                modifier = Modifier.weight(1f).padding(top = Space.sm),
-            )
-            dish.price?.let {
-                Text(
-                    it.asPrinted,
-                    style = type.price,
-                    color = colors.inkMuted,
-                    modifier = Modifier.padding(top = Space.sm),
-                )
+        // No close button: the handle, a tap outside, the back gesture and the screen reader's
+        // "close" action all dismiss the sheet, and a button here crowded the plate.
+        Text(
+            text = dish.originalName,
+            style = type.original,
+            color = colors.inkFaint,
+            modifier = Modifier.padding(top = Space.md),
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = Space.xs)) {
+            Column(Modifier.weight(1f)) {
+                Text(dish.readableName, style = type.dishTitle, color = colors.ink, modifier = nameModifier)
+                dish.price?.let {
+                    Text(
+                        it.asPrinted,
+                        style = type.price.copy(fontWeight = FontWeight.Bold),
+                        color = colors.sealInk,
+                        modifier =
+                            Modifier
+                                .padding(top = Space.sm)
+                                .background(colors.sealWash, Shapes.chip)
+                                .padding(horizontal = Space.sm, vertical = 6.dp),
+                    )
+                }
             }
-            IconAction(PaperIcons.Close, stringResource(Res.string.action_close), onDismiss, tint = colors.inkMuted)
+            Spacer(Modifier.width(Space.sm))
+            DishPlate(dish, size = 88.dp)
         }
-        Text(dish.readableName, style = type.dishTitle, color = colors.ink, modifier = nameModifier)
         Spacer(Modifier.height(Space.md))
     }
 }
@@ -208,6 +233,7 @@ private fun SheetHeader(
 private fun SheetBody(
     dish: Dish,
     history: DishHistoryControl?,
+    order: DishOrderControl?,
 ) {
     val colors = Paper.colors
     val type = Paper.type
@@ -240,21 +266,44 @@ private fun SheetBody(
 
             if (dish.ingredients.isNotEmpty()) {
                 Section(stringResource(Res.string.dish_ingredients)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Space.related),
+                        verticalArrangement = Arrangement.spacedBy(Space.related),
+                    ) {
                         dish.ingredients.forEach { ingredient ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                                Text("–", style = type.bodySmall, color = colors.inkFaint)
-                                Text(ingredient, style = type.bodySmall, color = colors.ink)
-                            }
+                            Text(
+                                ingredient,
+                                style = type.bodySmall,
+                                color = colors.ink,
+                                modifier =
+                                    Modifier
+                                        .background(colors.sunk, Shapes.chip)
+                                        .padding(horizontal = Space.sm, vertical = 6.dp),
+                            )
                         }
                     }
                 }
             }
 
-            Section(stringResource(Res.string.dish_how_it_is_made)) { HowItIsMade(dish.howItIsMade) }
+            Section(stringResource(Res.string.dish_how_it_is_made)) {
+                HowItIsMade(dish.howItIsMade, Paper.colors.food(dish.foodGroup()))
+            }
 
             Section(null) { AllergenPanel(dish.allergens) }
 
+            order?.let { control ->
+                Spacer(Modifier.height(Space.md))
+                PrimaryButton(
+                    text =
+                        if (control.quantity == 0) {
+                            stringResource(Res.string.order_add)
+                        } else {
+                            stringResource(Res.string.order_add_another, control.quantity)
+                        },
+                    onClick = control.onAdd,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             history?.let { control ->
                 Spacer(Modifier.height(Space.md))
                 SecondaryButton(
@@ -278,12 +327,30 @@ private fun Section(
     content()
 }
 
-/** Set in Petrona italic beside a single stamp of seal ink: the paragraph the whole app exists for. */
+/**
+ * Set in Petrona italic beside a coral bar, on a tile the colour of the dish's kind of food: the
+ * paragraph the whole app exists for.
+ */
 @Composable
-private fun HowItIsMade(method: String?) {
+private fun HowItIsMade(
+    method: String?,
+    tint: Color,
+) {
     val colors = Paper.colors
-    Row(Modifier.height(IntrinsicSize.Min).padding(top = Space.xs)) {
-        Box(Modifier.width(2.dp).fillMaxHeight().background(if (method == null) colors.rule else colors.seal))
+    Row(
+        Modifier
+            .padding(top = Space.xs)
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .background(if (method == null) colors.sunk else tint, Shapes.tile)
+            .padding(Space.md),
+    ) {
+        Box(
+            Modifier
+                .width(3.dp)
+                .fillMaxHeight()
+                .background(if (method == null) colors.rule else colors.seal, Shapes.pill),
+        )
         Text(
             text = method ?: stringResource(Res.string.dish_unknown_method),
             style = if (method == null) Paper.type.bodySmall else Paper.type.method,
@@ -308,7 +375,7 @@ internal fun AllergenPanel(
     Column(
         modifier
             .fillMaxWidth()
-            .background(colors.alarmWash, Shapes.card)
+            .background(colors.alarmWash, Shapes.tile)
             .padding(Space.md),
         verticalArrangement = Arrangement.spacedBy(Space.related),
     ) {

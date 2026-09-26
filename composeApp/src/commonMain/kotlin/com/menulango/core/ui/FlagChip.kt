@@ -1,13 +1,13 @@
 package com.menulango.core.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Paper
 import com.menulango.core.design.Shapes
@@ -39,7 +39,7 @@ internal data class DishChip(
 /**
  * The facts a nervous diner looks for first, most decisive first, capped at [limit].
  *
- * Text chips, never emoji: emoji would date the app and break the paper feeling instantly.
+ * Chips carry words; the picture of the dish is its plate (see [DishPlate]).
  */
 internal fun Dish.chips(limit: Int = 3): List<DishChip> =
     buildList {
@@ -64,22 +64,22 @@ internal fun Dish.chips(limit: Int = 3): List<DishChip> =
 internal fun FlagChip(
     chip: DishChip,
     modifier: Modifier = Modifier,
+    container: Color = Paper.colors.sunk,
 ) {
     val colors = Paper.colors
     val (ink, wash) =
         when (chip.tone) {
-            ChipTone.Neutral -> colors.inkMuted to colors.sunk
+            ChipTone.Neutral -> colors.inkMuted to container
             ChipTone.Ember -> colors.ember to colors.emberWash
         }
     Text(
-        text = stringResource(chip.text).uppercase(),
-        style = Paper.type.label,
+        text = stringResource(chip.text),
+        style = Paper.type.chip,
         color = ink,
         modifier =
             modifier
-                .background(wash, Shapes.chip)
-                .border(Space.hairline, if (chip.tone == ChipTone.Neutral) colors.rule else wash, Shapes.chip)
-                .padding(horizontal = 6.dp, vertical = 3.dp),
+                .weave(wash, Shapes.chip)
+                .padding(horizontal = 10.dp, vertical = 5.dp),
     )
 }
 
@@ -87,6 +87,7 @@ internal fun FlagChip(
 internal fun FlagChips(
     chips: List<DishChip>,
     modifier: Modifier = Modifier,
+    container: Color = Paper.colors.sunk,
 ) {
     if (chips.isEmpty()) return
     FlowRow(
@@ -94,6 +95,6 @@ internal fun FlagChips(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        chips.forEach { FlagChip(it) }
+        chips.forEach { FlagChip(it, container = container) }
     }
 }

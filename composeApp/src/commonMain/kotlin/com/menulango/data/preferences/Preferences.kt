@@ -1,0 +1,85 @@
+package com.menulango.data.preferences
+
+import com.russhwolf.settings.Settings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/** How the app should look, whatever the phone is set to. */
+internal enum class Appearance { System, Light, Dark }
+
+/**
+ * The diner's standing choices, kept between launches.
+ *
+ * The dietary profile is stored as filter names, not the UI's filter type, so the data layer never
+ * depends on a screen; a name that no longer exists is simply ignored when read.
+ */
+internal class Preferences(
+    private val settings: Settings,
+) {
+    private val appearanceState = MutableStateFlow(readAppearance())
+    private val dietaryState = MutableStateFlow(readDietary())
+    private val avoidState = MutableStateFlow(readList(KEY_AVOID))
+    private val featuredState = MutableStateFlow(settings.getBoolean(KEY_FEATURED, true))
+
+    /** Whether menus open with "Don't leave without trying". Some diners would rather just read. */
+    val showFeatured: StateFlow<Boolean> = featuredState.asStateFlow()
+
+    fun setShowFeatured(value: Boolean) {
+        settings.putBoolean(KEY_FEATURED, value)
+        featuredState.value = value
+    }
+
+    val appearance: StateFlow<Appearance> = appearanceState.asStateFlow()
+
+    /** Filters applied to every menu as it opens. The diner can still turn them off on the menu. */
+    val dietary: StateFlow<Set<String>> = dietaryState.asStateFlow()
+
+    /** The diner's own words — "coriander", "mushroom" — for dishes to leave out of every menu. */
+    val avoid: StateFlow<Set<String>> = avoidState.asStateFlow()
+
+    fun setAvoid(value: Set<String>) {
+        settings.putString(KEY_AVOID, value.sorted().joinToString(LIST_SEPARATOR))
+        avoidState.value = value
+    }
+
+    fun setAppearance(value: Appearance) {
+        settings.putString(KEY_APPEARANCE, value.name)
+        appearanceState.value = value
+    }
+
+    fun setDietary(value: Set<String>) {
+        settings.putString(KEY_DIETARY, value.sorted().joinToString(SEPARATOR))
+        dietaryState.value = value
+    }
+
+    private fun readAppearance(): Appearance =
+        Appearance.entries.firstOrNull { it.name == settings.getStringOrNull(KEY_APPEARANCE) } ?: Appearance.System
+
+    private fun readList(key: String): Set<String> =
+        settings
+            .getStringOrNull(key)
+            ?.split(LIST_SEPARATOR)
+            ?.filter { it.isNotBlank() }
+            ?.toSet()
+            .orEmpty()
+
+    private fun readDietary(): Set<String> =
+        settings
+            .getStringOrNull(KEY_DIETARY)
+            ?.split(SEPARATOR)
+            ?.filter { it.isNotBlank() }
+            ?.toSet()
+            .orEmpty()
+
+    private companion object {
+        const val KEY_APPEARANCE = "prefs.appearance"
+        const val KEY_DIETARY = "prefs.dietary"
+        const val SEPARATOR = ","
+        const val KEY_AVOID = "prefs.avoid"
+        const val KEY_FEATURED = "prefs.featured"
+
+        /** Words may contain commas ("peppers, green"), never a line break. */
+        const val LIST_SEPARATOR = "\n"
+    }
+}

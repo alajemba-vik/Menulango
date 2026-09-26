@@ -57,4 +57,5 @@ private fun Dish.toDto(): DishDto =
         adventureLevel = adventureLevel,
         effortLevel = effortLevel,
         confidence = confidence,
+        emoji = emoji,
     )

@@ -28,6 +28,16 @@ upsert:
 INSERT OR REPLACE INTO savedMenu(cacheKey, fingerprint, savedAtMillis, lastOpenedAtMillis, dishCount, venueType, language, document, photo)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
+selectAllSummaries:
+SELECT cacheKey, dishCount, venueType, language, savedAtMillis, lastOpenedAtMillis, photo
+FROM savedMenu ORDER BY lastOpenedAtMillis DESC;
+
+deleteAll:
+DELETE FROM savedMenu;
+
+deleteByKey:
+DELETE FROM savedMenu WHERE cacheKey = ?;
+
 touch:
 UPDATE savedMenu SET lastOpenedAtMillis = ? WHERE cacheKey = ?;
 

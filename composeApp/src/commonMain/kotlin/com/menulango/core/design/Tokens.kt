@@ -11,8 +11,13 @@ import androidx.compose.ui.unit.dp
 /**
  * Every colour in MenuLango. No hex literal appears anywhere else in the codebase.
  *
- * "Fancy paper": thick warm stock, ink sitting in the page. [seal] is the one brand colour and is
- * used like a stamp, never as a coat of paint. [alarm] is reserved for allergens — never decoration.
+ * "Felt board": cream felt, coral as the brand, charcoal for the hero moments. [seal] is the brand
+ * colour for the primary action and the selected state; [sealInk] is the same coral darkened so it
+ * reads as text. [alarm] is reserved for allergens — never decoration.
+ *
+ * Soft colours have exactly one job: [food] says what kind of food a dish is — sea, garden, grill,
+ * sweet, drink, hearth. Nothing else in the app uses them, so matching colours always mean the
+ * same kind of food and never a false connection.
  */
 @Immutable
 internal data class PaperColors(
@@ -24,59 +29,114 @@ internal data class PaperColors(
     val inkFaint: Color,
     val rule: Color,
     val seal: Color,
+    /** Coral dark enough to be read as text on [paper] and [raised]. */
+    val sealInk: Color,
+    /** Text and icons on a [seal] fill. */
+    val onSeal: Color,
     val ember: Color,
     val alarm: Color,
     /** Behind the menu photo when it dims. Warm, like a room with the lights down. */
     val scrim: Color,
     /** Text and controls laid over the live camera, which is dark-ish in any theme. */
     val onPhoto: Color,
+    /** One soft fill per [FoodGroup], in declaration order. [ink] reads on every one of them. */
+    private val foodColors: List<Color>,
     val isDark: Boolean,
 ) {
-    /** Text and icons on a [seal] fill. The page colour reads as the paper showing through the stamp. */
-    val onSeal: Color get() = paper
+    init {
+        require(foodColors.size == FoodGroup.entries.size) { "one colour per food group" }
+    }
+
+    fun food(group: FoodGroup): Color = foodColors[group.ordinal]
+
+    /** A peach tint of the brand colour: selected cards, fact tiles, the stepper. */
+    val sealWash: Color get() = seal.copy(alpha = if (isDark) 0.18f else 0.12f)
 
     /** The allergen panel's wash. Derived, so the panel can never drift from [alarm]. */
     val alarmWash: Color get() = alarm.copy(alpha = if (isDark) 0.14f else 0.07f)
 
-    val emberWash: Color get() = ember.copy(alpha = if (isDark) 0.16f else 0.10f)
+    val emberWash: Color get() = ember.copy(alpha = if (isDark) 0.16f else 0.12f)
 }
 
 internal val LightPaper =
     PaperColors(
-        paper = Color(0xFFFAF8F3),
+        paper = Color(0xFFF7F3EE),
         raised = Color(0xFFFFFFFF),
-        sunk = Color(0xFFF1EEE5),
-        ink = Color(0xFF1A1D17),
-        inkMuted = Color(0xFF5C6153),
-        inkFaint = Color(0xFF8E9284),
-        rule = Color(0xFFE4E0D6),
-        seal = Color(0xFF1F5A3D),
+        sunk = Color(0xFFF0E9E2),
+        ink = Color(0xFF201917),
+        inkMuted = Color(0xFF6B5F5A),
+        inkFaint = Color(0xFF9A8D86),
+        rule = Color(0xFFEBE2DA),
+        seal = Color(0xFFE4572E),
+        sealInk = Color(0xFFC24323),
+        onSeal = Color(0xFFFFFFFF),
         ember = Color(0xFFA3670F),
         alarm = Color(0xFF8E3037),
-        scrim = Color(0xFF0E0D09),
-        onPhoto = Color(0xFFFAF8F3),
+        scrim = Color(0xFF14100E),
+        onPhoto = Color(0xFFFFFFFF),
+        foodColors =
+            listOf(
+                Color(0xFFD5E8F6), // sea
+                Color(0xFFD7EDD3), // garden
+                Color(0xFFFFDCCB), // grill
+                Color(0xFFFBEBA8), // sweet
+                Color(0xFFE3DEFF), // drink
+                Color(0xFFEFE2CA), // hearth
+            ),
         isDark = false,
     )
 
-/** "The menu by candlelight." */
+/** "The menu by candlelight": charcoal, like the onboarding cards of a good food app. */
 internal val DarkPaper =
     PaperColors(
-        paper = Color(0xFF14130E),
-        raised = Color(0xFF1D1B15),
-        sunk = Color(0xFF23211A),
-        ink = Color(0xFFEFEBE0),
-        inkMuted = Color(0xFFA7A493),
-        inkFaint = Color(0xFF78755F),
-        rule = Color(0xFF2E2B22),
-        seal = Color(0xFF6FC694),
-        ember = Color(0xFFE0A458),
+        paper = Color(0xFF181311),
+        raised = Color(0xFF241D1A),
+        sunk = Color(0xFF2D2522),
+        ink = Color(0xFFF5EEE9),
+        inkMuted = Color(0xFFB5A8A1),
+        inkFaint = Color(0xFF85776F),
+        rule = Color(0xFF362D29),
+        seal = Color(0xFFFF7A59),
+        sealInk = Color(0xFFFF8A6B),
+        onSeal = Color(0xFF201917),
+        ember = Color(0xFFF5B348),
         alarm = Color(0xFFE08790),
-        scrim = Color(0xFF0E0D09),
-        onPhoto = Color(0xFFEFEBE0),
+        scrim = Color(0xFF14100E),
+        onPhoto = Color(0xFFFFFFFF),
+        foodColors =
+            listOf(
+                Color(0xFF1F3340), // sea
+                Color(0xFF243726), // garden
+                Color(0xFF4A2D23), // grill
+                Color(0xFF443A1C), // sweet
+                Color(0xFF302B4B), // drink
+                Color(0xFF3A3226), // hearth
+            ),
         isDark = true,
     )
 
-/** A 4dp grid. Whitespace is what makes paper feel expensive, so be generous with it. */
+/** What kind of food a dish is. Each has its own colour; see [PaperColors.food]. */
+internal enum class FoodGroup {
+    /** Fish and seafood: blue, the sea. */
+    Sea,
+
+    /** Salads, vegetables and dips: green, the garden. */
+    Garden,
+
+    /** Meat, kebabs and burgers: terracotta, the fire. */
+    Grill,
+
+    /** Desserts, fruit and pastries: butter yellow, honey. */
+    Sweet,
+
+    /** Wine, beer, coffee and cocktails: lavender. */
+    Drink,
+
+    /** Everything from the kitchen's heart — cheese, eggs, bread, pasta, rice, soups: oat. */
+    Hearth,
+}
+
+/** A 4dp grid. Whitespace is what makes the app feel calm, so be generous with it. */
 internal object Space {
     val hairline: Dp = 1.dp
     val xs: Dp = 4.dp
@@ -95,16 +155,44 @@ internal object Space {
     val readingWidth: Dp = 560.dp
 }
 
-/** Paper has corners. Heavy rounding reads as plastic. */
+/**
+ * Tailored rather than bubbly, in three families, each with one job:
+ *
+ *  - Rounded rectangles for everything that sits in the page: cards (14), buttons (14),
+ *    tiles (10), chips (8). A smaller thing gets a smaller radius, so corners look alike in scale.
+ *  - Capsules ([pill]) only for what floats above the page: the tab bar, the choose button, the
+ *    table bar, the page chip. The shape itself says "this is not part of the menu".
+ *  - Circles only for single objects: plates, the shutter, one-icon buttons.
+ */
 internal object Shapes {
-    val card: RoundedCornerShape = RoundedCornerShape(4.dp)
-    val sheet: RoundedCornerShape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-    val chip: RoundedCornerShape = RoundedCornerShape(2.dp)
+    val card: RoundedCornerShape = RoundedCornerShape(14.dp)
+    val tile: RoundedCornerShape = RoundedCornerShape(10.dp)
+    val sheet: RoundedCornerShape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
+    val button: RoundedCornerShape = RoundedCornerShape(14.dp)
+
+    /** Chips are small woven labels: squared off, softly. */
+    val chip: RoundedCornerShape = RoundedCornerShape(8.dp)
+
+    /** Only for things that float: the tab bar, the choose button, segmented switches. */
+    val pill: RoundedCornerShape = RoundedCornerShape(percent = 50)
 }
 
-/** The only shadow in the app, used by the dish sheet. Everything else separates by tone and rules. */
+/**
+ * Four heights, and the felt does most of the separating: shadows only say how far something sits
+ * off the board. Most things rest on it; very little floats.
+ */
 internal object Elevation {
-    val sheet: Dp = 18.dp
+    /** Lying on the felt: plates, pinned snapshots, the card behind. */
+    val resting: Dp = 1.dp
+
+    /** Lifted a little for emphasis: the top of a deck, a small badge. */
+    val raised: Dp = 3.dp
+
+    /** Floating above the page: the tab bar, the choose button, the picks bar. */
+    val floating: Dp = 6.dp
+
+    /** A sheet drawn up over the page. */
+    val sheet: Dp = 12.dp
 }
 
 /**

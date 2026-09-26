@@ -31,7 +31,7 @@ internal fun menuContextFacts(
     return MenuContextFacts(dishes.size, languageCode?.let(::languageName), average)
 }
 
-private fun currencyPrefix(code: String?): String =
+internal fun currencyPrefix(code: String?): String =
     when (code?.uppercase()) {
         null -> ""
         "EUR" -> "€"
@@ -48,7 +48,7 @@ private fun currencyPrefix(code: String?): String =
     }
 
 /** English names for the menu languages travellers meet most; anything else shows its code. */
-private fun languageName(code: String): String =
+internal fun languageName(code: String): String =
     LANGUAGE_NAMES[code.substringBefore('-').lowercase()] ?: code.uppercase()
 
 private val LANGUAGE_NAMES =

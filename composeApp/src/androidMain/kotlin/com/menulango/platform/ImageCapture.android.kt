@@ -154,22 +154,33 @@ private suspend fun LifecycleCameraController.takeUploadReadyPhoto(context: Cont
 }
 
 @Composable
-internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): () -> Unit {
+internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val picker =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
-            if (uri == null) {
-                onPicked(PickedPhoto.Cancelled)
-            } else {
-                scope.launch {
-                    val jpeg = readPicked(context, uri)?.let { compressForUpload(it) }
-                    onPicked(if (jpeg == null) PickedPhoto.Unreadable else PickedPhoto.Chosen(jpeg))
-                }
+    // Android fixes a multi-picker's maximum when it is registered, so the limit is applied here.
+    val limit = remember { arrayOfNulls<Int>(1) }
+    val deliver: (List<Uri>) -> Unit = { uris ->
+        if (uris.isEmpty()) {
+            onPicked(PickedPhoto.Cancelled)
+        } else {
+            scope.launch {
+                val pages =
+                    uris.take(limit[0] ?: uris.size).mapNotNull { uri ->
+                        readPicked(context, uri)?.let { compressForUpload(it) }
+                    }
+                onPicked(if (pages.isEmpty()) PickedPhoto.Unreadable else PickedPhoto.Chosen(pages))
             }
         }
-    return remember(picker) {
-        { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    }
+    val single =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { deliver(listOfNotNull(it)) }
+    val multiple = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { deliver(it) }
+    return remember(single, multiple) {
+        { maxPhotos ->
+            limit[0] = maxPhotos
+            val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            if (maxPhotos == 1) single.launch(request) else multiple.launch(request)
+        }
     }
 }
 

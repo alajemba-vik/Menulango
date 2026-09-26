@@ -1,6 +1,7 @@
 package com.menulango.data.menu.local
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.menulango.core.result.AppResult
 import com.menulango.data.db.MenuLangoDatabase
@@ -25,6 +26,16 @@ internal data class CachedMenuSummary(
     val dishCount: Int,
     val venueType: String?,
     val language: String?,
+)
+
+/** One saved menu as the menus list shows it. */
+internal data class SavedMenuItem(
+    val cacheKey: String,
+    val dishCount: Int,
+    val venueType: String?,
+    val language: String?,
+    val savedAtMillis: Long,
+    val photo: ByteArray?,
 )
 
 /**
@@ -68,6 +79,29 @@ internal class MenuCache(
             }
         }
 
+    suspend fun delete(cacheKey: String): Unit = withContext(io) { queries.deleteByKey(cacheKey) }
+
+    suspend fun clear(): Unit = withContext(io) { queries.deleteAll() }
+
+    /** Every saved menu, most recently opened first. */
+    fun all(): Flow<List<SavedMenuItem>> =
+        queries
+            .selectAllSummaries()
+            .asFlow()
+            .mapToList(io)
+            .map { rows ->
+                rows.map {
+                    SavedMenuItem(
+                        it.cacheKey,
+                        it.dishCount.toInt(),
+                        it.venueType,
+                        it.language,
+                        it.savedAtMillis,
+                        it.photo,
+                    )
+                }
+            }
+
     /** Returns null if the menu is gone or no longer passes validation (e.g. after a schema change). */
     suspend fun open(cacheKey: String): CachedMenu? =
         withContext(io) {
@@ -87,7 +121,10 @@ internal class MenuCache(
             }
 
     private companion object {
-        /** Photos are ~300 KB each; twenty menus is a long trip and a few megabytes. */
-        const val MAX_SAVED_MENUS = 20L
+        /**
+         * Photos are ~300 KB each, so sixty menus is several trips and under twenty megabytes. The
+         * menus list shows them all, and the oldest-opened goes first when the limit is reached.
+         */
+        const val MAX_SAVED_MENUS = 60L
     }
 }

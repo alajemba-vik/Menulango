@@ -41,6 +41,7 @@ internal data class DishDto(
     val adventureLevel: Int? = null,
     val effortLevel: Int? = null,
     val confidence: Double? = null,
+    val emoji: String? = null,
 )
 
 @Serializable

@@ -6,6 +6,7 @@ import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.remote.MenuAssembler
 import com.menulango.data.menu.remote.MenuContractViolation
 import com.menulango.data.menu.remote.MenuResponseParser
+import com.menulango.data.menu.remote.toDocument
 import com.menulango.dishJson
 import com.menulango.menuDocument
 import kotlin.test.Test
@@ -33,6 +34,29 @@ class MenuResponseParserTest {
         assertEquals(12.5, dish.price?.amount)
         assertTrue(dish.flags.offal)
         assertEquals(listOf("gluten"), dish.allergens.likelyContains)
+    }
+
+    @Test
+    fun aLoneEmojiIsKeptAndAnythingElseIsDroppedWithoutCostingTheDish() {
+        val menu =
+            debug
+                .parseDocument(
+                    menuDocument(
+                        dishJson("octopus", extra = ", \"emoji\": \"🐙\""),
+                        dishJson("chef", extra = ", \"emoji\": \"👨‍🍳\""),
+                        dishJson("word", extra = ", \"emoji\": \"octopus\""),
+                        dishJson("none"),
+                    ),
+                ).menu()
+
+        assertEquals(listOf("🐙", "👨‍🍳", null, null), menu.dishes.map { it.emoji })
+    }
+
+    @Test
+    fun theEmojiSurvivesTheCache() {
+        val menu = release.parseDocument(menuDocument(dishJson("octopus", extra = ", \"emoji\": \"🐙\""))).menu()
+        val reread = release.parseDocument(menu.toDocument()).menu()
+        assertEquals("🐙", reread.dishes.single().emoji)
     }
 
     @Test

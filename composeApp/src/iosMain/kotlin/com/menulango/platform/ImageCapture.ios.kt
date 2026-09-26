@@ -37,6 +37,7 @@ import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.create
 import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerConfigurationSelectionOrdered
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
@@ -195,27 +196,29 @@ private class PreviewView(
 }
 
 @Composable
-internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): () -> Unit {
+internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit {
     val scope = rememberCoroutineScope()
     val delegate =
         remember {
-            PickerDelegate { data ->
+            PickerDelegate { picked ->
                 scope.launch {
-                    if (data == null) {
+                    if (picked == null) {
                         onPicked(PickedPhoto.Cancelled)
                     } else {
-                        val jpeg = compressForUpload(data)
-                        onPicked(if (jpeg == null) PickedPhoto.Unreadable else PickedPhoto.Chosen(jpeg))
+                        val pages = picked.mapNotNull { compressForUpload(it) }
+                        onPicked(if (pages.isEmpty()) PickedPhoto.Unreadable else PickedPhoto.Chosen(pages))
                     }
                 }
             }
         }
     return remember(delegate) {
-        {
+        { maxPhotos ->
             val configuration =
                 PHPickerConfiguration().apply {
                     filter = PHPickerFilter.imagesFilter
-                    selectionLimit = 1
+                    // Zero is the picker's own "no limit".
+                    selectionLimit = (maxPhotos ?: 0).toLong()
+                    selection = PHPickerConfigurationSelectionOrdered
                 }
             val picker = PHPickerViewController(configuration).apply { this.delegate = delegate }
             topViewController()?.presentViewController(picker, animated = true, completion = null)
@@ -223,8 +226,9 @@ internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): () -> 
     }
 }
 
+/** Loads every picked photo, then hands them over together in the order they were picked. */
 private class PickerDelegate(
-    private val onData: (ByteArray?) -> Unit,
+    private val onData: (List<ByteArray>?) -> Unit,
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
     override fun picker(
@@ -232,15 +236,23 @@ private class PickerDelegate(
         didFinishPicking: List<*>,
     ) {
         picker.dismissViewControllerAnimated(true, completion = null)
-        val result = didFinishPicking.firstOrNull() as? PHPickerResult
-        if (result == null) {
+        val results = didFinishPicking.filterIsInstance<PHPickerResult>()
+        if (results.isEmpty()) {
             onData(null)
             return
         }
-        result.itemProvider.loadDataRepresentationForTypeIdentifier("public.image") { data, error ->
-            if (error != null) println("MenuLango photo picker: ${error.localizedDescription}")
-            val bytes = data?.toByteArray() ?: ByteArray(0)
-            dispatch_async(dispatch_get_main_queue()) { onData(bytes) }
+        val loaded = arrayOfNulls<ByteArray>(results.size)
+        var remaining = results.size
+        results.forEachIndexed { index, result ->
+            result.itemProvider.loadDataRepresentationForTypeIdentifier("public.image") { data, error ->
+                if (error != null) println("MenuLango photo picker: ${error.localizedDescription}")
+                val bytes = data?.toByteArray() ?: ByteArray(0)
+                dispatch_async(dispatch_get_main_queue()) {
+                    loaded[index] = bytes
+                    remaining--
+                    if (remaining == 0) onData(loaded.map { it ?: ByteArray(0) })
+                }
+            }
         }
     }
 }

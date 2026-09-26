@@ -53,9 +53,9 @@ internal expect fun CameraViewfinder(
 
 /** The outcome of the system photo picker. */
 internal sealed interface PickedPhoto {
-    /** Upload-ready, already passed through [compressForUpload]. */
+    /** Upload-ready, already passed through [compressForUpload], in the order they were picked. */
     class Chosen(
-        val jpeg: ByteArray,
+        val pages: List<ByteArray>,
     ) : PickedPhoto
 
     data object Cancelled : PickedPhoto
@@ -63,9 +63,13 @@ internal sealed interface PickedPhoto {
     data object Unreadable : PickedPhoto
 }
 
-/** Returns a launcher for the system photo picker. */
+/**
+ * Returns a launcher for the system photo picker, so a menu's pages can be chosen together.
+ * Launch it with the most photos to accept, or null for no limit. Photos that cannot be read are
+ * skipped; [PickedPhoto.Unreadable] means none could.
+ */
 @Composable
-internal expect fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): () -> Unit
+internal expect fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit
 
 /**
  * Prepares a photo for the proxy: upright, long edge [UPLOAD_LONG_EDGE_PX], JPEG quality

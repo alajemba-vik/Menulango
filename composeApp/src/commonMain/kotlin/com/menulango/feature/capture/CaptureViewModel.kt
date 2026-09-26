@@ -79,11 +79,15 @@ internal class CaptureViewModel(
         photoStatus.value = PhotoStatus.Preparing
     }
 
-    /** A null photo means the capture or the picked file failed. */
-    fun onPhotoReady(jpeg: ByteArray?): Route? {
-        photoStatus.value = if (jpeg == null) PhotoStatus.Unreadable else PhotoStatus.Idle
-        return jpeg?.let { Route.Menu(MenuSource.Photo(it)) }
+    /** Null or empty means the capture or every picked file failed. */
+    fun onPhotosReady(pages: List<ByteArray>?): Route? {
+        val readable = pages.orEmpty()
+        photoStatus.value = if (readable.isEmpty()) PhotoStatus.Unreadable else PhotoStatus.Idle
+        return if (readable.isEmpty()) null else Route.Menu(MenuSource.Photos(readable))
     }
+
+    /** How many pages a diner may pick from the gallery for one menu; null for no limit. */
+    fun galleryLimit(): Int? = if (billing.isPlus.value) null else ScanQuota.FREE_PAGES_PER_MENU
 
     fun onPhotoCancelled() {
         photoStatus.value = PhotoStatus.Idle

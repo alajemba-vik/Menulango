@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.history.EatenHistory
 import com.menulango.data.menu.model.Dish
+import com.menulango.feature.order.OrderBook
+import com.menulango.feature.order.TableOrder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,42 +17,42 @@ import kotlinx.coroutines.launch
 internal sealed interface ChooseUiState {
     data object Loading : ChooseUiState
 
+    /**
+     * @param deck the dishes this mood suggests, best first, starting with the one on top. Swiping
+     *   the top card away brings the next; the deck wraps round when it runs out.
+     * @param order the table's picks, which a swipe right adds to.
+     */
     data class Ready(
         val mode: ChoiceMode,
-        val pick: Pick,
+        val deck: List<Dish>,
         val openDish: Dish?,
         val isPlus: Boolean,
-    ) : ChooseUiState
+        val order: TableOrder,
+    ) : ChooseUiState {
+        val top: Dish? get() = deck.firstOrNull()
+    }
 
     /** The menu has no dishes at all. */
     data object Empty : ChooseUiState
 }
 
-/** The one dish revealed for a mode — always with its reason, never a bare name. */
-internal sealed interface Pick {
-    data class Found(
-        val dish: Dish,
-        val hasAnother: Boolean,
-        val ordered: Boolean,
-    ) : Pick
-
-    /** Nothing on this menu fits the mode. Said plainly, not hidden. */
-    data object NoneFits : Pick
-}
-
 /**
- * Picks a dish for the diner — locally, from the menu already on screen, with no second model call.
+ * Suggests dishes for the diner as a deck of cards — locally, from the menu already on screen,
+ * with no second model call. A swipe right adds the top dish to the table's picks, a swipe left
+ * passes on it; either way the next suggestion comes up.
  */
 internal class ChooseViewModel(
     private val dishes: List<Dish>,
     initialMode: ChoiceMode,
+    private val orderKey: String,
     billing: BillingRepository,
     private val history: EatenHistory,
+    private val orders: OrderBook,
 ) : ViewModel() {
-    private val selection = MutableStateFlow(Selection(initialMode, index = 0, ordered = false))
+    private val selection = MutableStateFlow(Selection(initialMode, index = 0))
     private val openDish = MutableStateFlow<Dish?>(null)
 
-    /** Captured when the screen opens, so ordering a dish doesn't instantly re-rank "Something new". */
+    /** Captured when the screen opens, so picking a dish doesn't instantly re-rank "Something new". */
     private val eatenAtOpen = MutableStateFlow<Set<String>?>(null)
 
     init {
@@ -58,7 +60,13 @@ internal class ChooseViewModel(
     }
 
     val uiState: StateFlow<ChooseUiState> =
-        combine(selection, openDish, eatenAtOpen, billing.isPlus) { selection, open, eaten, isPlus ->
+        combine(
+            selection,
+            openDish,
+            eatenAtOpen,
+            billing.isPlus,
+            orders.order(orderKey),
+        ) { selection, open, eaten, isPlus, order ->
             when {
                 dishes.isEmpty() -> {
                     ChooseUiState.Empty
@@ -70,21 +78,38 @@ internal class ChooseViewModel(
 
                 else -> {
                     val ranked = DishChooser.rank(selection.mode, dishes, eaten)
-                    val pick =
-                        ranked.getOrNull(selection.index % ranked.size.coerceAtLeast(1))?.let {
-                            Pick.Found(it, hasAnother = ranked.size > 1, ordered = selection.ordered)
-                        } ?: Pick.NoneFits
-                    ChooseUiState.Ready(selection.mode, pick, open, isPlus)
+                    val deck =
+                        if (ranked.isEmpty()) {
+                            emptyList()
+                        } else {
+                            List(minOf(DECK_SHOWN, ranked.size)) { ranked[(selection.index + it) % ranked.size] }
+                        }
+                    ChooseUiState.Ready(selection.mode, deck, open, isPlus, order)
                 }
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChooseUiState.Loading)
 
     fun selectMode(mode: ChoiceMode) {
-        selection.value = Selection(mode, index = 0, ordered = false)
+        selection.value = Selection(mode, index = 0)
     }
 
-    fun showAnother() {
-        selection.value = selection.value.let { it.copy(index = it.index + 1, ordered = false) }
+    /** Swiped left: not this one. */
+    fun pass() {
+        selection.value = selection.value.let { it.copy(index = it.index + 1) }
+    }
+
+    /**
+     * Swiped right: the dish joins the table's picks for whoever is being chosen for, and the next
+     * suggestion comes up. Not recorded as eaten — choosing is not eating.
+     */
+    fun keep(dish: Dish) {
+        orders.update(orderKey) { it.add(dish) }
+        pass()
+    }
+
+    /** The next person at the table: a new seat, so the next swipe right is theirs. */
+    fun nextPerson() {
+        orders.update(orderKey) { it.addDiner(null) }
     }
 
     fun openDish(dish: Dish) {
@@ -95,15 +120,13 @@ internal class ChooseViewModel(
         openDish.value = null
     }
 
-    /** "I'll have this": remembered, so tomorrow's "Something new" is new. */
-    fun order(dish: Dish) {
-        selection.value = selection.value.copy(ordered = true)
-        viewModelScope.launch { history.setEaten(dishHistoryKey(dish), eaten = true) }
-    }
-
     private data class Selection(
         val mode: ChoiceMode,
         val index: Int,
-        val ordered: Boolean,
     )
+
+    private companion object {
+        /** The top card and the two peeking behind it. */
+        const val DECK_SHOWN = 3
+    }
 }

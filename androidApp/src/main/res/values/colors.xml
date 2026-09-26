@@ -1,4 +1,4 @@
 <resources>
     <!-- Launch window only; the app itself takes every colour from core/design/Tokens.kt. -->
-    <color name="window_paper">#FAF8F3</color>
+    <color name="window_paper">#F7F3EE</color>
 </resources>

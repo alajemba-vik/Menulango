@@ -55,6 +55,8 @@ public data class Dish(
     val adventureLevel: Int,
     val effortLevel: Int,
     val confidence: Double,
+    /** One emoji picturing the dish, when the model chose one. The app guesses one otherwise. */
+    val emoji: String? = null,
 ) {
     /** Below this, the explanation is shown as a best guess rather than a statement. */
     public val isBestGuess: Boolean get() = confidence < CONFIDENT_THRESHOLD

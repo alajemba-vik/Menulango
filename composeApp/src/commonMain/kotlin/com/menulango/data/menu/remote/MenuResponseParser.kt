@@ -172,8 +172,19 @@ private fun DishDto.toDomain(): Dish {
         adventureLevel = adventure,
         effortLevel = effort,
         confidence = confidence,
+        emoji = emoji.asLoneEmoji(),
     )
 }
+
+/**
+ * The emoji is decoration, so a bad one is dropped quietly rather than costing the dish: it must be
+ * a single short symbol with no letters or digits, never a word the model slipped in.
+ */
+private fun String?.asLoneEmoji(): String? =
+    cleaned()?.takeIf { it.length <= MAX_EMOJI_CHARS && !it.contains(Regex("[\\p{L}\\p{N}\\s]")) }
+
+/** Room for a family or flag sequence joined with zero-width joiners, and nothing longer. */
+private const val MAX_EMOJI_CHARS = 16
 
 private fun PriceDto.toDomain(): Price? {
     // A price the model could not read is simply absent; a negative one is a broken contract.

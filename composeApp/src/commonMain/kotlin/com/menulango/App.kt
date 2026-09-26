@@ -11,10 +11,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
@@ -23,10 +26,14 @@ import com.menulango.core.design.MenuLangoTheme
 import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.ui.BackGesture
+import com.menulango.data.preferences.Appearance
+import com.menulango.data.preferences.Preferences
 import com.menulango.feature.capture.CaptureScreen
 import com.menulango.feature.choose.ChooseScreen
+import com.menulango.feature.home.HomeScreen
 import com.menulango.feature.menu.MenuScreen
 import com.menulango.feature.paywall.PaywallScreen
+import org.koin.compose.koinInject
 
 /**
  * The root of MenuLango on both platforms.
@@ -35,7 +42,15 @@ import com.menulango.feature.paywall.PaywallScreen
  */
 @Composable
 public fun MenuLangoApp(reduceMotion: Boolean = false) {
-    MenuLangoTheme(reduceMotion = reduceMotion) {
+    val preferences = koinInject<Preferences>()
+    val appearance by preferences.appearance.collectAsState()
+    val darkTheme =
+        when (appearance) {
+            Appearance.System -> isSystemInDarkTheme()
+            Appearance.Light -> false
+            Appearance.Dark -> true
+        }
+    MenuLangoTheme(darkTheme = darkTheme, reduceMotion = reduceMotion) {
         val navigator = remember { Navigator() }
         val saveableState = rememberSaveableStateHolder()
 
@@ -63,8 +78,12 @@ private fun Screen(
     navigator: Navigator,
 ) {
     when (route) {
-        Route.Capture -> {
-            CaptureScreen(navigate = navigator::push)
+        Route.Home -> {
+            HomeScreen(navigate = navigator::push)
+        }
+
+        is Route.AddPage -> {
+            CaptureScreen(navigate = navigator::push, addPage = route, onPagesAdded = navigator::pop)
         }
 
         is Route.Menu -> {
@@ -77,7 +96,12 @@ private fun Screen(
         }
 
         is Route.Choose -> {
-            ChooseScreen(dishes = route.dishes, initialMode = route.mode, onBack = navigator::pop)
+            ChooseScreen(
+                dishes = route.dishes,
+                initialMode = route.mode,
+                orderKey = route.orderKey,
+                onBack = navigator::pop,
+            )
         }
 
         is Route.Paywall -> {

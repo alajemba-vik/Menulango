@@ -28,7 +28,21 @@ internal fun SectionLabel(
     )
 }
 
-/** A printed rule. Paper separates with hairlines and tone, not borders and shadows. */
+/** A large serif heading for a group of content: "Cold starters", "Help me choose". */
+@Composable
+internal fun SectionHeading(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = Paper.type.headline,
+        color = Paper.colors.ink,
+        modifier = modifier.semantics { heading() },
+    )
+}
+
+/** A hairline rule, for lists inside a card. Cards themselves separate by tone, not borders. */
 @Composable
 internal fun Hairline(
     modifier: Modifier = Modifier,

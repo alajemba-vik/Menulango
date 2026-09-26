@@ -10,11 +10,11 @@ import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.ChooseActions
 import com.menulango.feature.choose.ChooseContent
 import com.menulango.feature.choose.ChooseUiState
-import com.menulango.feature.choose.Pick
 import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.menu.MenuActions
 import com.menulango.feature.menu.MenuContent
 import com.menulango.feature.menu.MenuUiState
+import com.menulango.feature.order.TableOrder
 import com.menulango.feature.paywall.PaywallActions
 import com.menulango.feature.paywall.PaywallContent
 import com.menulango.feature.paywall.PaywallUiState
@@ -49,9 +49,10 @@ private val paywallReady =
 private val chooseReady =
     ChooseUiState.Ready(
         mode = ChoiceMode.OnlyHere,
-        pick = Pick.Found(PreviewDishes.kokoretsi, hasAnother = true, ordered = false),
+        deck = listOf(PreviewDishes.kokoretsi, PreviewDishes.sfougato),
         openDish = null,
         isPlus = true,
+        order = TableOrder(),
     )
 
 @Preview
@@ -108,7 +109,7 @@ private fun ChooseDark() = PaperPreview(true) { ChooseContent(chooseReady, Choos
 @Composable
 private fun ChooseNoneFitsLight() =
     PaperPreview(false) {
-        ChooseContent(chooseReady.copy(pick = Pick.NoneFits), ChooseActions.Preview)
+        ChooseContent(chooseReady.copy(deck = emptyList()), ChooseActions.Preview)
     }
 
 @Preview
