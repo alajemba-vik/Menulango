@@ -31,6 +31,7 @@ import com.menulango.core.ui.TipHost
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tips
+import com.menulango.platform.SystemBarsFollow
 import com.menulango.feature.capture.CaptureScreen
 import com.menulango.feature.choose.ChooseScreen
 import com.menulango.feature.home.HomeScreen
@@ -53,7 +54,9 @@ public fun MenuLangoApp(reduceMotion: Boolean = false) {
             Appearance.Light -> false
             Appearance.Dark -> true
         }
-    MenuLangoTheme(darkTheme = darkTheme, reduceMotion = reduceMotion) {
+    val calmMotion by preferences.calmMotion.collectAsState()
+    SystemBarsFollow(darkTheme)
+    MenuLangoTheme(darkTheme = darkTheme, reduceMotion = reduceMotion || calmMotion) {
         val navigator = remember { Navigator() }
         val saveableState = rememberSaveableStateHolder()
 

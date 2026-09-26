@@ -93,6 +93,10 @@ internal class SettingsViewModel(
 
     fun setShowFeatured(value: Boolean) = preferences.setShowFeatured(value)
 
+    val calmMotion: StateFlow<Boolean> = preferences.calmMotion
+
+    fun setCalmMotion(value: Boolean) = preferences.setCalmMotion(value)
+
     fun addAvoid(word: String) {
         val clean = word.trim().lowercase().take(MAX_WORD)
         if (clean.isNotEmpty()) preferences.setAvoid(preferences.avoid.value + clean)

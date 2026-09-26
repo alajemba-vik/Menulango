@@ -102,6 +102,8 @@
     <string name="settings_appearance_system">System</string>
     <string name="settings_appearance_light">Light</string>
     <string name="settings_appearance_dark">Dark</string>
+    <string name="settings_calm_motion">Calm motion</string>
+    <string name="settings_calm_motion_body">Keeps the textures still and the cards flat while you scroll.</string>
     <string name="settings_dietary">Always apply</string>
     <string name="settings_dietary_body">Used on every menu you open. You can still switch them off on the menu.</string>
     <string name="settings_avoid">Leave out</string>

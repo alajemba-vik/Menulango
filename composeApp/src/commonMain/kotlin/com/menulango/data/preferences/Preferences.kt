@@ -31,6 +31,18 @@ internal class Preferences(
     private val dietaryState = MutableStateFlow(readDietary())
     private val avoidState = MutableStateFlow(readList(KEY_AVOID))
     private val featuredState = MutableStateFlow(settings.getBoolean(KEY_FEATURED, true))
+    private val calmMotionState = MutableStateFlow(settings.getBoolean(KEY_CALM_MOTION, false))
+
+    /**
+     * The app's own "reduce motion", for diners who want the texture still and the cards flat
+     * without changing their whole phone. Adds to the system setting, never overrides it.
+     */
+    val calmMotion: StateFlow<Boolean> = calmMotionState.asStateFlow()
+
+    fun setCalmMotion(value: Boolean) {
+        settings.putBoolean(KEY_CALM_MOTION, value)
+        calmMotionState.value = value
+    }
 
     /** Whether menus open with "Don't leave without trying". Some diners would rather just read. */
     val showFeatured: StateFlow<Boolean> = featuredState.asStateFlow()
@@ -98,6 +110,7 @@ internal class Preferences(
         const val SEPARATOR = ","
         const val KEY_AVOID = "prefs.avoid"
         const val KEY_FEATURED = "prefs.featured"
+        const val KEY_CALM_MOTION = "prefs.calmMotion"
 
         /** Words may contain commas ("peppers, green"), never a line break. */
         const val LIST_SEPARATOR = "\n"

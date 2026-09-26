@@ -102,6 +102,8 @@ import com.menulango.resources.paywall_terms
 import com.menulango.resources.settings_about
 import com.menulango.resources.settings_ai_note
 import com.menulango.resources.settings_appearance
+import com.menulango.resources.settings_calm_motion
+import com.menulango.resources.settings_calm_motion_body
 import com.menulango.resources.settings_appearance_dark
 import com.menulango.resources.settings_appearance_light
 import com.menulango.resources.settings_appearance_system
@@ -264,6 +266,14 @@ internal fun SettingsScreen(
 
         Section(stringResource(Res.string.settings_appearance)) {
             AppearancePicker(state.appearance, viewModel::setAppearance)
+            val calm by viewModel.calmMotion.collectAsStateWithLifecycle()
+            SwitchRow(
+                title = stringResource(Res.string.settings_calm_motion),
+                body = stringResource(Res.string.settings_calm_motion_body),
+                checked = calm,
+                onChange = viewModel::setCalmMotion,
+                modifier = Modifier.padding(top = Space.sm),
+            )
         }
 
         Section(stringResource(Res.string.settings_dietary)) {
@@ -717,6 +727,43 @@ private fun AppearancePicker(
                 )
             }
         }
+    }
+}
+
+/** A setting that is on or off: the whole row toggles, and reads as one switch to a screen reader. */
+@Composable
+private fun SwitchRow(
+    title: String,
+    body: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = Paper.colors
+    Row(
+        modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .padding(vertical = Space.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = Paper.type.body, color = colors.ink)
+            Text(body, style = Paper.type.caption, color = colors.inkMuted)
+        }
+        Spacer(Modifier.width(Space.sm))
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            colors =
+                SwitchDefaults.colors(
+                    checkedTrackColor = colors.seal,
+                    checkedThumbColor = colors.onSeal,
+                    uncheckedTrackColor = colors.sunk,
+                    uncheckedThumbColor = colors.inkFaint,
+                    uncheckedBorderColor = colors.rule,
+                ),
+        )
     }
 }
 
