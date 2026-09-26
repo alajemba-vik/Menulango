@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -338,6 +339,18 @@ internal fun MenuContent(
                     is HeaderTone.Menu -> tone.colour to Color.White
                 }
             Box(Modifier.fillMaxSize().felt(headerFelt))
+            // The menu's own dishes, drawn large and faint into the felt behind the title, so the
+            // header is a place, not a band of colour (it looked especially bare by candlelight).
+            HeaderGarnish(
+                emojis =
+                    ready
+                        ?.dishes
+                        ?.mapNotNull { it.emoji }
+                        ?.distinct()
+                        ?.take(GARNISH_COUNT)
+                        .orEmpty(),
+                ink = onHeader,
+            )
 
             Column(Modifier.fillMaxSize()) {
                 MenuHeader(state, actions, header, onHeader)
@@ -1405,6 +1418,51 @@ private fun DishName(
         }
     }
 }
+
+/**
+ * A scatter of the menu's dish emoji, large, tilted and faint, like prints in the felt. Fixed
+ * positions, so they never jump as dishes stream in; they simply fade in as each one arrives.
+ */
+@Composable
+private fun HeaderGarnish(
+    emojis: List<String>,
+    ink: Color,
+) {
+    val alpha = if (Paper.colors.isDark) 0.2f else 0.16f
+    Box(Modifier.fillMaxWidth().height(GARNISH_HEIGHT).clearAndSetSemantics { }) {
+        emojis.forEachIndexed { index, emoji ->
+            val (x, y, turn) = GARNISH_SPOTS[index % GARNISH_SPOTS.size]
+            val shown = remember(emoji) { Animatable(0f) }
+            LaunchedEffect(emoji) { shown.animateTo(1f, tween(Motion.ENTRANCE_MS)) }
+            Text(
+                emoji,
+                fontSize = GARNISH_SIZES[index % GARNISH_SIZES.size],
+                color = ink,
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = x, y = y)
+                        .graphicsLayer {
+                            this.alpha = alpha * shown.value
+                            rotationZ = turn
+                        },
+            )
+        }
+    }
+}
+
+private val GARNISH_HEIGHT = 280.dp
+private const val GARNISH_COUNT = 6
+private val GARNISH_SPOTS =
+    listOf(
+        Triple(250.dp, 70.dp, 14f),
+        Triple(310.dp, 170.dp, -10f),
+        Triple(190.dp, 150.dp, 8f),
+        Triple(330.dp, 40.dp, -18f),
+        Triple(120.dp, 210.dp, -6f),
+        Triple(270.dp, 225.dp, 20f),
+    )
+private val GARNISH_SIZES = listOf(64.sp, 52.sp, 44.sp, 38.sp, 48.sp, 40.sp)
 
 /** Whether two names are the same once case, spacing and punctuation are set aside. */
 internal fun String.sameDishNameAs(other: String): Boolean {
