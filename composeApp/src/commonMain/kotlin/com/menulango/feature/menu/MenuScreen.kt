@@ -60,6 +60,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -239,6 +240,7 @@ internal fun MenuScreen(
 ) {
     val viewModel = koinViewModel<MenuViewModel> { parametersOf(source) }
     val translator = koinInject<NoteTranslator>()
+    val tips = koinInject<Tips>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val order by viewModel.order.collectAsStateWithLifecycle()
     val tone by viewModel.headerTone.collectAsStateWithLifecycle()
@@ -268,7 +270,11 @@ internal fun MenuScreen(
                 onToggleSearchTag = viewModel::toggleSearchTag,
                 onClearFilters = viewModel::clearFilters,
                 onDropAvoid = viewModel::dropAvoid,
-                onAddPage = { navigate(viewModel.routeForAddPage()) },
+                onAddPage = {
+                    // Once the diner has added a page either way, the end-of-menu card has done its job.
+                    tips.markSeen(Tip.AddPageCard)
+                    navigate(viewModel.routeForAddPage())
+                },
             ),
     )
 }
@@ -641,7 +647,9 @@ private fun DishList(
     val pageOf = state.pages?.pageOfDish.orEmpty()
     val pageCount = state.pages?.total ?: 1
     // Items before the first dish, so a dish's place in the list can be found without scrolling to it.
-    val leadingItems = listOf(hasFilters, dishes.isEmpty() && state.isFiltering).count { it }
+    val notice = state.notice?.takeIf { dishes.isNotEmpty() }
+    val leadingItems = listOf(hasFilters, dishes.isEmpty() && state.isFiltering, notice != null).count { it }
+    val showAddPageCard = Tip.AddPageCard !in koinInject<Tips>().seen.collectAsState().value
     Box(Modifier.fillMaxSize()) {
         // No horizontal content padding: the filter pills scroll edge to edge, so each item insets itself.
         LazyColumn(
@@ -667,6 +675,17 @@ private fun DishList(
                             Modifier.fillMaxWidth(),
                         )
                     }
+                }
+            }
+            // A note about the list ("only its best known dishes") belongs above the list it describes.
+            notice?.let {
+                item(key = "notice") {
+                    Text(
+                        stringResource(it.text()),
+                        style = Paper.type.caption,
+                        color = Paper.colors.inkMuted,
+                        modifier = gutter.padding(top = Space.sm, bottom = Space.sm),
+                    )
                 }
             }
             itemsIndexed(dishes, key = { _, dish -> dish.id }) { index, dish ->
@@ -738,19 +757,10 @@ private fun DishList(
                     )
                 }
             }
-            state.pages?.takeIf { !state.isReading && !state.isFiltering }?.let { pages ->
+            // A one-time pointer to adding pages; after that the header's "Add page" is enough.
+            state.pages?.takeIf { !state.isReading && !state.isFiltering && showAddPageCard }?.let { pages ->
                 item(key = "more-pages") {
                     MorePagesCard(pages, actions.onAddPage, gutter.padding(top = Space.gutter))
-                }
-            }
-            state.notice?.let { notice ->
-                item(key = "notice") {
-                    Text(
-                        stringResource(notice.text()),
-                        style = Paper.type.caption,
-                        color = Paper.colors.inkMuted,
-                        modifier = gutter.padding(top = Space.gutter),
-                    )
                 }
             }
         }
@@ -1116,37 +1126,70 @@ private fun PageChip(
                 ?: 1
         }
     }
-    val next = if (current >= pageCount) 1 else current + 1
-    val target = dishes.indexOfFirst { pageOf[it.id] == next }
-    val description = stringResource(Res.string.menu_page_jump, next)
+    val jump: (Int) -> Unit = { page ->
+        val target = dishes.indexOfFirst { pageOf[it.id] == page }
+        if (target >= 0) scope.launch { listState.animateScrollToItem(leadingItems + target) }
+    }
+    // Previous and next, each its own target; an arrow only shows when there is a page that way.
     Row(
         modifier
-            .pressable(onClick = {
-                if (target >=
-                    0
-                ) {
-                    scope.launch { listState.animateScrollToItem(leadingItems + target) }
-                }
-            })
             .shadow(Elevation.floating, Shapes.pill, clip = false)
             .clip(Shapes.pill)
             .background(colors.ink)
-            .semantics(mergeDescendants = true) { contentDescription = description }
-            .padding(start = Space.md, end = Space.sm, top = Space.related, bottom = Space.related),
+            .padding(horizontal = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
+        PageArrow(visible = current > 1, up = true, label = stringResource(Res.string.menu_page_jump, current - 1)) {
+            jump(current - 1)
+        }
         Text(
             stringResource(Res.string.menu_page_position, current, pageCount),
             style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
             color = colors.paper,
-            modifier = Modifier.clearAndSetSemantics { },
+            modifier = Modifier.padding(horizontal = Space.xs).semantics { liveRegion = LiveRegionMode.Polite },
         )
+        PageArrow(
+            visible = current < pageCount,
+            up = false,
+            label =
+                stringResource(
+                    Res.string.menu_page_jump,
+                    current + 1,
+                ),
+        ) {
+            jump(current + 1)
+        }
+    }
+}
+
+@Composable
+private fun PageArrow(
+    visible: Boolean,
+    up: Boolean,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val colors = Paper.colors
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .then(
+                if (visible) {
+                    Modifier.clickable(role = Role.Button, onClickLabel = label, onClick = onClick).semantics {
+                        contentDescription = label
+                    }
+                } else {
+                    Modifier.clearAndSetSemantics { }
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
         Icon(
             PaperIcons.ChevronRight,
             contentDescription = null,
-            tint = colors.paper,
-            modifier = Modifier.size(16.dp).graphicsLayer { rotationZ = if (next == 1) -90f else 90f },
+            tint = colors.paper.copy(alpha = if (visible) 1f else 0.25f),
+            modifier = Modifier.size(16.dp).graphicsLayer { rotationZ = if (up) -90f else 90f },
         )
     }
 }

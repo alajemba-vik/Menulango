@@ -175,7 +175,7 @@
     <string name="menu_title_language">%1$s menu</string>
     <string name="menu_title_unknown">Your menu</string>
     <string name="menu_partial">We couldn't read part of this menu. What you see here is complete.</string>
-    <string name="menu_truncated">This menu is long, so here are its best known dishes.</string>
+    <string name="menu_truncated">This menu is long, so these are its best known dishes.</string>
     <string name="menu_known">You've read this menu before, so this one was free.</string>
     <string name="menu_last_free_scan">That was your last free scan this month. This menu stays fully explained.</string>
     <string name="menu_choose_title">Help me choose</string>

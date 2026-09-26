@@ -270,7 +270,7 @@ private fun Tip.text(): StringResource =
         Tip.Picks -> Res.string.tip_picks
         Tip.StartOnCamera -> Res.string.tip_start_on_camera
         Tip.StartOnCameraHere -> Res.string.tip_start_on_camera_here
-        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint -> Res.string.tip_picks
+        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard -> Res.string.tip_picks
     }
 
 private const val TIP_DELAY_MS = 700L
