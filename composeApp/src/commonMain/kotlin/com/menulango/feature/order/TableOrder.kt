@@ -180,6 +180,14 @@ internal class OrderBook(
 
     fun current(menuKey: String): TableOrder = orders.value[menuKey] ?: TableOrder()
 
+    fun backup(): Map<String, TableOrder> = orders.value
+
+    /** A live order wins if both devices have an order for the same menu. */
+    fun merge(incoming: Map<String, TableOrder>) {
+        orders.value = incoming + orders.value
+        persist()
+    }
+
     private fun readOrders(): Map<String, TableOrder> =
         settings
             ?.getStringOrNull(KEY)

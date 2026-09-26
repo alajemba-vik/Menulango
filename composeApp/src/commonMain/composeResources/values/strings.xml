@@ -112,12 +112,27 @@
     <string name="settings_featured">Suggest dishes not to miss</string>
     <string name="settings_featured_body">Shows the local favourites at the top of each menu.</string>
     <string name="settings_data">Your data</string>
+    <string name="settings_backup">Back up my data</string>
+    <string name="settings_backup_body">Make one encrypted file of your menus, picks and preferences. Keep the passphrase somewhere safe.</string>
+    <string name="settings_restore_backup">Restore from backup</string>
+    <string name="settings_backup_title">Back up your MenuLango data</string>
+    <string name="settings_restore_backup_title">Unlock this backup</string>
+    <string name="settings_backup_passphrase">Passphrase</string>
+    <string name="settings_backup_passphrase_hint">Use a passphrase you can remember</string>
+    <string name="settings_backup_confirm">Create backup</string>
+    <string name="settings_restore_confirm">Restore data</string>
+    <string name="settings_backup_failed">We couldn't create that backup. Try again.</string>
+    <string name="settings_backup_restored">Your backup has been merged into this device.</string>
+    <string name="settings_backup_wrong_passphrase">That passphrase didn't unlock this backup.</string>
+    <string name="settings_backup_unsupported">This backup comes from a newer version of MenuLango.</string>
+    <string name="settings_backup_not_opened">We couldn't open that backup file.</string>
     <string name="settings_delete_menus">Delete saved menus</string>
     <string name="settings_delete_menus_confirm_title">Delete every saved menu?</string>
     <string name="settings_delete_menus_confirm_body">Their photos and explanations will be removed from this phone. You can't undo this.</string>
     <string name="settings_delete_menus_done">Saved menus deleted.</string>
     <string name="settings_cancel">Cancel</string>
     <string name="settings_about">About</string>
+    <string name="settings_something_wrong">Something wrong?</string>
     <string name="settings_ai_note">The explanations are written by AI from your photo, so they can be wrong. Check with the restaurant, especially about allergies.</string>
 
     <!-- Menu -->

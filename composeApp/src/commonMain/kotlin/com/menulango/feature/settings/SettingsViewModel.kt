@@ -2,6 +2,8 @@ package com.menulango.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.menulango.data.backup.BackupRestoreResult
+import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.billing.PurchaseOutcome
 import com.menulango.data.menu.MenuRepository
@@ -10,6 +12,7 @@ import com.menulango.data.preferences.Preferences
 import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DishFilter
 import com.menulango.feature.menu.toFilters
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal data class SettingsUiState(
     val isPlus: Boolean,
@@ -29,12 +33,28 @@ internal data class SettingsUiState(
 )
 
 /** A one-off message for the snackbar. */
-internal enum class SettingsMessage { Restored, NothingToRestore, RestoreFailed, MenusDeleted }
+internal enum class SettingsMessage {
+    Restored,
+    NothingToRestore,
+    RestoreFailed,
+    MenusDeleted,
+    BackupFailed,
+    BackupRestored,
+    BackupWrongPassphrase,
+    BackupUnsupportedVersion,
+    BackupFileNotOpened,
+}
+
+internal data class BackupShare(
+    val filename: String,
+    val contents: ByteArray,
+)
 
 internal class SettingsViewModel(
     private val preferences: Preferences,
     private val billing: BillingRepository,
     private val repository: MenuRepository,
+    private val backup: BackupService,
     config: AppConfig,
 ) : ViewModel() {
     /** Test builds only: the sample menu and a free Plus switch live in Settings. */
@@ -44,6 +64,8 @@ internal class SettingsViewModel(
 
     private val messages = MutableSharedFlow<SettingsMessage>(extraBufferCapacity = 1)
     val message: SharedFlow<SettingsMessage> = messages.asSharedFlow()
+    private val backupShares = MutableSharedFlow<BackupShare>(extraBufferCapacity = 1)
+    val backupShare: SharedFlow<BackupShare> = backupShares.asSharedFlow()
 
     val uiState: StateFlow<SettingsUiState> =
         combine(
@@ -96,8 +118,34 @@ internal class SettingsViewModel(
         }
     }
 
+    fun createBackup(passphrase: String) {
+        viewModelScope.launch {
+            runCatching { withContext(Dispatchers.Default) { backup.export(passphrase) } }
+                .onSuccess { backupShares.emit(BackupShare(BACKUP_FILENAME, it)) }
+                .onFailure { messages.emit(SettingsMessage.BackupFailed) }
+        }
+    }
+
+    fun restoreBackup(
+        contents: ByteArray,
+        passphrase: String,
+    ) {
+        viewModelScope.launch {
+            when (withContext(Dispatchers.Default) { backup.restore(contents, passphrase) }) {
+                BackupRestoreResult.Restored -> messages.emit(SettingsMessage.BackupRestored)
+                BackupRestoreResult.WrongPassphraseOrDamaged -> messages.emit(SettingsMessage.BackupWrongPassphrase)
+                BackupRestoreResult.UnsupportedVersion -> messages.emit(SettingsMessage.BackupUnsupportedVersion)
+            }
+        }
+    }
+
+    fun backupFileWasNotOpened() {
+        messages.tryEmit(SettingsMessage.BackupFileNotOpened)
+    }
+
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L
         const val MAX_WORD = 30
+        const val BACKUP_FILENAME = "menulango-backup.menulango"
     }
 }

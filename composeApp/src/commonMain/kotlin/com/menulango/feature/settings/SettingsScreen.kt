@@ -54,6 +54,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -82,6 +84,8 @@ import com.menulango.feature.menu.DietaryFilters
 import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.label
 import com.menulango.feature.paywall.TERMS_URL
+import com.menulango.platform.feedbackMailUri
+import com.menulango.platform.rememberBackupFileTransfer
 import com.menulango.platform.subscriptionSettingsUrl
 import com.menulango.resources.Res
 import com.menulango.resources.filter_avoid
@@ -98,6 +102,17 @@ import com.menulango.resources.settings_avoid_add
 import com.menulango.resources.settings_avoid_body
 import com.menulango.resources.settings_avoid_hint
 import com.menulango.resources.settings_avoid_remove_hint
+import com.menulango.resources.settings_backup
+import com.menulango.resources.settings_backup_body
+import com.menulango.resources.settings_backup_confirm
+import com.menulango.resources.settings_backup_failed
+import com.menulango.resources.settings_backup_not_opened
+import com.menulango.resources.settings_backup_passphrase
+import com.menulango.resources.settings_backup_passphrase_hint
+import com.menulango.resources.settings_backup_restored
+import com.menulango.resources.settings_backup_title
+import com.menulango.resources.settings_backup_unsupported
+import com.menulango.resources.settings_backup_wrong_passphrase
 import com.menulango.resources.settings_cancel
 import com.menulango.resources.settings_data
 import com.menulango.resources.settings_delete_menus
@@ -120,9 +135,13 @@ import com.menulango.resources.settings_plus_label_member
 import com.menulango.resources.settings_plus_manage
 import com.menulango.resources.settings_plus_title
 import com.menulango.resources.settings_restore
+import com.menulango.resources.settings_restore_backup
+import com.menulango.resources.settings_restore_backup_title
+import com.menulango.resources.settings_restore_confirm
 import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
 import com.menulango.resources.settings_show_tips
+import com.menulango.resources.settings_something_wrong
 import com.menulango.resources.settings_tester
 import com.menulango.resources.settings_tester_plus
 import com.menulango.resources.settings_tester_plus_body
@@ -150,14 +169,20 @@ internal fun SettingsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val config = koinInject<AppConfig>()
     val tips = koinInject<Tips>()
+    val backupFiles = rememberBackupFileTransfer()
     val scope = rememberCoroutineScope()
     val tipsReset = stringResource(Res.string.settings_tips_reset)
     val uriHandler = LocalUriHandler.current
     val colors = Paper.colors
     var confirmDelete by remember { mutableStateOf(false) }
+    var backupDialog by remember { mutableStateOf<BackupDialog?>(null) }
+    var importedBackup by remember { mutableStateOf<ByteArray?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.message.collect { snackbar.showSnackbar(getString(it.text())) }
+    }
+    LaunchedEffect(viewModel, backupFiles) {
+        viewModel.backupShare.collect { backupFiles.share(it.filename, it.contents) }
     }
 
     Column(
@@ -289,10 +314,23 @@ internal fun SettingsScreen(
         }
 
         Section(stringResource(Res.string.settings_data)) {
+            Text(stringResource(Res.string.settings_backup_body), style = Paper.type.caption, color = colors.inkMuted)
+            SettingsRow(stringResource(Res.string.settings_backup)) { backupDialog = BackupDialog.Export }
+            SettingsRow(stringResource(Res.string.settings_restore_backup)) {
+                backupFiles.pick { contents ->
+                    if (contents == null) {
+                        viewModel.backupFileWasNotOpened()
+                    } else {
+                        importedBackup = contents
+                        backupDialog = BackupDialog.Restore
+                    }
+                }
+            }
             SettingsRow(stringResource(Res.string.settings_delete_menus), colors.alarm) { confirmDelete = true }
         }
 
         Section(stringResource(Res.string.settings_about)) {
+            SettingsRow(stringResource(Res.string.settings_something_wrong)) { uriHandler.openUri(feedbackMailUri()) }
             config.privacyPolicyUrl?.let { url ->
                 SettingsRow(stringResource(Res.string.paywall_privacy)) { uriHandler.openUri(url) }
             }
@@ -340,6 +378,24 @@ internal fun SettingsScreen(
             },
         )
     }
+
+    backupDialog?.let { action ->
+        BackupPassphraseDialog(
+            action = action,
+            onDismiss = {
+                backupDialog = null
+                importedBackup = null
+            },
+            onConfirm = { passphrase ->
+                when (action) {
+                    BackupDialog.Export -> viewModel.createBackup(passphrase)
+                    BackupDialog.Restore -> importedBackup?.let { viewModel.restoreBackup(it, passphrase) }
+                }
+                backupDialog = null
+                importedBackup = null
+            },
+        )
+    }
 }
 
 private fun SettingsMessage.text(): StringResource =
@@ -348,7 +404,67 @@ private fun SettingsMessage.text(): StringResource =
         SettingsMessage.NothingToRestore -> Res.string.settings_nothing_to_restore
         SettingsMessage.RestoreFailed -> Res.string.settings_restore_failed
         SettingsMessage.MenusDeleted -> Res.string.settings_delete_menus_done
+        SettingsMessage.BackupFailed -> Res.string.settings_backup_failed
+        SettingsMessage.BackupRestored -> Res.string.settings_backup_restored
+        SettingsMessage.BackupWrongPassphrase -> Res.string.settings_backup_wrong_passphrase
+        SettingsMessage.BackupUnsupportedVersion -> Res.string.settings_backup_unsupported
+        SettingsMessage.BackupFileNotOpened -> Res.string.settings_backup_not_opened
     }
+
+private enum class BackupDialog { Export, Restore }
+
+@Composable
+private fun BackupPassphraseDialog(
+    action: BackupDialog,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    val colors = Paper.colors
+    var passphrase by remember { mutableStateOf("") }
+    val isExport = action == BackupDialog.Export
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.raised,
+        title = {
+            Text(
+                stringResource(
+                    if (isExport) Res.string.settings_backup_title else Res.string.settings_restore_backup_title,
+                ),
+                style = Paper.type.dishName,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+                Text(
+                    stringResource(Res.string.settings_backup_passphrase_hint),
+                    style = Paper.type.bodySmall,
+                    color = colors.inkMuted,
+                )
+                OutlinedTextField(
+                    value = passphrase,
+                    onValueChange = { passphrase = it },
+                    label = { Text(stringResource(Res.string.settings_backup_passphrase)) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(passphrase) }, enabled = passphrase.isNotBlank()) {
+                Text(
+                    stringResource(
+                        if (isExport) Res.string.settings_backup_confirm else Res.string.settings_restore_confirm,
+                    ),
+                    color = colors.sealInk,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel), color = colors.ink) }
+        },
+    )
+}
 
 /**
  * The subscription as a stitched label: charcoal felt with a coral running stitch just inside the

@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 
 /** A menu reopened from the device, with the photo it was read from when we kept one. */
 internal data class CachedMenu(
@@ -35,6 +36,20 @@ internal data class SavedMenuItem(
     val venueType: String?,
     val language: String?,
     val savedAtMillis: Long,
+    val photo: ByteArray?,
+)
+
+/** The complete saved-menu row, including the original photo when the diner chose to keep it. */
+@Serializable
+internal data class BackupSavedMenu(
+    val cacheKey: String,
+    val fingerprint: String,
+    val savedAtMillis: Long,
+    val lastOpenedAtMillis: Long,
+    val dishCount: Long,
+    val venueType: String?,
+    val language: String?,
+    val document: String,
     val photo: ByteArray?,
 )
 
@@ -80,6 +95,47 @@ internal class MenuCache(
         }
 
     suspend fun delete(cacheKey: String): Unit = withContext(io) { queries.deleteByKey(cacheKey) }
+
+    suspend fun backup(): List<BackupSavedMenu> =
+        withContext(io) {
+            queries.selectAllForBackup().executeAsList().map {
+                BackupSavedMenu(
+                    it.cacheKey,
+                    it.fingerprint,
+                    it.savedAtMillis,
+                    it.lastOpenedAtMillis,
+                    it.dishCount,
+                    it.venueType,
+                    it.language,
+                    it.document,
+                    it.photo,
+                )
+            }
+        }
+
+    /** Imports only valid menus, retaining a newer local copy when the same menu exists already. */
+    suspend fun merge(backup: List<BackupSavedMenu>): Unit =
+        withContext(io) {
+            database.transaction {
+                backup.forEach { incoming ->
+                    if (parser.parseDocument(incoming.document) !is AppResult.Ok) return@forEach
+                    val current = queries.selectByKey(incoming.cacheKey).executeAsOneOrNull()
+                    if (current != null && current.savedAtMillis > incoming.savedAtMillis) return@forEach
+                    queries.upsert(
+                        incoming.cacheKey,
+                        incoming.fingerprint,
+                        incoming.savedAtMillis,
+                        incoming.lastOpenedAtMillis,
+                        incoming.dishCount,
+                        incoming.venueType,
+                        incoming.language,
+                        incoming.document,
+                        incoming.photo,
+                    )
+                }
+                queries.pruneOldest(MAX_SAVED_MENUS)
+            }
+        }
 
     suspend fun clear(): Unit = withContext(io) { queries.deleteAll() }
 

@@ -7,6 +7,9 @@ CREATE TABLE eatenDish (
 selectAllKeys:
 SELECT dishKey FROM eatenDish;
 
+selectAllForBackup:
+SELECT * FROM eatenDish;
+
 insert:
 INSERT OR REPLACE INTO eatenDish(dishKey, eatenAtMillis) VALUES (?, ?);
 

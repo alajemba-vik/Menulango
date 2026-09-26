@@ -1,6 +1,7 @@
 import SwiftUI
 import ComposeApp
 import MLKitTranslate
+import UniformTypeIdentifiers
 
 /// A thin shell: configuration in, the shared Compose app out.
 @main
@@ -17,7 +18,8 @@ struct MenuLangoApp: App {
             revenueCatApiKey: info["MenuLangoRevenueCatKey"] as? String ?? "",
             isDebug: isDebug,
             betaTools: (info["MenuLangoBetaTools"] as? String) == "YES",
-            noteTranslationBridge: MLKitNoteTranslationBridge()
+            noteTranslationBridge: MLKitNoteTranslationBridge(),
+            backupFileBridge: BackupFileBridge()
         )
     }
 
@@ -25,6 +27,63 @@ struct MenuLangoApp: App {
         WindowGroup {
             ComposeView().ignoresSafeArea()
         }
+    }
+}
+
+/** Owns iOS's system share sheet and document picker; backup content is encrypted by shared Kotlin. */
+private final class BackupFileBridge: NSObject, IosBackupFileBridge, UIDocumentPickerDelegate {
+    private var importCallback: IosBackupImportCallback?
+
+    func share(encoded: String, filename: String) {
+        guard let data = Data(base64Encoded: encoded) else { return }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        do {
+            try data.write(to: url, options: .atomic)
+            guard let presenter = presenter() else { return }
+            let shareSheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+            presenter.present(shareSheet, animated: true)
+        } catch {
+            return
+        }
+    }
+
+    func pick(callback: IosBackupImportCallback) {
+        importCallback = callback
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.data])
+        picker.delegate = self
+        presenter()?.present(picker, animated: true)
+    }
+
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        defer { importCallback = nil }
+        guard let url = urls.first, let data = try? Data(contentsOf: url) else {
+            importCallback?.onData(encoded: nil)
+            return
+        }
+        importCallback?.onData(encoded: data.base64EncodedString())
+    }
+
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        defer { importCallback = nil }
+        importCallback?.onData(encoded: nil)
+    }
+
+    private func presenter() -> UIViewController? {
+        let root =
+            UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap(\.windows)
+                .first(where: \.isKeyWindow)?
+                .rootViewController
+        return visibleViewController(from: root)
+    }
+
+    private func visibleViewController(from controller: UIViewController?) -> UIViewController? {
+        guard let controller else { return nil }
+        if let presented = controller.presentedViewController { return visibleViewController(from: presented) }
+        if let navigation = controller as? UINavigationController { return visibleViewController(from: navigation.visibleViewController) }
+        if let tabs = controller as? UITabBarController { return visibleViewController(from: tabs.selectedViewController) }
+        return controller
     }
 }
 

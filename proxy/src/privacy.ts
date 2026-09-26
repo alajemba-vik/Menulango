@@ -11,19 +11,22 @@ export const PRIVACY_HTML = `<!doctype html>
   @media (prefers-color-scheme:dark){body{color:#EFEBE0;background:#14130E}h2{color:#78755F}}
 </style></head><body>
 <h1>MenuLango privacy policy</h1>
-<p>Last updated 23 September 2026.</p>
+<p>Last updated 26 September 2026.</p>
 <h2>What we collect</h2>
-<p>When you photograph a menu, the photo is sent to our server so an AI model can read it. We do not ask for your name, email address or location, and there are no accounts.</p>
-<p>The app creates a random identifier on install. It is sent with each photo so we can stop any one device from overloading the service. It is not linked to you, your device hardware, or advertising.</p>
+<p>There are no accounts. We do not ask for your name, email address, location or dietary preferences.</p>
+<p>The app creates a random identifier on install. It is sent with a menu photo only to rate-limit abuse. It is not linked to you, device hardware, advertising or tracking.</p>
 <h2>What happens to your photo</h2>
-<p>Your photo is passed to Google's Gemini API on a paid plan, whose terms do not allow your data to be used to train models. Our server does not store photos. Google may keep request data for a limited period for abuse monitoring, as described in its terms.</p>
-<p>The menus you scan, and the photos you took of them, are kept on your phone so you can reopen them offline. Deleting the app deletes them.</p>
+<p>When you scan a menu, its photo is sent to our server and Google's Gemini API only to read and explain that menu. Our server does not store the photo.</p>
+<p>Your scanned menus, their photos and the choices you make are stored on your device so you can reopen them offline. Deleting the app deletes them.</p>
+<h2>Translations and backups</h2>
+<p>Waiter-note translation happens on your device. Your dietary preferences, diners, picks, quantities and notes stay on your device.</p>
+<p>You can create an encrypted backup file protected by a passphrase you choose. It stays with you: you choose where to share or store it, and we never receive the file or its passphrase.</p>
 <h2>Purchases</h2>
-<p>Purchases are processed by Apple or Google and managed through RevenueCat, which receives an anonymous app user ID and your purchase history so your subscription works across reinstalls. We never see your payment details.</p>
+<p>Purchases are processed by Apple or Google and managed through RevenueCat. We do not see your payment details.</p>
 <h2>No tracking</h2>
 <p>MenuLango contains no advertising, no analytics SDK and no third-party tracking.</p>
 <h2>Allergens</h2>
 <p>Allergen information is an estimate of what a dish usually contains. It is never a guarantee. Always ask the restaurant if you have an allergy.</p>
 <h2>Contact</h2>
-<p>Questions about this policy: open an issue on the project's public repository.</p>
+<p>Questions about this policy: <a href="mailto:menulango@gmail.com?subject=MenuLango%20privacy">menulango@gmail.com</a>.</p>
 </body></html>`;

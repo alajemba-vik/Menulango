@@ -4,9 +4,19 @@ import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 
 /** How the app should look, whatever the phone is set to. */
 internal enum class Appearance { System, Light, Dark }
+
+/** The preferences a diner can take with them in an encrypted backup. */
+@Serializable
+internal data class PreferenceBackup(
+    val appearance: Appearance,
+    val dietary: Set<String>,
+    val avoid: Set<String>,
+    val showFeatured: Boolean,
+)
 
 /**
  * The diner's standing choices, kept between launches.
@@ -51,6 +61,16 @@ internal class Preferences(
     fun setDietary(value: Set<String>) {
         settings.putString(KEY_DIETARY, value.sorted().joinToString(SEPARATOR))
         dietaryState.value = value
+    }
+
+    fun backup(): PreferenceBackup = PreferenceBackup(appearance.value, dietary.value, avoid.value, showFeatured.value)
+
+    /** Keep stricter food choices from either device; leave an explicit appearance choice intact. */
+    fun merge(incoming: PreferenceBackup) {
+        setDietary(dietary.value + incoming.dietary)
+        setAvoid(avoid.value + incoming.avoid)
+        if (appearance.value == Appearance.System) setAppearance(incoming.appearance)
+        setShowFeatured(showFeatured.value && incoming.showFeatured)
     }
 
     private fun readAppearance(): Appearance =

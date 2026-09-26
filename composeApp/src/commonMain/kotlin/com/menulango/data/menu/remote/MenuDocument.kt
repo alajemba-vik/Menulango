@@ -15,6 +15,7 @@ internal fun Menu.toDocument(): String {
             menu =
                 MenuMetaDto(
                     language = meta.language,
+                    languageTag = meta.languageTag,
                     currency = meta.currency,
                     venueType = meta.venueType,
                     truncated = meta.truncated,

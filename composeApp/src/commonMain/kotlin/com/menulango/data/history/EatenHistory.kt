@@ -7,6 +7,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal data class EatenDishRecord(
+    val dishKey: String,
+    val eatenAtMillis: Long,
+)
 
 /**
  * The dishes a diner has already eaten, so "Something new" is genuinely new to them.
@@ -35,6 +42,23 @@ internal class EatenHistory(
                 database.eatenDishQueries.insert(dishKey, nowMillis())
             } else {
                 database.eatenDishQueries.delete(dishKey)
+            }
+        }
+
+    suspend fun backup(): List<EatenDishRecord> =
+        withContext(io) {
+            database.eatenDishQueries.selectAllForBackup().executeAsList().map {
+                EatenDishRecord(
+                    it.dishKey,
+                    it.eatenAtMillis,
+                )
+            }
+        }
+
+    suspend fun merge(backup: List<EatenDishRecord>): Unit =
+        withContext(io) {
+            database.transaction {
+                backup.forEach { database.eatenDishQueries.insert(it.dishKey, it.eatenAtMillis) }
             }
         }
 }

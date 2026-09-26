@@ -32,6 +32,9 @@ selectAllSummaries:
 SELECT cacheKey, dishCount, venueType, language, savedAtMillis, lastOpenedAtMillis, photo
 FROM savedMenu ORDER BY lastOpenedAtMillis DESC;
 
+selectAllForBackup:
+SELECT * FROM savedMenu ORDER BY lastOpenedAtMillis DESC;
+
 deleteAll:
 DELETE FROM savedMenu;
 
