@@ -6,6 +6,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 
+/**
+ * The language MenuLango speaks: its own words, and the language new menus are explained in.
+ * [System] follows the phone (or the per-app language chosen in the phone's settings).
+ */
+internal enum class AppLanguage(
+    val languageTag: String?,
+    /** The language's name in itself, so anyone can find their own in the list. */
+    val nativeName: String,
+) {
+    System(null, ""),
+    English("en", "English"),
+    French("fr", "Français"),
+    Spanish("es", "Español"),
+    Arabic("ar", "العربية"),
+    Chinese("zh-Hans", "简体中文"),
+    Japanese("ja", "日本語"),
+    Korean("ko", "한국어"),
+    Russian("ru", "Русский"),
+    Hindi("hi", "हिन्दी"),
+}
+
 /** Which tab the app opens on. */
 internal enum class StartPage { Menus, Camera }
 
@@ -19,6 +40,7 @@ internal data class PreferenceBackup(
     val dietary: Set<String>,
     val avoid: Set<String>,
     val showFeatured: Boolean,
+    val language: AppLanguage = AppLanguage.System,
 )
 
 /**
@@ -41,6 +63,26 @@ internal class Preferences(
      * without changing their whole phone. Adds to the system setting, never overrides it.
      */
     val calmMotion: StateFlow<Boolean> = calmMotionState.asStateFlow()
+
+    private val languageState =
+        MutableStateFlow(
+            AppLanguage.entries.firstOrNull {
+                it.name == settings.getStringOrNull(KEY_LANGUAGE)
+            } ?: AppLanguage.System,
+        )
+
+    val language: StateFlow<AppLanguage> = languageState.asStateFlow()
+
+    /** The language new menus are explained in: the app's chosen language, else the phone's. */
+    val contentLanguageTag: String
+        get() =
+            language.value.languageTag ?: androidx.compose.ui.text.intl.Locale.current
+                .toLanguageTag()
+
+    fun setLanguage(value: AppLanguage) {
+        settings.putString(KEY_LANGUAGE, value.name)
+        languageState.value = value
+    }
 
     private val startPageState =
         MutableStateFlow(
@@ -101,13 +143,15 @@ internal class Preferences(
         dietaryState.value = value
     }
 
-    fun backup(): PreferenceBackup = PreferenceBackup(appearance.value, dietary.value, avoid.value, showFeatured.value)
+    fun backup(): PreferenceBackup =
+        PreferenceBackup(appearance.value, dietary.value, avoid.value, showFeatured.value, language.value)
 
     /** Keep stricter food choices from either device; leave an explicit appearance choice intact. */
     fun merge(incoming: PreferenceBackup) {
         setDietary(dietary.value + incoming.dietary)
         setAvoid(avoid.value + incoming.avoid)
         if (appearance.value == Appearance.System) setAppearance(incoming.appearance)
+        if (language.value == AppLanguage.System) setLanguage(incoming.language)
         setShowFeatured(showFeatured.value && incoming.showFeatured)
     }
 
@@ -139,6 +183,7 @@ internal class Preferences(
         const val KEY_CALM_MOTION = "prefs.calmMotion"
         const val KEY_PLUS_INK = "prefs.plusInkAt"
         const val KEY_START = "prefs.startPage"
+        const val KEY_LANGUAGE = "prefs.language"
         const val KEY_CAMERA_FIRST = "prefs.cameraFirstLaunches"
 
         /** Words may contain commas ("peppers, green"), never a line break. */

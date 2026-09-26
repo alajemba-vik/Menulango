@@ -285,6 +285,10 @@
     <string name="tip_picks">Your picks are here. Open them and show the waiter.</string>
     <string name="tip_start_on_camera">You often start by scanning. You can open MenuLango on Scan in Settings.</string>
     <string name="tip_start_on_camera_here">Choose Scan here and MenuLango will open ready to take a photo.</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_body">The language MenuLango speaks to you in, and the one new menus are explained in. System follows your phone.</string>
+    <string name="settings_language_row">App language</string>
+    <string name="settings_language_system">System</string>
     <string name="settings_start_page">Open the app on</string>
     <string name="settings_start_menus">Menus</string>
     <string name="settings_start_camera">Scan</string>

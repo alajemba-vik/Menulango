@@ -96,6 +96,7 @@ import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.tipTarget
+import com.menulango.data.preferences.AppLanguage
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.StartPage
 import com.menulango.data.tips.Tip
@@ -146,6 +147,10 @@ import com.menulango.resources.settings_dietary
 import com.menulango.resources.settings_dietary_body
 import com.menulango.resources.settings_featured
 import com.menulango.resources.settings_featured_body
+import com.menulango.resources.settings_language
+import com.menulango.resources.settings_language_body
+import com.menulango.resources.settings_language_row
+import com.menulango.resources.settings_language_system
 import com.menulango.resources.settings_menus
 import com.menulango.resources.settings_nothing_to_restore
 import com.menulango.resources.settings_plus_active_title
@@ -287,6 +292,30 @@ internal fun SettingsScreen(
                     checked = calm,
                     onChange = viewModel::setCalmMotion,
                 )
+            }
+
+            Section(stringResource(Res.string.settings_language)) {
+                val language by viewModel.language.collectAsStateWithLifecycle()
+                var choosing by remember { mutableStateOf(false) }
+                Text(
+                    stringResource(Res.string.settings_language_body),
+                    style = Paper.type.caption,
+                    color = colors.inkMuted,
+                )
+                SettingsRow(
+                    stringResource(Res.string.settings_language_row),
+                    value = language.label(),
+                ) { choosing = true }
+                if (choosing) {
+                    LanguageDialog(
+                        selected = language,
+                        onSelect = {
+                            viewModel.setLanguage(it)
+                            choosing = false
+                        },
+                        onDismiss = { choosing = false },
+                    )
+                }
             }
 
             // Everything that shapes how menus are read, in one group, iOS grouped-settings style.
@@ -587,6 +616,65 @@ private fun PlusCard(
     }
 }
 
+/** "System" in the current language, otherwise each language in its own name. */
+@Composable
+private fun AppLanguage.label(): String =
+    if (this == AppLanguage.System) stringResource(Res.string.settings_language_system) else nativeName
+
+/**
+ * The languages as a list of radio rows in a dialog, as both iOS and Android present a language
+ * choice: every name written in its own language, so anyone can find theirs.
+ */
+@Composable
+private fun LanguageDialog(
+    selected: AppLanguage,
+    onSelect: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = Paper.colors
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.raised,
+        title = { Text(stringResource(Res.string.settings_language), style = Paper.type.dishName, color = colors.ink) },
+        text = {
+            Column(Modifier.selectableGroup().verticalScroll(rememberScrollState())) {
+                AppLanguage.entries.forEach { language ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Space.touchTarget)
+                            .clip(Shapes.chip)
+                            .selectable(
+                                selected = language == selected,
+                                role = Role.RadioButton,
+                                onClick = { onSelect(language) },
+                            ).padding(horizontal = Space.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            language.label(),
+                            style = Paper.type.body,
+                            color = colors.ink,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (language == selected) {
+                            Icon(
+                                PaperIcons.Check,
+                                contentDescription = null,
+                                tint = colors.sealInk,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel), color = colors.ink) }
+        },
+    )
+}
+
 /** A small heading inside a settings group, above the control it names. */
 @Composable
 private fun SubHeading(text: String) {
@@ -630,6 +718,7 @@ private fun Section(
 private fun SettingsRow(
     text: String,
     color: Color = Paper.colors.ink,
+    value: String? = null,
     onClick: () -> Unit,
 ) {
     Row(
@@ -642,6 +731,15 @@ private fun SettingsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = Paper.type.body, color = color, modifier = Modifier.weight(1f))
+        // The current choice beside the chevron, as iOS Settings shows it.
+        value?.let {
+            Text(
+                it,
+                style = Paper.type.body,
+                color = Paper.colors.inkMuted,
+                modifier = Modifier.padding(end = Space.xs),
+            )
+        }
         Icon(
             PaperIcons.ChevronRight,
             contentDescription = null,

@@ -24,8 +24,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Paper
 import kotlinx.coroutines.delay
@@ -96,7 +98,16 @@ internal fun HandwrittenText(
         onTextLayout = { result ->
             layout = result
             val last = result.lineCount - 1
-            ink.titleEnd = Offset(result.getLineRight(last), result.getLineBottom(last))
+            // Where the writing ends: the right of the last line, or its left in a right-to-left language.
+            val endX =
+                if (result.layoutInput.layoutDirection ==
+                    LayoutDirection.Rtl
+                ) {
+                    result.getLineLeft(last)
+                } else {
+                    result.getLineRight(last)
+                }
+            ink.titleEnd = Offset(endX, result.getLineBottom(last))
         },
         modifier =
             modifier.drawWithContent {
@@ -153,8 +164,16 @@ internal fun Modifier.plusCardInk(
         val button = ink.button
         if (drawing <= 0f || end == null || button == null) return@drawWithContent
         val origin = titleOrigin()
-        val start = Offset(origin.x + end.x + 6.dp.toPx(), origin.y + end.y - 10.dp.toPx())
-        val loop = button.inflate(7.dp.toPx())
+        // The path is drawn for left-to-right and mirrored for right-to-left, so the pen always
+        // runs down the side of the card the text leaves empty.
+        val rtl = layoutDirection == LayoutDirection.Rtl
+
+        fun mirror(x: Float) = if (rtl) size.width - x else x
+        val start = Offset(mirror(origin.x + end.x) + 6.dp.toPx(), origin.y + end.y - 10.dp.toPx())
+        val loop =
+            button.inflate(7.dp.toPx()).let {
+                if (rtl) Rect(size.width - it.right, it.top, size.width - it.left, it.bottom) else it
+            }
         val path =
             Path().apply {
                 moveTo(start.x, start.y)
@@ -224,11 +243,13 @@ internal fun Modifier.plusCardInk(
         val measure = PathMeasure().apply { setPath(path, false) }
         val partial = Path()
         measure.getSegment(0f, measure.length * drawing, partial, true)
-        drawPath(
-            partial,
-            pen,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-        )
+        scale(scaleX = if (rtl) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2, 0f)) {
+            drawPath(
+                partial,
+                pen,
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
     }
 
 private const val WRITE_DELAY_MS = 350L

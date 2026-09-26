@@ -62,7 +62,10 @@ private val tightLines =
     LineHeightStyle(alignment = LineHeightStyle.Alignment.Center, trim = LineHeightStyle.Trim.None)
 
 @Composable
-private fun rememberPaperType(): PaperType {
+private fun rememberPaperType(latinScript: Boolean): PaperType {
+    // Tracking is tuned for Latin and Cyrillic; Arabic, Devanagari and CJK set it to zero, or
+    // joined scripts come apart and lines break in the middle of words.
+    fun tracking(value: Float) = if (latinScript) value.em else 0.em
     val petrona =
         FontFamily(
             Font(Res.font.petrona_semibold, FontWeight.SemiBold),
@@ -85,14 +88,14 @@ private fun rememberPaperType(): PaperType {
                     fontSize = 40.sp,
                     lineHeight = 44.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.01).em,
+                    letterSpacing = tracking(-0.01f),
                 ),
             dishTitle =
                 serif.copy(
                     fontSize = 30.sp,
                     lineHeight = 35.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.01).em,
+                    letterSpacing = tracking(-0.01f),
                 ),
             headline = serif.copy(fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold),
             dishName = serif.copy(fontSize = 20.sp, lineHeight = 25.sp, fontWeight = FontWeight.Bold),
@@ -112,7 +115,7 @@ private fun rememberPaperType(): PaperType {
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.12.em,
+                    letterSpacing = tracking(0.12f),
                 ),
             original = base.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 18.sp),
             price =
@@ -127,7 +130,7 @@ private fun rememberPaperType(): PaperType {
                     fontSize = 16.sp,
                     lineHeight = 20.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.01.em,
+                    letterSpacing = tracking(0.01f),
                 ),
             chip = sans.copy(fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
         )
@@ -166,6 +169,8 @@ internal object Paper {
 internal fun MenuLangoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     reduceMotion: Boolean = false,
+    /** False for Arabic, Devanagari, Chinese, Japanese and Korean, which take no letter spacing. */
+    latinScript: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     // The whole palette fades between light and dark instead of snapping, as the system does.
@@ -175,7 +180,7 @@ internal fun MenuLangoTheme(
         label = "theme",
     )
     val colors = LightPaper.blend(DarkPaper, darkness)
-    val type = rememberPaperType()
+    val type = rememberPaperType(latinScript)
     val material =
         if (colors.isDark) {
             darkColorScheme(

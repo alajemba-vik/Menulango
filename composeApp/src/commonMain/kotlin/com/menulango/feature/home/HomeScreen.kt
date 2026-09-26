@@ -30,6 +30,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,19 +86,21 @@ internal fun HomeScreen(
     navigate: (Route) -> Unit,
     showMenus: Boolean = false,
     onShowedMenus: () -> Unit = {},
+    tabHolder: (initial: () -> HomeTab) -> MutableState<HomeTab> = { mutableStateOf(it()) },
 ) {
     val preferences = koinInject<Preferences>()
     val tips = koinInject<Tips>()
     // Menus by default; the camera if the diner chose it, or while they have never used it (the
     // welcome page lives there, and a first-time Menus list would only be empty).
-    var tab by rememberSaveable {
-        mutableStateOf(
+    // Held by the navigator, above the language switch, so changing language keeps the tab.
+    var tab by remember {
+        tabHolder {
             when {
                 Tip.Welcome !in tips.seen.value -> HomeTab.Scan
                 preferences.startPage.value == StartPage.Camera -> HomeTab.Scan
                 else -> HomeTab.Menus
-            },
-        )
+            }
+        }
     }
     // A launch that opens on Menus and goes straight to the camera counts towards suggesting
     // "open on Camera". Counted once per launch; three such launches bring the suggestion.

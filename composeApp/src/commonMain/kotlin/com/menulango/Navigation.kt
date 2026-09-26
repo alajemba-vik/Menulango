@@ -1,5 +1,6 @@
 package com.menulango
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +9,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.menulango.data.menu.model.Dish
 import com.menulango.feature.choose.ChoiceMode
+import com.menulango.feature.home.HomeTab
 
 /** Where a menu screen gets its menu from. */
 internal sealed interface MenuSource {
@@ -91,6 +93,9 @@ internal class Navigator {
      * there, next to it, rather than on the camera it came from.
      */
     var showMenusOnReturn by mutableStateOf(false)
+
+    /** The Home tab showing; kept here so it survives the tree being rebuilt for a new language. */
+    var homeTab: MutableState<HomeTab>? = null
     val canGoBack: Boolean get() = entries.size > 1
 
     fun push(route: Route) {

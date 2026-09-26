@@ -7,6 +7,7 @@ import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.billing.PurchaseOutcome
 import com.menulango.data.menu.MenuRepository
+import com.menulango.data.preferences.AppLanguage
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.preferences.StartPage
@@ -100,6 +101,10 @@ internal class SettingsViewModel(
     fun setCalmMotion(value: Boolean) = preferences.setCalmMotion(value)
 
     val startPage: StateFlow<StartPage> = preferences.startPage
+
+    val language: StateFlow<AppLanguage> = preferences.language
+
+    fun setLanguage(value: AppLanguage) = preferences.setLanguage(value)
 
     fun setStartPage(value: StartPage) = preferences.setStartPage(value)
 

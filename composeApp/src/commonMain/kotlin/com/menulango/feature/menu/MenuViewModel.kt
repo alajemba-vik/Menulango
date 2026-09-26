@@ -162,7 +162,7 @@ internal class MenuViewModel(
     private val billing: BillingRepository,
     private val history: EatenHistory,
     private val inbox: PageInbox,
-    preferences: Preferences,
+    private val preferences: Preferences,
     private val orders: OrderBook,
     /** Outlives this screen: a menu being read keeps reading, and is saved, after the diner leaves. */
     private val appScope: CoroutineScope,
@@ -410,7 +410,7 @@ internal class MenuViewModel(
             pages.waiting = false
             publishPages()
             var outcome: PageProgress? = null
-            repository.scanPage(pages.photo(index), Locale.current.toLanguageTag()).collect { progress ->
+            repository.scanPage(pages.photo(index), preferences.contentLanguageTag).collect { progress ->
                 if (progress is PageProgress.Reading) {
                     pages.update(index, progress.meta, progress.dishes)
                     publishPages()

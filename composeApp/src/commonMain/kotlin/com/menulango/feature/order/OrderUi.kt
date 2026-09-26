@@ -66,6 +66,7 @@ import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.suede
 import com.menulango.data.menu.model.Dish
+import com.menulango.data.preferences.Preferences
 import com.menulango.feature.menu.FilterPill
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
@@ -504,7 +505,7 @@ internal fun WaiterView(
     val colors = Paper.colors
     val type = Paper.type
     val translator = koinInject<NoteTranslator>()
-    val dinerLanguageTag = Locale.current.toLanguageTag()
+    val dinerLanguageTag = koinInject<Preferences>().contentLanguageTag
     val targetLanguageTag = restaurantLanguageTag?.takeIf(::isLanguageTag)
     val notes =
         remember(order.lines) {
