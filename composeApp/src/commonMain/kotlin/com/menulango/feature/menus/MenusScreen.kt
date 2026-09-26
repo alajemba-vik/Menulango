@@ -36,8 +36,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,13 +65,17 @@ import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.ScrollTitleBar
+import com.menulango.core.ui.SearchField
+import com.menulango.core.ui.SearchTag
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
 import com.menulango.data.menu.local.SavedMenuItem
+import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
+import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.menuTitle
 import com.menulango.resources.Res
 import com.menulango.resources.menu_context_dishes
@@ -85,6 +92,9 @@ import com.menulango.resources.menus_title
 import com.menulango.resources.menus_today
 import com.menulango.resources.menus_undo
 import com.menulango.resources.menus_yesterday
+import com.menulango.resources.search_menus_hint
+import com.menulango.resources.search_menus_none
+import com.menulango.resources.search_tag_dishes
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -127,6 +137,24 @@ internal fun MenusScreen(
 
     Box(Modifier.fillMaxSize().felt(colors.paper)) {
         val ready = state as? MenusUiState.Ready ?: return@Box
+        // Search is local: by each menu's title, and by the dishes inside only with the tag on.
+        var query by rememberSaveable { mutableStateOf("") }
+        var searchDishes by rememberSaveable { mutableStateOf(false) }
+        val dishNames by viewModel.dishNames.collectAsState()
+        LaunchedEffect(searchDishes, ready.menus) {
+            if (searchDishes) viewModel.loadDishNames(ready.menus.map { it.cacheKey })
+        }
+        val titles = ready.menus.associate { it.cacheKey to menuTitle(it.language, it.venueType) }
+        val shown =
+            ready.menus.filter { menu ->
+                TextSearch.matches(
+                    query,
+                    buildList {
+                        add(titles[menu.cacheKey])
+                        if (searchDishes) addAll(dishNames[menu.cacheKey].orEmpty())
+                    },
+                )
+            }
         val list = rememberLazyListState()
         val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
         val collapsed by remember {
@@ -153,6 +181,33 @@ internal fun MenusScreen(
                     )
                 }
             }
+            if (ready.menus.isNotEmpty()) {
+                item(key = "search") {
+                    SearchField(
+                        query = query,
+                        onQuery = { query = it },
+                        placeholder = stringResource(Res.string.search_menus_hint),
+                        tags =
+                            listOf(
+                                SearchTag(stringResource(Res.string.search_tag_dishes), searchDishes) {
+                                    searchDishes = !searchDishes
+                                },
+                            ),
+                        pill = { FilterPill(it.label, it.selected, it.onToggle) },
+                        modifier = Modifier.padding(bottom = Space.xs),
+                    )
+                }
+            }
+            if (ready.menus.isNotEmpty() && shown.isEmpty()) {
+                item(key = "no-match") {
+                    Text(
+                        stringResource(Res.string.search_menus_none),
+                        style = Paper.type.bodySmall,
+                        color = colors.inkMuted,
+                        modifier = Modifier.padding(vertical = Space.md),
+                    )
+                }
+            }
             if (ready.menus.isEmpty()) {
                 item(key = "empty") {
                     StateMessage(
@@ -164,7 +219,7 @@ internal fun MenusScreen(
                     }
                 }
             }
-            items(ready.menus, key = { it.cacheKey }) { menu ->
+            items(shown, key = { it.cacheKey }) { menu ->
                 SwipeToDelete(
                     onDelete = { onDelete(menu.cacheKey) },
                     modifier = Modifier.animateItem(),

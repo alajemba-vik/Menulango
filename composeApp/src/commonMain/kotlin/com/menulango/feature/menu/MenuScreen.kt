@@ -116,6 +116,8 @@ import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
+import com.menulango.core.ui.SearchField
+import com.menulango.core.ui.SearchTag
 import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.SectionHeading
 import com.menulango.core.ui.SectionLabel
@@ -132,6 +134,8 @@ import com.menulango.core.ui.tipTarget
 import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.quota.ScanQuota
+import com.menulango.data.search.DishSearchTag
+import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.feature.choose.ChoiceMode
@@ -210,6 +214,9 @@ import com.menulango.resources.note_add
 import com.menulango.resources.note_added
 import com.menulango.resources.note_hint_once
 import com.menulango.resources.order_cleared
+import com.menulango.resources.search_menu_hint
+import com.menulango.resources.search_tag_description
+import com.menulango.resources.search_tag_ingredients
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
@@ -254,6 +261,8 @@ internal fun MenuScreen(
                 onEaten = viewModel::setEaten,
                 onChoose = { mode -> viewModel.routeForMode(mode)?.let(navigate) },
                 onToggleFilter = viewModel::toggleFilter,
+                onSearch = viewModel::setSearchQuery,
+                onToggleSearchTag = viewModel::toggleSearchTag,
                 onClearFilters = viewModel::clearFilters,
                 onDropAvoid = viewModel::dropAvoid,
                 onAddPage = { navigate(viewModel.routeForAddPage()) },
@@ -273,6 +282,8 @@ internal data class MenuActions(
     val onClearFilters: () -> Unit,
     val onDropAvoid: (String) -> Unit,
     val onAddPage: () -> Unit,
+    val onSearch: (String) -> Unit = {},
+    val onToggleSearchTag: (DishSearchTag) -> Unit = {},
 ) {
     companion object {
         val Preview = MenuActions({}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {})
@@ -614,7 +625,8 @@ private fun DishList(
     val dishes = state.visibleDishes
     val sections = remember(dishes) { dishes.map { it.section } }
     val gutter = Modifier.padding(horizontal = Space.gutter)
-    val hasFilters = state.filterOptions.isNotEmpty() || state.avoid.isNotEmpty()
+    // The bar is always there once dishes are: it carries the search as well as the filters.
+    val hasFilters = true
     val featured = remember(state.dishes) { state.dishes.filter { it.flags.localSpecialty }.take(FEATURED_MAX) }
     // The picks are only fair once the whole menu is read, so they arrive once, at the end, rather
     // than jumping in above dishes the diner is already reading.
@@ -761,6 +773,24 @@ private fun FilterBar(
 ) {
     val colors = Paper.colors
     Column(Modifier.fillMaxWidth().felt(colors.paper).padding(top = Space.gutter, bottom = Space.sm)) {
+        SearchField(
+            query = state.search.query,
+            onQuery = actions.onSearch,
+            placeholder = stringResource(Res.string.search_menu_hint),
+            tags =
+                listOf(
+                    SearchTag(
+                        stringResource(Res.string.search_tag_ingredients),
+                        DishSearchTag.Ingredients in state.search.tags,
+                    ) { actions.onToggleSearchTag(DishSearchTag.Ingredients) },
+                    SearchTag(
+                        stringResource(Res.string.search_tag_description),
+                        DishSearchTag.Description in state.search.tags,
+                    ) { actions.onToggleSearchTag(DishSearchTag.Description) },
+                ),
+            pill = { FilterPill(it.label, it.selected, it.onToggle) },
+            modifier = Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.sm),
+        )
         Row(
             Modifier
                 .fillMaxWidth()
@@ -1474,26 +1504,8 @@ private val GARNISH_SIZES = listOf(64.sp, 52.sp, 44.sp, 38.sp, 48.sp, 40.sp)
 /** Whether two names are the same once case, spacing and punctuation are set aside. */
 internal fun String.sameDishNameAs(other: String): Boolean = foldedName() == other.foldedName()
 
-/** Lowercase letters and digits with common accents folded: "Crème Brûlée" and "creme brulee" match. */
-internal fun String.foldedName(): String =
-    lowercase()
-        .map { ACCENTS[it] ?: it }
-        .filter { it.isLetterOrDigit() }
-        .joinToString("")
-
-private val ACCENTS: Map<Char, Char> =
-    buildMap {
-        "àáâãäåā".forEach { put(it, 'a') }
-        "çćč".forEach { put(it, 'c') }
-        "èéêëēė".forEach { put(it, 'e') }
-        "ìíîïī".forEach { put(it, 'i') }
-        "ñń".forEach { put(it, 'n') }
-        "òóôõöøō".forEach { put(it, 'o') }
-        "ùúûüū".forEach { put(it, 'u') }
-        "ýÿ".forEach { put(it, 'y') }
-        "šś".forEach { put(it, 's') }
-        "žźż".forEach { put(it, 'z') }
-    }
+/** Letters and digits only, case and accents folded: "Crème Brûlée" and "creme brulee" match. */
+internal fun String.foldedName(): String = TextSearch.fold(this).filter { it.isLetterOrDigit() }
 
 /**
  * "Help me choose", floating over the menu like a basket button: always in reach, never taking

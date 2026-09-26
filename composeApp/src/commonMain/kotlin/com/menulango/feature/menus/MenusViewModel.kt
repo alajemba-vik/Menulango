@@ -36,6 +36,29 @@ internal class MenusViewModel(
             MenusUiState.Ready(menus.filterNot { it.cacheKey in pending }, nowMillis())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MenusUiState.Loading)
 
+    /**
+     * The dish names inside each saved menu, loaded only once the diner adds the "Dishes" tag to
+     * their search: a plain search never has to open every saved menu.
+     */
+    val dishNames = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+
+    fun loadDishNames(cacheKeys: List<String>) {
+        val missing = cacheKeys.filterNot { it in dishNames.value }
+        if (missing.isEmpty()) return
+        viewModelScope.launch {
+            val loaded =
+                missing.associateWith { key ->
+                    repository
+                        .open(key)
+                        ?.menu
+                        ?.dishes
+                        ?.flatMap { listOf(it.readableName, it.originalName) }
+                        .orEmpty()
+                }
+            dishNames.value = dishNames.value + loaded
+        }
+    }
+
     fun hide(cacheKey: String) {
         pendingDeletes.value += cacheKey
     }

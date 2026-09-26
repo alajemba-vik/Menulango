@@ -49,10 +49,11 @@ internal fun ScrollTitleBar(
         ) {
             Column(Modifier.fillMaxWidth().felt(colors.paper)) {
                 Box(Modifier.fillMaxWidth().height(BAR_HEIGHT), contentAlignment = Alignment.Center) {
+                    // The big title's own serif, smaller: the same heading, folded away.
                     // The big title is still the page's heading for screen readers; this is its echo.
                     Text(
                         title,
-                        style = Paper.type.title,
+                        style = Paper.type.dishName,
                         color = colors.ink,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

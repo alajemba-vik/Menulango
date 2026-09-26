@@ -135,6 +135,15 @@ internal object PaperIcons {
             arcToRelative(4f, 4f, 0f, false, true, 2.5f, -2.3f)
         }
 
+    val Search: ImageVector =
+        lineIcon("search") {
+            moveTo(16.5f, 10.5f)
+            arcTo(6f, 6f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 4.5f, y1 = 10.5f)
+            arcTo(6f, 6f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 16.5f, y1 = 10.5f)
+            moveTo(15f, 15f)
+            lineTo(20f, 20f)
+        }
+
     val Minus: ImageVector =
         lineIcon("minus") {
             moveTo(5f, 12f)

@@ -19,6 +19,9 @@ import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.model.MenuMeta
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.ScanQuota
+import com.menulango.data.search.DishSearch
+import com.menulango.data.search.DishSearchTag
+import com.menulango.data.search.TextSearch
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.dishHistoryKey
 import com.menulango.feature.order.OrderBook
@@ -63,20 +66,37 @@ internal sealed interface MenuUiState {
         val showFeatured: Boolean = true,
         /** Present for a menu being photographed page by page; null for the sample or a saved menu. */
         val pages: PageStatus? = null,
+        /** What the diner typed in the menu's search, and which extra fields they chose to include. */
+        val search: DishSearch = DishSearch(),
     ) : MenuUiState {
         val selectedDish: Dish? get() = dishes.firstOrNull { it.id == selectedDishId }
 
         private val filtering = DishFilters(dishes)
 
         /** The dishes left after the diner's filters, in menu order. */
-        val visibleDishes: List<Dish> = filtering.apply(filters, avoid)
+        val visibleDishes: List<Dish> =
+            filtering.apply(filters, avoid).filter { dish ->
+                TextSearch.matches(
+                    search.query,
+                    buildList {
+                        add(dish.readableName)
+                        add(dish.originalName)
+                        if (DishSearchTag.Ingredients in search.tags) addAll(dish.ingredients)
+                        if (DishSearchTag.Description in search.tags) {
+                            add(dish.whatItIs)
+                            add(dish.howItIsMade)
+                            add(dish.pitch)
+                        }
+                    },
+                )
+            }
 
         val filterOptions: List<DishFilter> = filtering.options(filters)
 
         val budgetLimit: Double? get() = filtering.budgetLimit
 
         /** Anything narrowing the menu, the diner's own words included. */
-        val isFiltering: Boolean get() = filters.isNotEmpty() || avoid.isNotEmpty()
+        val isFiltering: Boolean get() = filters.isNotEmpty() || avoid.isNotEmpty() || search.isActive
     }
 
     data class Empty(
@@ -152,6 +172,7 @@ internal class MenuViewModel(
     /** Starts from the diner's standing dietary profile; they can still change it for this menu. */
     private val filters = MutableStateFlow(preferences.dietary.value.toFilters())
     private val avoid = MutableStateFlow(preferences.avoid.value)
+    private val search = MutableStateFlow(DishSearch())
     private val showFeatured = preferences.showFeatured.value
     private var job: Job? = null
 
@@ -186,8 +207,8 @@ internal class MenuViewModel(
             selectedDishId,
             billing.isPlus,
             history.keys,
-            combine(filters, avoid) { f, a -> f to a },
-        ) { reading, selected, isPlus, eaten, (filters, avoid) ->
+            combine(filters, avoid, search) { f, a, s -> Triple(f, a, s) },
+        ) { reading, selected, isPlus, eaten, (filters, avoid, search) ->
             val photo = pages.cover ?: reading.cachedPhoto
             when (reading) {
                 Reading.Loading -> {
@@ -215,6 +236,7 @@ internal class MenuViewModel(
                             eatenKeys = eaten,
                             filters = filters,
                             avoid = avoid,
+                            search = search,
                             showFeatured = showFeatured,
                             pages =
                                 reading.pages?.let {
@@ -258,6 +280,16 @@ internal class MenuViewModel(
     fun clearFilters() {
         filters.value = emptySet()
         avoid.value = emptySet()
+        search.value = DishSearch()
+    }
+
+    fun setSearchQuery(query: String) {
+        search.value = search.value.copy(query = query.take(MAX_QUERY))
+    }
+
+    fun toggleSearchTag(tag: DishSearchTag) {
+        val tags = search.value.tags
+        search.value = search.value.copy(tags = if (tag in tags) tags - tag else tags + tag)
     }
 
     /** Lets a dish the diner usually avoids back onto this menu, without changing their settings. */
@@ -587,3 +619,5 @@ private class PageSession {
             else -> baseNotice
         }
 }
+
+private const val MAX_QUERY = 60
