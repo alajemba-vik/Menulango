@@ -5,8 +5,9 @@ submitted first and stands on its own if iOS slips.
 
 ## 1. Proxy (15 minutes)
 
-1. Create a Gemini API key in Google AI Studio **on a billing-enabled project** (paid tier: your
-   users' photos must not be used for training). Set a monthly budget alert of a few dollars.
+1. Create a Gemini API key in Google AI Studio and set a monthly budget alert before opening the
+   app to public testing. The app sends menu photos only to read that menu; review the current
+   Gemini data terms for the selected API tier before release.
 2. Deploy:
    ```bash
    cd proxy && npm install
@@ -71,7 +72,8 @@ submitted first and stands on its own if iOS slips.
 
 ## 4. App Store (day 5)
 
-1. In `Secrets.xcconfig` set `TEAM_ID`. Open `iosApp/iosApp.xcodeproj`, select a real iPhone, Run,
+1. In `Secrets.xcconfig` set `TEAM_ID`. Run `cd iosApp && pod install`, then open
+   `iosApp/iosApp.xcworkspace`, select a real iPhone, Run,
    and check: camera permission prompt, safe areas, the back swipe, and the dish sheet with
    Dynamic Type at its largest.
 2. Product → Archive → Distribute → App Store Connect.

@@ -605,9 +605,7 @@ internal fun WaiterView(
                     }
                 }
 
-                WaiterTranslationState.NotNeeded -> {
-                    Unit
-                }
+                WaiterTranslationState.NotNeeded -> {}
             }
             order.diners.filter { order.linesFor(it.id).isNotEmpty() }.forEach { diner ->
                 Column(

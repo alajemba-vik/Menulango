@@ -206,9 +206,11 @@ internal fun SettingsScreen(
             onGetPlus = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
             onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
         )
-        if (!state.isPlus) {
-            QuietButton(stringResource(Res.string.settings_restore), viewModel::restore, color = colors.sealInk)
-        }
+        QuietButton(
+            stringResource(Res.string.settings_restore),
+            viewModel::restore,
+            color = colors.sealInk,
+        )
 
         if (viewModel.showsTestTools) {
             Section(stringResource(Res.string.settings_tester)) {

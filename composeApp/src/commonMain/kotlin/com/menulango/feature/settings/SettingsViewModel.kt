@@ -14,6 +14,7 @@ import com.menulango.feature.menu.DishFilter
 import com.menulango.feature.menu.toFilters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,7 @@ internal class SettingsViewModel(
     val message: SharedFlow<SettingsMessage> = messages.asSharedFlow()
     private val backupShares = MutableSharedFlow<BackupShare>(extraBufferCapacity = 1)
     val backupShare: SharedFlow<BackupShare> = backupShares.asSharedFlow()
+    private val restoring = MutableStateFlow(false)
 
     val uiState: StateFlow<SettingsUiState> =
         combine(
@@ -99,15 +101,21 @@ internal class SettingsViewModel(
     fun removeAvoid(word: String) = preferences.setAvoid(preferences.avoid.value - word)
 
     fun restore() {
+        if (restoring.value) return
         viewModelScope.launch {
-            val outcome = billing.restore()
-            messages.emit(
-                when (outcome) {
-                    PurchaseOutcome.Unlocked -> SettingsMessage.Restored
-                    PurchaseOutcome.NothingToRestore -> SettingsMessage.NothingToRestore
-                    else -> SettingsMessage.RestoreFailed
-                },
-            )
+            restoring.value = true
+            try {
+                val outcome = billing.restore()
+                messages.emit(
+                    when (outcome) {
+                        PurchaseOutcome.Unlocked -> SettingsMessage.Restored
+                        PurchaseOutcome.NothingToRestore -> SettingsMessage.NothingToRestore
+                        else -> SettingsMessage.RestoreFailed
+                    },
+                )
+            } finally {
+                restoring.value = false
+            }
         }
     }
 

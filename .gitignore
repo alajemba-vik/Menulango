@@ -6,6 +6,8 @@ xcuserdata
 !src/**/build/
 local.properties
 secrets.properties
+androidApp/google-services.json
+iosApp/iosApp/GoogleService-Info.plist
 .idea
 .DS_Store
 captures
@@ -24,3 +26,5 @@ node_modules
 iosApp/Pods/
 *.jks
 *.keystore
+*.p8
+**/*service-account*.json

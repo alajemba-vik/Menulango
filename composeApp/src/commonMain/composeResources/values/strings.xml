@@ -48,7 +48,7 @@
     <string name="order_view">Your picks</string>
     <string name="order_count">%1$d</string>
     <string name="order_title">Your picks</string>
-    <string name="order_for">Adding for %1$s</string>
+    <string name="order_for">Picking for %1$s</string>
     <string name="order_you">You</string>
     <string name="order_guest">Guest %1$d</string>
     <string name="order_add_person">+ Person</string>

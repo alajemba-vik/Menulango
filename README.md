@@ -47,6 +47,14 @@ REVENUECAT_ANDROID_KEY=goog_xxxxxxxx
 
 For iOS copy `iosApp/Configuration/Secrets.xcconfig.example` to `Secrets.xcconfig`. xcconfig files treat `//` as a comment, so URLs are written `https:/$()/host` — the example shows how. Environment variables with the same names also work for Android (useful in CI).
 
+### RevenueCat setup
+
+MenuLango has no account or app sign-in. Create the `menulango_pro` entitlement in RevenueCat and
+attach the same store products to it on Android and iOS. Create a current `default` offering with
+the **Weekly**, **Monthly** and **Annual** packages. The app reads only that entitlement and offers
+“Restore purchases” in Settings, so a store purchase can be recovered on a new device without
+creating a MenuLango account.
+
 **No local proxy?** `node proxy/scripts/mock-proxy.mjs` serves the sample menu over the same streaming contract, and can simulate failures (`MOCK_ERROR=RATE_LIMITED`, `MOCK_EMPTY=1`, `MOCK_CUT=1`). On the Android emulator run `adb reverse tcp:8787 tcp:8787` and set `PROXY_URL=http://localhost:8787` (cleartext to localhost is allowed in debug builds only).
 
 ### Deploy the proxy
@@ -55,7 +63,7 @@ For iOS copy `iosApp/Configuration/Secrets.xcconfig.example` to `Secrets.xcconfi
 cd proxy
 npm install
 npx wrangler login
-npx wrangler secret put GEMINI_API_KEY      # a PAID-tier key — see "Privacy" below
+npx wrangler secret put GEMINI_API_KEY
 npx wrangler deploy
 scripts/scan.sh https://menulango-proxy.<you>.workers.dev path/to/menu.jpg en-US
 ```
@@ -85,11 +93,13 @@ Shipping to the stores — keys, products, signing, listings — is written up s
                    └──► SQLDelight cache (keyed by what is printed, not by the pixels)
 ```
 
-- **One model call does OCR, translation and explanation.** No OCR library, no on-device model. The Worker sends the photo with a JSON schema (`responseSchema`), so the response is always parseable.
+- **One model call reads and explains the menu.** The Worker sends the photo with a JSON schema (`responseSchema`), so the response is always parseable. It also records the menu language, which the app uses later for waiter notes.
 - **Streaming.** The Worker unwraps Gemini's server-sent events and streams the raw JSON. [`MenuStreamScanner`](composeApp/src/commonMain/kotlin/com/menulango/data/menu/remote/MenuStreamScanner.kt) cuts each dish object out of the stream the moment it closes, so the first dish is on screen long before the last is written.
 - **Untrusted output is validated at the boundary.** [`MenuResponseParser`](composeApp/src/commonMain/kotlin/com/menulango/data/menu/remote/MenuResponseParser.kt) checks every dish (required fields, confidence in 0..1, levels on the scale, non-negative prices). Release builds drop a bad dish and carry on; debug builds throw so a prompt regression is impossible to miss.
 - **The four choosing modes run locally**, ranking dishes the model already described ([`DishChooser`](composeApp/src/commonMain/kotlin/com/menulango/feature/choose/DishChooser.kt)). A dish is only ever recommended with its reason.
-- **The cache key is the menu, not the photo.** Two photos of the same menu share no pixels but list the same dishes, so the key is a SHA-256 of the printed names (sorted, lowercased, accents folded) plus an optional coarse geohash ([`MenuCacheKey`](composeApp/src/commonMain/kotlin/com/menulango/data/menu/local/MenuCacheKey.kt)). Today it lets you reopen menus offline and makes rescanning a known menu free; the same key can move to the Worker's KV store so the second tourist at a taverna costs nothing.
+- **Waiter notes translate on the device.** When you choose “Show the waiter”, ML Kit translates each note into the menu's language and caches the result with that order. The “For me” and “For the restaurant” toggle is instant and makes no network request. If an offline model is unavailable, the app keeps the original note and asks the diner to say or show it instead.
+- **Your cache stays on your device.** Scanned menus, picks and dining history work offline. A user can export a passphrase-encrypted backup and restore it on another device; MenuLango never receives the backup or the passphrase.
+- **Purchases need no sign-in.** RevenueCat reads the Apple App Store or Google Play entitlement, and “Restore purchases” is always available in Settings.
 
 ### Layout
 
@@ -102,7 +112,8 @@ composeApp/src/commonMain/kotlin/com/menulango/
   core/result/                AppResult, AppError
   data/menu/model/            Menu, Dish — imports nothing
   data/menu/remote/           proxy client, DTOs, stream scanner, validator
-  data/menu/local/            SQLDelight cache, cache key
+  data/menu/local/            SQLDelight cache
+  data/backup/                AES-GCM encrypted, user-held backup files
   data/menu/MenuRepository.kt the only place network and cache meet
   data/billing/               BillingRepository — the only file that imports RevenueCat
   data/quota/                 three free scans a month
@@ -115,20 +126,33 @@ androidApp/                   thin Android shell
 
 Every screen state is a sealed `Loading / Ready / Empty / Failed`; ViewModels expose exactly one `StateFlow<UiState>`; no composable touches a repository.
 
+## Accessibility
+
+- Interactive controls have a 48 dp minimum target on Android (the matching 44 pt target on iOS),
+  clear labels, and logical Compose semantics. Decorative illustrations are hidden from screen
+  readers; headings, dish cards, sheets and scan status carry useful semantics.
+- Scan progress and errors use polite live announcements. The dish and menu sheets identify
+  themselves as panes and expose a close action to assistive technology.
+- The shared theme accepts the platform reduce-motion setting. Navigation and press effects fall
+  back to fades or still states when it is enabled.
+- Before every store release, check TalkBack and VoiceOver on a real phone plus the largest system
+  text setting. Record any visual-token contrast or layout issue in `NOTES.md` rather than working
+  around it with one-off colours or sizes.
+
 ---
 
 ## Privacy and cost
 
 - The Gemini key lives only in the Worker's secrets. It is not in the app binary.
-- Use a **paid** Gemini API tier in production: on the free tier Google may use prompts and images to improve its models.
-- Photos are not stored on the server. Menus and their photos are cached on the device only.
-- No analytics SDK, no ads, no tracking. The privacy policy is served by the proxy at `/privacy`.
-- A scan costs about a quarter of a US cent (≈1,700 input and ≈5,400 output tokens on Flash-Lite). The Worker logs tokens per scan; the app logs cache hits and parse failures.
+- Photos are sent to the Worker and Gemini only to read the menu; the Worker does not store them. Menus and their photos are cached on the device only.
+- Waiter-note translation and backup encryption happen on the device. Backups are protected with AES-GCM and a passphrase-derived key, then shared through the device's own file-sharing sheet.
+- There are no accounts, ads, analytics SDKs or third-party tracking. The privacy policy is served by the proxy at `/privacy`.
+- RevenueCat manages store entitlements, while Apple and Google process payments. The app does not receive payment details.
 
 ## Known limitations
 
 - **The free-scan counter is local**, so reinstalling resets it. At a quarter of a cent a scan that is cheaper than a server-side quota.
-- **The cache is per device.** The key is built so it can move to the Worker's KV store; that is the next step.
+- **Backups are user-held.** If a passphrase is lost, the encrypted backup cannot be recovered by MenuLango.
 - **Location is not used yet**, so the cache key's geohash is empty. Adding it needs a location permission and nothing else.
 - Allergen information is an estimate, always shown as "Often contains…" and always followed by "Ask the restaurant if you have an allergy." It is never behind the paywall.
 
