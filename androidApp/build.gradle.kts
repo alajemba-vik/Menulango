@@ -36,7 +36,7 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 1
+        versionCode = 2
         versionName = "1.0.0"
         buildConfigField("String", "PROXY_URL", "\"${secret("PROXY_URL")}\"")
         buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"${secret("REVENUECAT_ANDROID_KEY")}\"")

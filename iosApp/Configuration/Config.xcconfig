@@ -5,7 +5,7 @@ TEAM_ID=
 PRODUCT_NAME=MenuLango
 PRODUCT_BUNDLE_IDENTIFIER=com.menulango.app
 
-CURRENT_PROJECT_VERSION=1
+CURRENT_PROJECT_VERSION=2
 MARKETING_VERSION=1.0.0
 
 // The Kotlin framework is static, so the system SQLite that SQLDelight uses is linked here.
