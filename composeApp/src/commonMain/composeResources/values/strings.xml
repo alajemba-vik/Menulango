@@ -28,6 +28,14 @@
     <string name="capture_failed">We couldn't open that photo. Try another one.</string>
 
     <!-- Home tabs -->
+    <string name="welcome_title">Every dish, explained</string>
+    <string name="welcome_body">Take a photo of any menu, in any language. MenuLango tells you what each dish is, what's in it and how it's cooked.</string>
+    <string name="welcome_step_photo">Photograph the whole menu</string>
+    <string name="welcome_step_read">See what every dish really is</string>
+    <string name="welcome_step_choose">Get a little help choosing</string>
+    <string name="welcome_open_camera">Open the camera</string>
+    <string name="welcome_sample">See an example first</string>
+    <string name="welcome_camera_note">We'll ask to use your camera. Photos are only used to read the menu and aren't kept.</string>
     <string name="tab_menus">Menus</string>
     <string name="tab_scan">Scan</string>
     <string name="tab_scan_shutter">Take a photo of the menu</string>

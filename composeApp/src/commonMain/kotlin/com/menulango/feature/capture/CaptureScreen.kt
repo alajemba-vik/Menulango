@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,6 +78,7 @@ import com.menulango.core.ui.paper
 import com.menulango.core.ui.tipTarget
 import com.menulango.data.menu.local.CachedMenuSummary
 import com.menulango.data.tips.Tip
+import com.menulango.data.tips.Tips
 import com.menulango.feature.menu.PageInbox
 import com.menulango.platform.CameraController
 import com.menulango.platform.CameraState
@@ -151,6 +153,18 @@ internal fun CaptureScreen(
         }
     // The menu being added to has already passed the free-scan gate.
     val gate: () -> Route? = { if (addPage != null) null else viewModel.gateForScan() }
+
+    // A first-time diner meets the app before the camera: no permission prompt out of nowhere.
+    val tips = koinInject<Tips>()
+    val seenTips by tips.seen.collectAsState()
+    if (addPage == null && Tip.Welcome !in seenTips) {
+        Welcome(
+            onOpenCamera = { tips.markSeen(Tip.Welcome) },
+            onSample = { navigate(Route.Menu(MenuSource.Sample)) },
+            bottomInset = bottomInset,
+        )
+        return
+    }
 
     CaptureContent(
         state = state,
@@ -522,7 +536,7 @@ private fun CameraProblem(
  * own words. Motion that explains, never motion for its own sake; still under reduce-motion.
  */
 @Composable
-private fun PlateCluster() {
+internal fun PlateCluster() {
     val colors = Paper.colors
     val reduceMotion = Paper.reduceMotion
     val progress =

@@ -9,7 +9,10 @@ import kotlinx.coroutines.flow.asStateFlow
  * The little notes that point at what makes MenuLango different, in the order a first evening
  * meets them. Each is shown once, where it is useful, never as a carousel up front.
  */
-internal enum class Tip {
+internal enum class Tip(
+    /** False for moments that are not a note: the welcome page, the swipe hint. */
+    val isNote: Boolean = true,
+) {
     /** Test builds only: points testers at the free Plus switch. */
     TesterSettings,
     TesterPlus,
@@ -20,7 +23,10 @@ internal enum class Tip {
     Picks,
 
     /** Not a note: the first saved menu slides aside once to show it can be swiped away. */
-    SwipeToDelete,
+    SwipeToDelete(isNote = false),
+
+    /** Not a note: the page that introduces the app before the camera is ever opened. */
+    Welcome(isNote = false),
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */
