@@ -91,7 +91,11 @@ private fun Screen(
 ) {
     when (route) {
         Route.Home -> {
-            HomeScreen(navigate = navigator::push)
+            HomeScreen(
+                navigate = navigator::push,
+                showMenus = navigator.showMenusOnReturn && navigator.current.route == Route.Home,
+                onShowedMenus = { navigator.showMenusOnReturn = false },
+            )
         }
 
         is Route.AddPage -> {

@@ -1,6 +1,9 @@
 package com.menulango
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.menulango.data.menu.model.Dish
@@ -82,9 +85,16 @@ internal class Navigator {
     val entries = mutableStateListOf(BackStackEntry(Route.Home, nextId++))
 
     val current: BackStackEntry get() = entries.last()
+
+    /**
+     * Set when a fresh scan opens: the new menu is saved under Menus, so going back from it lands
+     * there, next to it, rather than on the camera it came from.
+     */
+    var showMenusOnReturn by mutableStateOf(false)
     val canGoBack: Boolean get() = entries.size > 1
 
     fun push(route: Route) {
+        if (route is Route.Menu && route.source is MenuSource.Photos) showMenusOnReturn = true
         entries.add(BackStackEntry(route, nextId++))
     }
 

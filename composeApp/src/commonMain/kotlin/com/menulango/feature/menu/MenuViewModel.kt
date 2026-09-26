@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -142,6 +143,8 @@ internal class MenuViewModel(
     private val inbox: PageInbox,
     preferences: Preferences,
     private val orders: OrderBook,
+    /** Outlives this screen: a menu being read keeps reading, and is saved, after the diner leaves. */
+    private val appScope: CoroutineScope,
 ) : ViewModel() {
     private val reading = MutableStateFlow<Reading>(Reading.Loading)
     private val selectedDishId = MutableStateFlow<String?>(null)
@@ -292,8 +295,11 @@ internal class MenuViewModel(
     private fun load() {
         job?.cancel()
         reading.value = Reading.Loading
+        // A photographed menu is read in the app's scope, not the screen's: going back mid-read
+        // must not throw the scan away. It finishes quietly and appears under Menus.
+        val scope = if (source is MenuSource.Photos) appScope else viewModelScope
         job =
-            viewModelScope.launch {
+            scope.launch {
                 when (source) {
                     is MenuSource.Saved -> {
                         openSaved(source.cacheKey)

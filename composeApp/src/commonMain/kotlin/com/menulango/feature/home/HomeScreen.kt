@@ -24,6 +24,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,8 +68,15 @@ internal enum class HomeTab { Scan, Menus, Settings }
  * tab bar. A menu itself opens full screen on top, without the bar, the way a restaurant page does.
  */
 @Composable
-internal fun HomeScreen(navigate: (Route) -> Unit) {
+internal fun HomeScreen(
+    navigate: (Route) -> Unit,
+    showMenus: Boolean = false,
+    onShowedMenus: () -> Unit = {},
+) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.Scan) }
+    // Back from a menu just scanned: switch before the first frame so the camera never flashes.
+    if (showMenus && tab != HomeTab.Menus) tab = HomeTab.Menus
+    if (showMenus) SideEffect(onShowedMenus)
     val snackbar = remember { SnackbarHostState() }
     val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     // Room above the floating bar: the camera adds the navigation bar itself, lists do not.
