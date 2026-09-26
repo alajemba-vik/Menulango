@@ -46,6 +46,7 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.result.AppError
 import com.menulango.core.ui.ErrorMessage
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
@@ -58,6 +59,7 @@ import com.menulango.core.ui.paperShimmer
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
 import com.menulango.di.AppConfig
+import com.menulango.platform.feedbackMailUri
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
 import com.menulango.resources.action_try_again
@@ -76,10 +78,13 @@ import com.menulango.resources.paywall_monthly_detail
 import com.menulango.resources.paywall_nothing_to_restore
 import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
+import com.menulango.resources.paywall_plans_failed_body
+import com.menulango.resources.paywall_plans_failed_title
 import com.menulango.resources.paywall_privacy
 import com.menulango.resources.paywall_reason_choose
 import com.menulango.resources.paywall_reason_pages
 import com.menulango.resources.paywall_reason_scans
+import com.menulango.resources.paywall_report_issue
 import com.menulango.resources.paywall_restore
 import com.menulango.resources.paywall_store_error
 import com.menulango.resources.paywall_subtitle
@@ -215,12 +220,39 @@ internal fun PaywallContent(
                 }
 
                 is PaywallUiState.Failed -> {
-                    ErrorMessage(state.error, horizontalPadding = 0.dp) {
-                        PrimaryButton(
-                            stringResource(Res.string.action_try_again),
-                            actions.onRetry,
-                            Modifier.fillMaxWidth(),
-                        )
+                    if (state.error == AppError.Offline) {
+                        ErrorMessage(state.error, horizontalPadding = 0.dp) {
+                            PrimaryButton(
+                                stringResource(Res.string.action_try_again),
+                                actions.onRetry,
+                                Modifier.fillMaxWidth(),
+                            )
+                        }
+                    } else {
+                        // The photo has nothing to do with it: the store didn't hand over the plans.
+                        // Say so plainly, and make reporting it one tap.
+                        val uriHandler = LocalUriHandler.current
+                        StateMessage(
+                            stringResource(Res.string.paywall_plans_failed_title),
+                            stringResource(Res.string.paywall_plans_failed_body),
+                            horizontalPadding = 0.dp,
+                        ) {
+                            PrimaryButton(
+                                stringResource(Res.string.action_try_again),
+                                actions.onRetry,
+                                Modifier.fillMaxWidth(),
+                            )
+                            QuietButton(
+                                stringResource(Res.string.paywall_report_issue),
+                                {
+                                    uriHandler.openUri(
+                                        feedbackMailUri("Plans didn't load on the paywall (${state.error})"),
+                                    )
+                                },
+                                color = colors.sealInk,
+                                singleLine = true,
+                            )
+                        }
                     }
                 }
             }

@@ -3,7 +3,7 @@ package com.menulango.platform
 import platform.Foundation.NSBundle
 import platform.UIKit.UIDevice
 
-internal actual fun feedbackMailUri(): String {
+internal actual fun feedbackMailUri(issue: String?): String {
     val info = NSBundle.mainBundle.infoDictionary
     val version = info?.get("CFBundleShortVersionString") as? String ?: "unknown"
     val build = info?.get("CFBundleVersion") as? String
@@ -11,5 +11,6 @@ internal actual fun feedbackMailUri(): String {
         "$version${build?.let { " ($it)" }.orEmpty()}",
         "iOS",
         "iOS ${UIDevice.currentDevice.systemVersion}",
+        issue,
     )
 }

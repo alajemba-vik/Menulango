@@ -310,6 +310,9 @@
     <string name="paywall_privacy">Privacy</string>
     <string name="paywall_unavailable_title">Purchases aren't available here</string>
     <string name="paywall_unavailable_body">This version can't connect to the store. Everything free still works.</string>
+    <string name="paywall_plans_failed_title">The plans aren't loading</string>
+    <string name="paywall_plans_failed_body">The store didn't send us the plans just now. It can happen in test versions or while payments are being set up. Try again in a moment, or tell us and we'll look into it.</string>
+    <string name="paywall_report_issue">Report the issue</string>
     <string name="paywall_offline">You're offline. The plans will show up when you're back online.</string>
     <string name="paywall_store_error">The store couldn't be reached. Try again in a moment.</string>
     <string name="paywall_pending">Your payment is waiting for approval. Plus unlocks as soon as it clears.</string>

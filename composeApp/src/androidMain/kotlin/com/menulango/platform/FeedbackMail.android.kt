@@ -9,7 +9,7 @@ internal fun installAndroidFeedbackContext(context: Context) {
     applicationContext = context.applicationContext
 }
 
-internal actual fun feedbackMailUri(): String {
+internal actual fun feedbackMailUri(issue: String?): String {
     val context = applicationContext
     val version =
         context
@@ -17,5 +17,5 @@ internal actual fun feedbackMailUri(): String {
             ?.getPackageInfo(context.packageName, 0)
             ?.let { "${it.versionName} (${it.longVersionCode})" }
             ?: "unknown"
-    return feedbackMailUri(version, "Android", "Android ${Build.VERSION.RELEASE}")
+    return feedbackMailUri(version, "Android", "Android ${Build.VERSION.RELEASE}", issue)
 }

@@ -1,12 +1,17 @@
 package com.menulango.platform
 
-/** A prefilled support email with app diagnostics only, never a diner's content or identity. */
-internal expect fun feedbackMailUri(): String
+/**
+ * A prefilled support email with app diagnostics only, never a diner's content or identity.
+ *
+ * @param issue what the diner ran into, when the report starts from a specific problem.
+ */
+internal expect fun feedbackMailUri(issue: String? = null): String
 
 internal fun feedbackMailUri(
     version: String,
     platform: String,
     operatingSystem: String,
+    issue: String? = null,
 ): String {
     val body =
         """
@@ -14,6 +19,7 @@ internal fun feedbackMailUri(
 
         What happened?
 
+        ${issue?.let { "Issue: $it" }.orEmpty()}
         App version: $version
         Platform: $platform
         OS: $operatingSystem
