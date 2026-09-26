@@ -36,6 +36,8 @@ Rules:
   representative and set menu.truncated = true.
 
 Field guide:
+- menu.language: the printed menu's language, written in English (for example, "Greek").
+- menu.languageTag: its BCP-47 language tag (for example, "el", "fr", or "ja").
 - id: a short lowercase ascii slug of the readable name, unique on this menu.
 - readableName: how a traveller would say the dish; transliterate non-Latin
   scripts (Kokoretsi, Tonkotsu ramen, Mansaf).
@@ -122,9 +124,9 @@ export const RESPONSE_SCHEMA = {
   properties: {
     menu: {
       type: "OBJECT",
-      properties: { language: str, currency: str, venueType: str, truncated: bool, confidence: num },
-      required: ["language", "truncated", "confidence"],
-      propertyOrdering: ["language", "currency", "venueType", "truncated", "confidence"],
+      properties: { language: str, languageTag: str, currency: str, venueType: str, truncated: bool, confidence: num },
+      required: ["language", "languageTag", "truncated", "confidence"],
+      propertyOrdering: ["language", "languageTag", "currency", "venueType", "truncated", "confidence"],
     },
     dishes: { type: "ARRAY", items: dish },
   },

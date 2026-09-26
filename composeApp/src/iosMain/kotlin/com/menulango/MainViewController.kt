@@ -5,6 +5,8 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.menulango.data.db.MenuLangoDatabase
 import com.menulango.di.AppConfig
+import com.menulango.feature.order.IosNoteTranslationBridge
+import com.menulango.feature.order.installIosNoteTranslationBridge
 import org.koin.dsl.module
 import platform.UIKit.UIAccessibilityIsReduceMotionEnabled
 import platform.UIKit.UIViewController
@@ -15,7 +17,9 @@ public fun startMenuLango(
     revenueCatApiKey: String,
     isDebug: Boolean,
     betaTools: Boolean,
+    noteTranslationBridge: IosNoteTranslationBridge,
 ) {
+    installIosNoteTranslationBridge(noteTranslationBridge)
     MenuLango.start(
         AppConfig(proxyUrl = proxyUrl, revenueCatApiKey = revenueCatApiKey, isDebug = isDebug, betaTools = betaTools),
         module {

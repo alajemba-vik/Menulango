@@ -90,6 +90,8 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android.driver)
             implementation(libs.koin.android)
+            implementation(libs.kotlinx.coroutines.play.services)
+            implementation(libs.kotlinx.mlkit.translate)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

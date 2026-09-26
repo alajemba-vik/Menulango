@@ -519,11 +519,20 @@ internal fun MenuContent(
                 enter = fadeIn(tween(Motion.SHEET_MS)),
                 exit = fadeOut(tween(Motion.QUICK_MS)),
             ) {
-                WaiterView(order, onClose = { showingWaiter = false })
+                WaiterView(
+                    order = order,
+                    // Older saved menus may have only a two-letter value in `language`; fresh
+                    // scans carry a proper tag. Never guess from a human-readable label.
+                    restaurantLanguageTag = ready?.meta?.languageTag ?: ready?.meta?.language?.takeIf { it.isLanguageTag() },
+                    onTranslationsReady = { translations -> onOrderChange { it.saveWaiterTranslations(translations) } },
+                    onClose = { showingWaiter = false },
+                )
             }
         }
     }
 }
+
+private fun String.isLanguageTag(): Boolean = Regex("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$").matches(this)
 
 @Composable
 private fun Modifier.sharedDishName(

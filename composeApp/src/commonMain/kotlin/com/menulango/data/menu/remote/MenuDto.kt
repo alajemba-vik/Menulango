@@ -19,6 +19,7 @@ internal data class ScanResponseDto(
 @Serializable
 internal data class MenuMetaDto(
     val language: String? = null,
+    val languageTag: String? = null,
     val currency: String? = null,
     val venueType: String? = null,
     val truncated: Boolean? = null,

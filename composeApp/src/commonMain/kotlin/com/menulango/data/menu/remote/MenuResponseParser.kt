@@ -225,12 +225,18 @@ private fun MenuMetaDto.toDomain(): MenuMeta {
     require(score in 0.0..1.0) { "menu confidence $score outside 0..1" }
     return MenuMeta(
         language = language.cleaned(),
+        languageTag = languageTag.cleaned()?.takeIf(::isLanguageTag),
         currency = currency.cleaned(),
         venueType = venueType.cleaned(),
         truncated = truncated == true,
         confidence = score,
     )
 }
+
+/** Enough validation to prevent an invented display label becoming a translation locale. */
+private fun isLanguageTag(value: String): Boolean = LANGUAGE_TAG.matches(value)
+
+private val LANGUAGE_TAG = Regex("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$")
 
 private fun String?.required(field: String): String = requireNotNull(cleaned()) { "$field missing or blank" }
 

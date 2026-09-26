@@ -19,6 +19,8 @@ import com.menulango.feature.menu.MenuViewModel
 import com.menulango.feature.menu.PageInbox
 import com.menulango.feature.menus.MenusViewModel
 import com.menulango.feature.order.OrderBook
+import com.menulango.feature.order.NoteTranslator
+import com.menulango.feature.order.onDeviceNoteTranslator
 import com.menulango.feature.paywall.PaywallViewModel
 import com.menulango.feature.settings.SettingsViewModel
 import com.menulango.resources.Res
@@ -73,7 +75,8 @@ internal fun sharedModule(config: AppConfig): Module =
         single { PageInbox() }
         single { Preferences(get()) }
         single { Tips(get()) }
-        single { OrderBook() }
+        single { OrderBook(get()) }
+        single<NoteTranslator> { onDeviceNoteTranslator() }
         viewModel { params -> MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get()) }
         viewModel { MenusViewModel(get(), ::nowMillis) }
         viewModel { SettingsViewModel(get(), get(), get(), get()) }

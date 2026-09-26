@@ -1,5 +1,7 @@
 package com.menulango.data.menu.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * A menu the app has read and validated.
  *
@@ -8,6 +10,7 @@ package com.menulango.data.menu.model
  * imports nothing — not Compose, not Ktor, not SQLDelight — so the domain can never leak a
  * framework concern upwards.
  */
+@Serializable
 public data class Menu(
     val meta: MenuMeta,
     val dishes: List<Dish>,
@@ -19,8 +22,12 @@ public data class Menu(
  * Kept separate from [Menu] because it arrives first in the stream, before any dish, and the
  * context strip ("23 dishes · Greek · avg €12") can render from it on its own.
  */
+@Serializable
 public data class MenuMeta(
+    /** Human-readable language name for the context strip, e.g. "Greek". */
     val language: String?,
+    /** BCP-47 tag for the printed menu language, e.g. "el". Kept to translate diner notes locally. */
+    val languageTag: String? = null,
     val currency: String?,
     val venueType: String?,
     val truncated: Boolean,
@@ -40,6 +47,7 @@ public data class MenuMeta(
  * regional dish it is told to say nothing rather than invent a preparation. A missing explanation
  * is recoverable at the table ("ask the waiter"); a confident wrong one is not.
  */
+@Serializable
 public data class Dish(
     val id: String,
     val originalName: String,
@@ -69,6 +77,7 @@ public data class Dish(
 }
 
 /** A price as the restaurant printed it, plus the number we parsed out of it. */
+@Serializable
 public data class Price(
     val amount: Double,
     val currency: String?,
@@ -81,6 +90,7 @@ public data class Price(
  * Booleans rather than free text so the choosing modes can rank dishes locally, with no second
  * model call.
  */
+@Serializable
 public data class DishFlags(
     val spicy: Int,
     val raw: Boolean,
@@ -114,6 +124,7 @@ public data class DishFlags(
  * The app never claims a dish is safe. It can only report likelihoods, and always sends the
  * diner back to the restaurant.
  */
+@Serializable
 public data class Allergens(
     val likelyContains: List<String>,
     val mayContain: List<String>,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -30,10 +31,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +46,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -89,9 +93,15 @@ import com.menulango.resources.order_total
 import com.menulango.resources.order_total_note
 import com.menulango.resources.order_view
 import com.menulango.resources.order_waiter_hint
+import com.menulango.resources.order_waiter_for_me
+import com.menulango.resources.order_waiter_for_restaurant
+import com.menulango.resources.order_waiter_preparing
+import com.menulango.resources.order_waiter_translated_by_google
+import com.menulango.resources.order_waiter_unavailable
 import com.menulango.resources.order_you
 import com.menulango.resources.settings_cancel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import kotlin.math.roundToLong
 
 /** "You", a name the diner gave, or "Guest 2" by seat. */
@@ -467,10 +477,52 @@ private fun RenameDialog(
 @Composable
 internal fun WaiterView(
     order: TableOrder,
+    restaurantLanguageTag: String?,
+    onTranslationsReady: (Map<String, String>) -> Unit,
     onClose: () -> Unit,
 ) {
     val colors = Paper.colors
     val type = Paper.type
+    val translator = koinInject<NoteTranslator>()
+    val dinerLanguageTag = Locale.current.toLanguageTag()
+    val targetLanguageTag = restaurantLanguageTag?.takeIf(::isLanguageTag)
+    val notes =
+        remember(order.lines) {
+            order.lines.mapNotNull { line ->
+                line.note?.let { TableOrder.noteKey(line.dish.id, line.dinerId) to it }
+            }.toMap()
+        }
+    val missingTranslations =
+        remember(notes, order.waiterTranslations) {
+            notes.filterKeys { it !in order.waiterTranslations }
+        }
+    var translationState by remember { mutableStateOf<WaiterTranslationState>(WaiterTranslationState.NotNeeded) }
+    var restaurantCopy by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(missingTranslations, dinerLanguageTag, targetLanguageTag) {
+        when {
+            missingTranslations.isEmpty() || notes.isEmpty() -> translationState = WaiterTranslationState.Ready
+            targetLanguageTag == null -> translationState = WaiterTranslationState.Unavailable
+            sameLanguage(dinerLanguageTag, targetLanguageTag) -> {
+                onTranslationsReady(missingTranslations)
+                translationState = WaiterTranslationState.Ready
+            }
+            else -> {
+                translationState = WaiterTranslationState.Preparing
+                translationState =
+                    when (val result = translator.translate(missingTranslations, dinerLanguageTag, targetLanguageTag)) {
+                        is NoteTranslationResult.Ready -> {
+                            onTranslationsReady(result.translations)
+                            WaiterTranslationState.Ready
+                        }
+                        NoteTranslationResult.Unavailable -> WaiterTranslationState.Unavailable
+                    }
+            }
+        }
+    }
+
+    val restaurantCopyAvailable = notes.isEmpty() || translationState == WaiterTranslationState.Ready
+    if (!restaurantCopyAvailable && restaurantCopy) restaurantCopy = false
     Column(
         Modifier
             .fillMaxSize()
@@ -484,9 +536,9 @@ internal fun WaiterView(
         ) {
             IconAction(PaperIcons.Close, stringResource(Res.string.action_close), onClose, background = colors.raised)
             Text(
-                stringResource(Res.string.order_waiter_hint),
-                style = type.caption,
-                color = colors.inkMuted,
+                stringResource(Res.string.order_show_waiter),
+                style = type.title,
+                color = colors.ink,
                 modifier = Modifier.padding(start = Space.sm),
             )
         }
@@ -497,6 +549,42 @@ internal fun WaiterView(
                 .padding(horizontal = Space.gutter, vertical = Space.md),
             verticalArrangement = Arrangement.spacedBy(Space.gutter),
         ) {
+            Text(
+                stringResource(Res.string.order_waiter_hint),
+                style = type.bodySmall,
+                color = colors.inkMuted,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.related)) {
+                WaiterLanguageToggle(
+                    text = stringResource(Res.string.order_waiter_for_me),
+                    selected = !restaurantCopy,
+                    onClick = { restaurantCopy = false },
+                )
+                WaiterLanguageToggle(
+                    text = stringResource(Res.string.order_waiter_for_restaurant),
+                    selected = restaurantCopy,
+                    enabled = restaurantCopyAvailable,
+                    onClick = { restaurantCopy = true },
+                )
+            }
+            when (translationState) {
+                WaiterTranslationState.Preparing -> {
+                    Text(stringResource(Res.string.order_waiter_preparing), style = type.caption, color = colors.inkMuted)
+                }
+                WaiterTranslationState.Unavailable -> {
+                    Text(stringResource(Res.string.order_waiter_unavailable), style = type.caption, color = colors.sealInk)
+                }
+                WaiterTranslationState.Ready -> {
+                    if (notes.isNotEmpty()) {
+                        Text(
+                            stringResource(Res.string.order_waiter_translated_by_google),
+                            style = type.caption,
+                            color = colors.inkFaint,
+                        )
+                    }
+                }
+                WaiterTranslationState.NotNeeded -> Unit
+            }
             order.diners.filter { order.linesFor(it.id).isNotEmpty() }.forEach { diner ->
                 Column(
                     Modifier.fillMaxWidth().paper(colors.raised, Shapes.card).padding(Space.cardPadding),
@@ -505,7 +593,15 @@ internal fun WaiterView(
                     if (order.diners.size > 1) {
                         Text(order.label(diner), style = type.label, color = colors.inkFaint)
                     }
-                    order.linesFor(diner.id).forEach { line -> WaiterLine(line.dish, line.quantity, line.note) }
+                    order.linesFor(diner.id).forEach { line ->
+                        WaiterLine(
+                            dish = line.dish,
+                            quantity = line.quantity,
+                            dinerNote = line.note,
+                            restaurantNote = order.waiterNote(line.dish.id, line.dinerId),
+                            restaurantCopy = restaurantCopy,
+                        )
+                    }
                 }
             }
         }
@@ -516,7 +612,9 @@ internal fun WaiterView(
 private fun WaiterLine(
     dish: Dish,
     quantity: Int,
-    note: String?,
+    dinerNote: String?,
+    restaurantNote: String?,
+    restaurantCopy: Boolean,
 ) {
     val colors = Paper.colors
     Row(verticalAlignment = Alignment.Top) {
@@ -527,10 +625,17 @@ private fun WaiterLine(
             modifier = Modifier.widthIn(min = 56.dp),
         )
         Column(Modifier.weight(1f)) {
-            Text(dish.originalName, style = Paper.type.dishTitle, color = colors.ink)
-            Text(dish.readableName, style = Paper.type.bodySmall, color = colors.inkMuted)
-            // The diner's note, in their own words, marked so they remember to say it out loud.
-            note?.let {
+            Text(
+                if (restaurantCopy) dish.originalName else dish.readableName,
+                style = Paper.type.dishTitle,
+                color = colors.ink,
+            )
+            Text(
+                if (restaurantCopy) dish.readableName else dish.originalName,
+                style = Paper.type.bodySmall,
+                color = colors.inkMuted,
+            )
+            (if (restaurantCopy) restaurantNote else dinerNote)?.let {
                 Text(
                     stringResource(Res.string.note_waiter, it),
                     style = Paper.type.body.copy(fontWeight = FontWeight.SemiBold),
@@ -541,6 +646,40 @@ private fun WaiterLine(
         }
     }
 }
+
+@Composable
+private fun WaiterLanguageToggle(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    val colors = Paper.colors
+    Row(
+        Modifier
+            .heightIn(min = 40.dp)
+            .clip(Shapes.chip)
+            .background(if (selected) colors.seal else colors.sunk)
+            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text,
+            style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
+            color = if (selected) colors.onSeal else colors.inkMuted,
+        )
+    }
+}
+
+private enum class WaiterTranslationState { NotNeeded, Preparing, Ready, Unavailable }
+
+private fun isLanguageTag(tag: String): Boolean = LANGUAGE_TAG.matches(tag)
+
+private fun sameLanguage(first: String, second: String): Boolean =
+    first.substringBefore('-').equals(second.substringBefore('-'), ignoreCase = true)
+
+private val LANGUAGE_TAG = Regex("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$")
 
 /**
  * How someone wants their dish, written while the choice is fresh. Suggestions come from the dish

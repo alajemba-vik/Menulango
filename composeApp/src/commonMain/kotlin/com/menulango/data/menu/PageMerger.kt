@@ -47,6 +47,7 @@ internal object PageMerger {
         } else {
             MenuMeta(
                 language = pages.firstNotNullOfOrNull { it.language },
+                languageTag = pages.firstNotNullOfOrNull { it.languageTag },
                 currency = pages.firstNotNullOfOrNull { it.currency },
                 venueType = pages.firstNotNullOfOrNull { it.venueType },
                 truncated = pages.any { it.truncated },

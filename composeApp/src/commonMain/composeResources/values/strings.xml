@@ -62,7 +62,12 @@
     <string name="order_total">Menu prices add up to</string>
     <string name="order_total_note">These are the prices on the menu. The bill may add tax, service or a cover charge. MenuLango doesn't order for you, you still order from the restaurant.</string>
     <string name="order_show_waiter">Show the waiter</string>
-    <string name="order_waiter_hint">Turn your phone round so the waiter can read it.</string>
+    <string name="order_waiter_hint">Check the restaurant wording, then turn the phone round.</string>
+    <string name="order_waiter_for_me">For me</string>
+    <string name="order_waiter_for_restaurant">For the restaurant</string>
+    <string name="order_waiter_preparing">Preparing restaurant translation…</string>
+    <string name="order_waiter_unavailable">Restaurant translation isn’t available on this device. Say or show this note.</string>
+    <string name="order_waiter_translated_by_google">Translated on this device with Google</string>
 
     <!-- Menus -->
     <string name="menus_title">Your menus</string>

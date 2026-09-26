@@ -1,0 +1,9 @@
+platform :ios, '15.0'
+
+# The shared Compose framework is still built by Gradle. This pod belongs only to the Swift app
+# shell, where it translates diner notes on-device.
+use_frameworks! :linkage => :static
+
+target 'iosApp' do
+  pod 'GoogleMLKit/Translate', '8.0.0'
+end
