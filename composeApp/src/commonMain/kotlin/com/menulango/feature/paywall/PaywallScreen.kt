@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -265,14 +266,26 @@ internal fun PaywallContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                QuietButton(stringResource(Res.string.paywall_restore), actions.onRestore)
-                QuietButton(stringResource(Res.string.paywall_terms), actions.onTerms, color = colors.inkFaint)
+            // On a narrow phone a link that doesn't fit moves to the next line whole, never split
+            // mid-word ("Pri / vacy").
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                QuietButton(stringResource(Res.string.paywall_restore), actions.onRestore, singleLine = true)
+                QuietButton(
+                    stringResource(Res.string.paywall_terms),
+                    actions.onTerms,
+                    color = colors.inkFaint,
+                    singleLine = true,
+                )
                 actions.onPrivacy?.let {
                     QuietButton(
                         stringResource(Res.string.paywall_privacy),
                         it,
                         color = colors.inkFaint,
+                        singleLine = true,
                     )
                 }
             }

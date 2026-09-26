@@ -94,6 +94,7 @@ internal fun QuietButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     color: Color = Paper.colors.inkMuted,
+    singleLine: Boolean = false,
 ) {
     Box(
         modifier =
@@ -104,7 +105,13 @@ internal fun QuietButton(
                 .padding(horizontal = Space.sm),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = Paper.type.button, color = color)
+        Text(
+            text,
+            style = Paper.type.button,
+            color = color,
+            maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+            softWrap = !singleLine,
+        )
     }
 }
 
