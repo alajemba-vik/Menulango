@@ -29,12 +29,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +56,10 @@ import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.tipTarget
+import com.menulango.data.preferences.Preferences
+import com.menulango.data.preferences.StartPage
 import com.menulango.data.tips.Tip
+import com.menulango.data.tips.Tips
 import com.menulango.di.AppConfig
 import com.menulango.feature.capture.CaptureScreen
 import com.menulango.feature.menus.MenusScreen
@@ -62,6 +68,7 @@ import com.menulango.resources.Res
 import com.menulango.resources.tab_menus
 import com.menulango.resources.tab_scan
 import com.menulango.resources.tab_settings
+import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -78,7 +85,32 @@ internal fun HomeScreen(
     showMenus: Boolean = false,
     onShowedMenus: () -> Unit = {},
 ) {
-    var tab by rememberSaveable { mutableStateOf(HomeTab.Scan) }
+    val preferences = koinInject<Preferences>()
+    val tips = koinInject<Tips>()
+    // Menus by default; the camera if the diner chose it, or while they have never used it (the
+    // welcome page lives there, and a first-time Menus list would only be empty).
+    var tab by rememberSaveable {
+        mutableStateOf(
+            when {
+                Tip.Welcome !in tips.seen.value -> HomeTab.Scan
+                preferences.startPage.value == StartPage.Camera -> HomeTab.Scan
+                else -> HomeTab.Menus
+            },
+        )
+    }
+    // A launch that opens on Menus and goes straight to the camera counts towards suggesting
+    // "open on Camera". Counted once per launch; three such launches bring the suggestion.
+    LaunchedEffect(Unit) {
+        if (!LaunchCount.recorded && tab == HomeTab.Menus) {
+            snapshotFlow { tab }.first { it != HomeTab.Menus }.let { next ->
+                if (!LaunchCount.recorded && next == HomeTab.Scan) preferences.cameraFirstLaunches += 1
+                LaunchCount.recorded = true
+            }
+        }
+    }
+    val suggestCameraStart =
+        preferences.startPage.collectAsState().value == StartPage.Menus &&
+            preferences.cameraFirstLaunches >= CAMERA_FIRST_LAUNCHES
     // Back from a menu just scanned: switch before the first frame so the camera never flashes.
     if (showMenus && tab != HomeTab.Menus) tab = HomeTab.Menus
     if (showMenus) SideEffect(onShowedMenus)
@@ -128,7 +160,12 @@ internal fun HomeScreen(
                 actionColor = Paper.colors.seal,
             )
         }
-        TabBar(tab, onSelect = { tab = it }, modifier = Modifier.align(Alignment.BottomCenter))
+        TabBar(
+            tab,
+            onSelect = { tab = it },
+            suggestStart = suggestCameraStart,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -141,6 +178,7 @@ internal fun HomeScreen(
 private fun TabBar(
     selected: HomeTab,
     onSelect: (HomeTab) -> Unit,
+    suggestStart: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
@@ -226,3 +264,11 @@ private val TAB_BAR_HEIGHT: Dp = 64.dp
 
 private const val TAB_OUT_MS = 90
 private const val TAB_IN_MS = 210
+
+/** Once per app launch: whether this launch's first move has been counted. */
+private object LaunchCount {
+    var recorded = false
+}
+
+/** Launches that went straight to the camera before we suggest opening on it. */
+private const val CAMERA_FIRST_LAUNCHES = 3

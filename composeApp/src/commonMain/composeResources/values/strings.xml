@@ -280,6 +280,11 @@
     <string name="tip_add_dish">Tap + to add it to your picks. You can pick for friends at the table too.</string>
     <string name="tip_help_choose">Can't decide? Pick a mood and MenuLango will find you a dish.</string>
     <string name="tip_picks">Your picks are here. Open them and show the waiter.</string>
+    <string name="tip_start_on_camera">You often start with the camera. You can open MenuLango on it in Settings.</string>
+    <string name="tip_start_on_camera_here">Choose Camera here and MenuLango will open ready to scan.</string>
+    <string name="settings_start_page">Open the app on</string>
+    <string name="settings_start_menus">Menus</string>
+    <string name="settings_start_camera">Camera</string>
     <string name="tip_got_it">Got it</string>
     <string name="settings_tester">Tester tools</string>
     <string name="settings_tester_sample">Open the sample menu</string>

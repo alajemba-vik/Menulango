@@ -22,6 +22,12 @@ internal enum class Tip(
     HelpChoose,
     Picks,
 
+    /** Suggested only to diners who keep going straight to the camera: points at Settings... */
+    StartOnCamera,
+
+    /** ...and then at the "Open the app on" control itself. */
+    StartOnCameraHere,
+
     /** Not a note: the first saved menu slides aside once to show it can be swiped away. */
     SwipeToDelete(isNote = false),
 

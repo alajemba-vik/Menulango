@@ -9,6 +9,7 @@ import com.menulango.data.billing.PurchaseOutcome
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
+import com.menulango.data.preferences.StartPage
 import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DishFilter
 import com.menulango.feature.menu.toFilters
@@ -97,6 +98,10 @@ internal class SettingsViewModel(
     val calmMotion: StateFlow<Boolean> = preferences.calmMotion
 
     fun setCalmMotion(value: Boolean) = preferences.setCalmMotion(value)
+
+    val startPage: StateFlow<StartPage> = preferences.startPage
+
+    fun setStartPage(value: StartPage) = preferences.setStartPage(value)
 
     /**
      * Whether the Plus card should write itself out this time. Decorative motion is a delight the

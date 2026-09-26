@@ -68,6 +68,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -95,6 +96,7 @@ import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.tipTarget
 import com.menulango.data.preferences.Appearance
+import com.menulango.data.preferences.StartPage
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.di.AppConfig
@@ -162,6 +164,9 @@ import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
 import com.menulango.resources.settings_show_tips
 import com.menulango.resources.settings_something_wrong
+import com.menulango.resources.settings_start_camera
+import com.menulango.resources.settings_start_menus
+import com.menulango.resources.settings_start_page
 import com.menulango.resources.settings_tester
 import com.menulango.resources.settings_tester_plus
 import com.menulango.resources.settings_tester_plus_body
@@ -254,17 +259,32 @@ internal fun SettingsScreen(
 
             Section(stringResource(Res.string.settings_appearance)) {
                 AppearancePicker(state.appearance, viewModel::setAppearance)
+                GroupDivider()
+                val startPage by viewModel.startPage.collectAsStateWithLifecycle()
+                SubHeading(stringResource(Res.string.settings_start_page))
+                SegmentedControl(
+                    options =
+                        listOf(
+                            stringResource(Res.string.settings_start_menus),
+                            stringResource(Res.string.settings_start_camera),
+                        ),
+                    selected = if (startPage == StartPage.Camera) 1 else 0,
+                    onSelect = { viewModel.setStartPage(if (it == 1) StartPage.Camera else StartPage.Menus) },
+                    modifier = Modifier.tipTarget(Tip.StartOnCameraHere),
+                )
+                GroupDivider()
                 val calm by viewModel.calmMotion.collectAsStateWithLifecycle()
                 SwitchRow(
                     title = stringResource(Res.string.settings_calm_motion),
                     body = stringResource(Res.string.settings_calm_motion_body),
                     checked = calm,
                     onChange = viewModel::setCalmMotion,
-                    modifier = Modifier.padding(top = Space.sm),
                 )
             }
 
-            Section(stringResource(Res.string.settings_dietary)) {
+            // Everything that shapes how menus are read, in one group, iOS grouped-settings style.
+            Section(stringResource(Res.string.settings_menus)) {
+                SubHeading(stringResource(Res.string.settings_dietary))
                 Text(
                     stringResource(Res.string.settings_dietary_body),
                     style = Paper.type.caption,
@@ -284,49 +304,16 @@ internal fun SettingsScreen(
                         )
                     }
                 }
-            }
-
-            Section(stringResource(Res.string.settings_avoid)) {
+                GroupDivider()
+                SubHeading(stringResource(Res.string.settings_avoid))
                 AvoidWords(state.avoid, viewModel::addAvoid, viewModel::removeAvoid)
-            }
-
-            Section(stringResource(Res.string.settings_menus)) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .toggleable(
-                            value = state.showFeatured,
-                            role = Role.Switch,
-                            onValueChange = viewModel::setShowFeatured,
-                        ).padding(vertical = Space.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            stringResource(Res.string.settings_featured),
-                            style = Paper.type.body,
-                            color = colors.ink,
-                        )
-                        Text(
-                            stringResource(Res.string.settings_featured_body),
-                            style = Paper.type.caption,
-                            color = colors.inkMuted,
-                        )
-                    }
-                    Spacer(Modifier.width(Space.sm))
-                    Switch(
-                        checked = state.showFeatured,
-                        onCheckedChange = null,
-                        colors =
-                            SwitchDefaults.colors(
-                                checkedTrackColor = colors.seal,
-                                checkedThumbColor = colors.onSeal,
-                                uncheckedTrackColor = colors.sunk,
-                                uncheckedThumbColor = colors.inkFaint,
-                                uncheckedBorderColor = colors.rule,
-                            ),
-                    )
-                }
+                GroupDivider()
+                SwitchRow(
+                    title = stringResource(Res.string.settings_featured),
+                    body = stringResource(Res.string.settings_featured_body),
+                    checked = state.showFeatured,
+                    onChange = viewModel::setShowFeatured,
+                )
             }
 
             Section(stringResource(Res.string.settings_data)) {
@@ -591,6 +578,29 @@ private fun PlusCard(
             }
         }
     }
+}
+
+/** A small heading inside a settings group, above the control it names. */
+@Composable
+private fun SubHeading(text: String) {
+    Text(
+        text,
+        style = Paper.type.body.copy(fontWeight = FontWeight.SemiBold),
+        color = Paper.colors.ink,
+        modifier = Modifier.padding(bottom = Space.xs).semantics { heading() },
+    )
+}
+
+/** The hairline between rows of one group, inset like an iOS grouped list. */
+@Composable
+private fun GroupDivider() {
+    Box(
+        Modifier
+            .padding(vertical = Space.md)
+            .fillMaxWidth()
+            .height(Space.hairline)
+            .background(Paper.colors.rule),
+    )
 }
 
 @Composable

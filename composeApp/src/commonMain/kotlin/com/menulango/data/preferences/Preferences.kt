@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 
+/** Which tab the app opens on. */
+internal enum class StartPage { Menus, Camera }
+
 /** How the app should look, whatever the phone is set to. */
 internal enum class Appearance { System, Light, Dark }
 
@@ -38,6 +41,24 @@ internal class Preferences(
      * without changing their whole phone. Adds to the system setting, never overrides it.
      */
     val calmMotion: StateFlow<Boolean> = calmMotionState.asStateFlow()
+
+    private val startPageState =
+        MutableStateFlow(
+            StartPage.entries.firstOrNull { it.name == settings.getStringOrNull(KEY_START) } ?: StartPage.Menus,
+        )
+
+    /** Menus by default: most returns are to a menu already read. Camera-first diners can switch. */
+    val startPage: StateFlow<StartPage> = startPageState.asStateFlow()
+
+    fun setStartPage(value: StartPage) {
+        settings.putString(KEY_START, value.name)
+        startPageState.value = value
+    }
+
+    /** Launches on which the diner went straight from Menus to the camera: the hint to suggest a switch. */
+    var cameraFirstLaunches: Int
+        get() = settings.getInt(KEY_CAMERA_FIRST, 0)
+        set(value) = settings.putInt(KEY_CAMERA_FIRST, value)
 
     /** When the Plus card last wrote itself out, so the flourish stays rare. */
     var plusCardPerformedAt: Long
@@ -117,6 +138,8 @@ internal class Preferences(
         const val KEY_FEATURED = "prefs.featured"
         const val KEY_CALM_MOTION = "prefs.calmMotion"
         const val KEY_PLUS_INK = "prefs.plusInkAt"
+        const val KEY_START = "prefs.startPage"
+        const val KEY_CAMERA_FIRST = "prefs.cameraFirstLaunches"
 
         /** Words may contain commas ("peppers, green"), never a line break. */
         const val LIST_SEPARATOR = "\n"

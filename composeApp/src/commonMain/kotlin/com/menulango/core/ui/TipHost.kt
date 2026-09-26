@@ -70,6 +70,8 @@ import com.menulango.resources.tip_got_it
 import com.menulango.resources.tip_help_choose
 import com.menulango.resources.tip_picks
 import com.menulango.resources.tip_scan
+import com.menulango.resources.tip_start_on_camera
+import com.menulango.resources.tip_start_on_camera_here
 import com.menulango.resources.tip_tap_dish
 import com.menulango.resources.tip_tester_plus
 import com.menulango.resources.tip_tester_plus_here
@@ -266,6 +268,8 @@ private fun Tip.text(): StringResource =
         Tip.AddDish -> Res.string.tip_add_dish
         Tip.HelpChoose -> Res.string.tip_help_choose
         Tip.Picks -> Res.string.tip_picks
+        Tip.StartOnCamera -> Res.string.tip_start_on_camera
+        Tip.StartOnCameraHere -> Res.string.tip_start_on_camera_here
         Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint -> Res.string.tip_picks
     }
 
