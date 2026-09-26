@@ -169,14 +169,24 @@ internal fun Modifier.plusCardInk(
                     lane,
                     start.y + 22.dp.toPx(),
                 )
-                cubicTo(
-                    lane + 3.dp.toPx(),
-                    start.y + (loop.top - start.y) * 0.45f,
-                    lane - 3.dp.toPx(),
-                    loop.top - 30.dp.toPx(),
-                    lane,
-                    loop.top - 16.dp.toPx(),
-                )
+                // A hand never draws a straight line: the pen wanders in soft S-curves down the lane.
+                val from = start.y + 22.dp.toPx()
+                val to = loop.top - 16.dp.toPx()
+                val bends = ((to - from) / WAVE_LENGTH.toPx()).toInt().coerceAtLeast(2)
+                val step = (to - from) / bends
+                val sway = WAVE_SWAY.toPx()
+                for (bend in 0 until bends) {
+                    val y = from + step * bend
+                    val side = if (bend % 2 == 0) 1f else -1f
+                    cubicTo(
+                        lane + sway * side,
+                        y + step * 0.3f,
+                        lane + sway * side,
+                        y + step * 0.7f,
+                        lane,
+                        y + step,
+                    )
+                }
                 cubicTo(
                     lane,
                     loop.top - 4.dp.toPx(),
@@ -230,4 +240,8 @@ private const val SHEEN_GAP_MIN_MS = 90_000L
 private const val SHEEN_GAP_MAX_MS = 180_000L
 
 /** The pen runs down this far in from the card's right edge: inside the stitching, outside the text. */
-private val LANE_FROM_EDGE = 14.dp
+private val LANE_FROM_EDGE = 24.dp
+
+/** How far apart the pen line's bends are, and how far each swings either side. */
+private val WAVE_LENGTH = 34.dp
+private val WAVE_SWAY = 7.dp

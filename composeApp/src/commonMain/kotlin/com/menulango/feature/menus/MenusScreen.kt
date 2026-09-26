@@ -72,6 +72,7 @@ import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.SearchField
 import com.menulango.core.ui.SearchTag
 import com.menulango.core.ui.StateMessage
+import com.menulango.core.ui.bigTitleFade
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
@@ -175,8 +176,14 @@ internal fun MenusScreen(
             }
         val list = rememberLazyListState()
         val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
-        val collapsed by remember {
-            derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > titleGone }
+        val progress = {
+            if (list.firstVisibleItemIndex >
+                0
+            ) {
+                1f
+            } else {
+                (list.firstVisibleItemScrollOffset / titleGone.toFloat()).coerceIn(0f, 1f)
+            }
         }
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -191,7 +198,7 @@ internal fun MenusScreen(
                             stringResource(Res.string.menus_title),
                             style = Paper.type.hero,
                             color = colors.ink,
-                            modifier = Modifier.weight(1f).semantics { heading() },
+                            modifier = Modifier.weight(1f).bigTitleFade(progress).semantics { heading() },
                         )
                         // Search waits behind its icon until wanted, as in Mail or Notes.
                         if (ready.menus.isNotEmpty() && !searching) {
@@ -273,7 +280,7 @@ internal fun MenusScreen(
                 }
             }
         }
-        ScrollTitleBar(stringResource(Res.string.menus_title), collapsed, Modifier.align(Alignment.TopCenter))
+        ScrollTitleBar(stringResource(Res.string.menus_title), progress, Modifier.align(Alignment.TopCenter))
     }
 }
 

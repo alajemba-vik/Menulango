@@ -55,6 +55,7 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.ui.PaperSnackbar
 import com.menulango.core.ui.tipTarget
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.preferences.StartPage
@@ -151,14 +152,7 @@ internal fun HomeScreen(
                 .padding(horizontal = Space.gutter)
                 .padding(bottom = aboveBar),
         ) { data ->
-            Snackbar(
-                data,
-                modifier = Modifier.fillMaxWidth(),
-                shape = Shapes.tile,
-                containerColor = Paper.colors.ink,
-                contentColor = Paper.colors.paper,
-                actionColor = Paper.colors.seal,
-            )
+            PaperSnackbar(data)
         }
         TabBar(
             tab,

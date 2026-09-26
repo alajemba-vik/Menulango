@@ -90,6 +90,7 @@ import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.SegmentedControl
+import com.menulango.core.ui.bigTitleFade
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
@@ -212,7 +213,7 @@ internal fun SettingsScreen(
 
     val scroll = rememberScrollState()
     val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
-    val collapsed by remember { derivedStateOf { scroll.value > titleGone } }
+    val progress = { (scroll.value / titleGone.toFloat()).coerceIn(0f, 1f) }
     Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -227,7 +228,13 @@ internal fun SettingsScreen(
                 stringResource(Res.string.settings_title),
                 style = Paper.type.hero,
                 color = colors.ink,
-                modifier = Modifier.padding(top = Space.xl, bottom = Space.gutter).semantics { heading() },
+                modifier =
+                    Modifier
+                        .padding(
+                            top = Space.xl,
+                            bottom = Space.gutter,
+                        ).bigTitleFade(progress)
+                        .semantics { heading() },
             )
 
             PlusCard(
@@ -407,7 +414,7 @@ internal fun SettingsScreen(
                 },
             )
         }
-        ScrollTitleBar(stringResource(Res.string.settings_title), collapsed, Modifier.align(Alignment.TopCenter))
+        ScrollTitleBar(stringResource(Res.string.settings_title), progress, Modifier.align(Alignment.TopCenter))
     }
 }
 

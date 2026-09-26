@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -115,6 +116,7 @@ import com.menulango.core.ui.FlagChip
 import com.menulango.core.ui.FlagChips
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.MenuSnapshot
+import com.menulango.core.ui.PaperSnackbar
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SearchField
@@ -550,14 +552,7 @@ internal fun MenuContent(
                     .padding(horizontal = Space.gutter)
                     .padding(bottom = 88.dp),
             ) { data ->
-                Snackbar(
-                    data,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = Shapes.tile,
-                    containerColor = Paper.colors.ink,
-                    contentColor = Paper.colors.paper,
-                    actionColor = Paper.colors.seal,
-                )
+                PaperSnackbar(data)
             }
 
             noting?.let { dish ->
@@ -637,7 +632,8 @@ private fun DishList(
     val dishes = state.visibleDishes
     val sections = remember(dishes) { dishes.map { it.section } }
     val gutter = Modifier.padding(horizontal = Space.gutter)
-    val hasFilters = state.filterOptions.isNotEmpty() || state.avoid.isNotEmpty() || state.search.open
+    // Always there once dishes are: the row starts with the search chip.
+    val hasFilters = true
     val featured = remember(state.dishes) { state.dishes.filter { it.flags.localSpecialty }.take(FEATURED_MAX) }
     // The picks are only fair once the whole menu is read, so they arrive once, at the end, rather
     // than jumping in above dishes the diner is already reading.
@@ -815,6 +811,8 @@ private fun FilterBar(
                 .padding(horizontal = Space.gutter),
             horizontalArrangement = Arrangement.spacedBy(Space.related),
         ) {
+            // Search leads the row, a chip like the rest, until it is opened into a field above.
+            if (!state.search.open) SearchChip(actions.onOpenSearch)
             // The diner's own words come first: they chose them, so they should see them working.
             state.avoid.sorted().forEach { word ->
                 FilterPill(
@@ -845,6 +843,27 @@ private fun FilterBar(
                 QuietButton(stringResource(Res.string.filter_clear), actions.onClearFilters, color = colors.sealInk)
             }
         }
+    }
+}
+
+/** The first chip of the filter row: a magnifier and "Search", opening the search field. */
+@Composable
+private fun SearchChip(onClick: () -> Unit) {
+    val colors = Paper.colors
+    val label = stringResource(Res.string.search_open)
+    Row(
+        Modifier
+            .heightIn(min = 40.dp)
+            .clip(Shapes.chip)
+            .background(colors.raised)
+            .border(Space.hairline, colors.rule, Shapes.chip)
+            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .padding(horizontal = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(PaperIcons.Search, contentDescription = null, tint = colors.inkMuted, modifier = Modifier.size(15.dp))
+        Text(label, style = Paper.type.chip, color = colors.ink)
     }
 }
 
@@ -996,15 +1015,6 @@ private fun MenuHeader(
                             .graphicsLayer { alpha = ((header.progress - 0.6f) / 0.4f).coerceIn(0f, 1f) }
                             .clearAndSetSemantics { },
                 )
-                if (ready != null && !ready.search.open) {
-                    IconAction(
-                        icon = PaperIcons.Search,
-                        label = stringResource(Res.string.search_open),
-                        onClick = actions.onOpenSearch,
-                        tint = colors.ink,
-                        background = colors.raised.copy(alpha = 0.92f),
-                    )
-                }
                 if (ready?.pages != null) AddPageButton(actions.onAddPage)
             }
             Spacer(Modifier.height(Space.md))
@@ -1579,12 +1589,9 @@ private fun ChooseButton(
     onClick: () -> Unit,
 ) {
     val colors = Paper.colors
-    // Full width inside the gutters, like the picks bar that replaces it once something is picked.
     Row(
         Modifier
-            .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = Space.gutter)
             .padding(bottom = Space.md)
             .tipTarget(Tip.HelpChoose)
             .pressable(onClick)
@@ -1594,7 +1601,7 @@ private fun ChooseButton(
             .heightIn(min = 56.dp)
             .padding(start = Space.gutter, end = if (isPlus) Space.gutter else Space.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.related, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(Space.related),
     ) {
         Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.seal, modifier = Modifier.size(24.dp))
         Text(stringResource(Res.string.menu_choose_title), style = Paper.type.button, color = colors.paper)

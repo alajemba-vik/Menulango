@@ -46,13 +46,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -115,6 +116,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 
 /**
@@ -374,10 +376,10 @@ private fun AllowanceLine(
 }
 
 /**
- * MenuLango's own shutter, the app icon in the thumb's reach: a coral felt disc edged with a
- * stitched seam, holding a small tilted menu card. The seam turns slowly while the camera waits;
- * pressing squashes the disc and straightens the card, as if laying the menu flat to read.
- * The white outer ring keeps it unmistakably a shutter. Still under reduce motion.
+ * MenuLango's shutter is a lens iris in the brand coral: six blades around a hexagonal opening,
+ * glowing warm inside like light through a lens. It stays still while waiting; pressing closes
+ * the iris with a twist, as a real aperture does, and it springs open again as the photo lands.
+ * The white ring keeps it unmistakably a shutter. Under reduce motion it simply dims when pressed.
  */
 @Composable
 private fun Shutter(
@@ -388,39 +390,34 @@ private fun Shutter(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val reduceMotion = Paper.reduceMotion
-    val scale by animateFloatAsState(
-        if (pressed) 0.9f else 1f,
-        tween(Motion.QUICK_MS, easing = Motion.standard),
-        label = "shutter",
-    )
-    val tilt by animateFloatAsState(
-        if (pressed || reduceMotion) 0f else -12f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
-        label = "shutter-card",
-    )
-    val seam =
-        if (reduceMotion) {
-            null
+    val aperture by animateFloatAsState(
+        if (pressed && !reduceMotion) IRIS_CLOSED else IRIS_OPEN,
+        if (pressed) {
+            tween(IRIS_CLOSE_MS, easing = Motion.standard)
         } else {
-            rememberInfiniteTransition(label = "seam").animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(tween(SEAM_TURN_MS, easing = LinearEasing)),
-                label = "seam-turn",
-            )
-        }
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+        },
+        label = "iris",
+    )
     val description = stringResource(Res.string.capture_shutter)
-    val card = colors.paper
-    val print = colors.seal.copy(alpha = 0.55f)
-    val stitch = colors.onSeal.copy(alpha = 0.75f)
+    val blade = colors.seal
+    val bladeShade = lerp(colors.seal, Color.Black, 0.22f)
+    val seam = Color.Black.copy(alpha = 0.35f)
+    val glow = lerp(colors.seal, Color.White, 0.55f)
+    val depth = Color(0xFF1A1210)
     Box(
         Modifier
-            .size(80.dp)
+            .size(84.dp)
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                alpha = if (enabled) 1f else 0.45f
-            }.border(3.dp, colors.onPhoto, CircleShape)
+                alpha =
+                    if (!enabled) {
+                        0.45f
+                    } else if (pressed && reduceMotion) {
+                        0.75f
+                    } else {
+                        1f
+                    }
+            }.border(2.5.dp, colors.onPhoto, CircleShape)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -430,53 +427,66 @@ private fun Shutter(
             ).semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(
-            Modifier
-                .size(66.dp)
-                .clip(CircleShape)
-                .felt(colors.seal),
-        ) {
-            // The stitched seam, just inside the disc's edge.
-            rotate(seam?.value ?: 0f) {
-                drawCircle(
-                    stitch,
-                    radius = size.minDimension / 2 - 5.dp.toPx(),
-                    style =
-                        Stroke(
-                            width = 1.4.dp.toPx(),
-                            cap = StrokeCap.Round,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.5.dp.toPx())),
-                        ),
-                )
-            }
-            // A little menu card: a heading and three lines of dishes.
-            val w = 20.dp.toPx()
-            val h = 26.dp.toPx()
-            rotate(tilt) {
-                val topLeft = Offset(center.x - w / 2, center.y - h / 2)
-                drawRoundRect(card, topLeft, Size(w, h), CornerRadius(3.dp.toPx()))
-                val pad = 4.dp.toPx()
-                val line = 2.dp.toPx()
-                drawRoundRect(
-                    print,
-                    Offset(topLeft.x + pad, topLeft.y + pad),
-                    Size(w * 0.5f, line * 1.2f),
-                    CornerRadius(line),
-                )
-                listOf(0.62f, 0.5f, 0.66f).forEachIndexed { row, width ->
-                    drawRoundRect(
-                        print,
-                        Offset(topLeft.x + pad, topLeft.y + pad + line * 3.2f + row * line * 2.4f),
-                        Size((w - pad * 2) * width, line),
-                        CornerRadius(line / 2),
+        Canvas(Modifier.size(70.dp).clip(CircleShape)) {
+            val radius = size.minDimension / 2
+            // Looking into the lens: warm light at the centre falling off into darkness.
+            drawCircle(Brush.radialGradient(listOf(glow, colors.seal, depth), center, radius * 0.75f))
+            // The blades: everything outside the opening, turning a little as the iris closes.
+            val open = radius * aperture
+            val twist = (IRIS_OPEN - aperture) / IRIS_OPEN * 50f
+            val corners =
+                (0 until BLADES).map { index ->
+                    val angle = ((index * 360f / BLADES) + twist - 90f) * (PI.toFloat() / 180f)
+                    Offset(center.x + cos(angle) * open, center.y + sin(angle) * open)
+                }
+            val hole =
+                Path().apply {
+                    moveTo(corners[0].x, corners[0].y)
+                    corners.drop(1).forEach { lineTo(it.x, it.y) }
+                    close()
+                }
+            val ring = Path().apply { addOval(Rect(center, radius)) }
+            drawPath(Path.combine(PathOperation.Difference, ring, hole), blade)
+            // Each blade's edge runs from a corner of the opening out to the rim, like overlapping
+            // metal leaves; every other blade sits a shade deeper.
+            corners.forEachIndexed { index, corner ->
+                val next = corners[(index + 1) % BLADES]
+                val out = (corner - center) / (corner - center).getDistance().coerceAtLeast(1f)
+                val tangent = Offset(-out.y, out.x)
+                val rim = center + (out * 0.55f + tangent * 0.85f) * radius
+                if (index % 2 == 0) {
+                    drawPath(
+                        Path().apply {
+                            moveTo(corner.x, corner.y)
+                            lineTo(rim.x, rim.y)
+                            lineTo(next.x + (rim.x - corner.x) * 0.2f, next.y + (rim.y - corner.y) * 0.2f)
+                            lineTo(next.x, next.y)
+                            close()
+                        },
+                        bladeShade,
                     )
                 }
+                drawLine(seam, corner, rim, strokeWidth = 1.dp.toPx(), cap = StrokeCap.Round)
             }
+            // A glint across the glass, top left, where studio light would catch it.
+            drawArc(
+                Color.White.copy(alpha = 0.35f),
+                startAngle = 200f,
+                sweepAngle = 50f,
+                useCenter = false,
+                topLeft = Offset(center.x - radius * 0.78f, center.y - radius * 0.78f),
+                size = Size(radius * 1.56f, radius * 1.56f),
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            )
+            drawCircle(Color.Black.copy(alpha = 0.25f), radius - 0.75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
         }
     }
 }
 
-private const val SEAM_TURN_MS = 14_000
+private const val BLADES = 6
+private const val IRIS_OPEN = 0.5f
+private const val IRIS_CLOSED = 0.06f
+private const val IRIS_CLOSE_MS = 140
 
 @Composable
 private fun ChromeButton(

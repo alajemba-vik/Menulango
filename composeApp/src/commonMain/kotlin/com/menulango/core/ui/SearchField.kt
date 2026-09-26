@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.BasicTextField
@@ -45,6 +46,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
@@ -130,7 +132,21 @@ internal fun SearchField(
                     )
                 }
             }
-            QuietButton(stringResource(Res.string.search_cancel), onCancel, color = colors.sealInk, singleLine = true)
+            // Small, like the chips around it: closing the search is not the page's main action.
+            Text(
+                stringResource(Res.string.search_cancel),
+                style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
+                color = colors.sealInk,
+                maxLines = 1,
+                modifier =
+                    Modifier
+                        .padding(start = Space.xs)
+                        .clip(Shapes.chip)
+                        .pressable(onCancel)
+                        .heightIn(min = Space.touchTarget)
+                        .wrapContentHeight(Alignment.CenterVertically)
+                        .padding(horizontal = Space.sm),
+            )
         }
         if (tags.isNotEmpty()) {
             Row(
@@ -140,8 +156,9 @@ internal fun SearchField(
             ) {
                 Text(
                     stringResource(Res.string.search_tags),
-                    style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
-                    color = colors.sealInk,
+                    // A clickable caption: useful, but the least important thing on the bar.
+                    style = Paper.type.caption.copy(textDecoration = TextDecoration.Underline),
+                    color = colors.inkMuted,
                     modifier = Modifier.clip(Shapes.chip).pressable({ showTags = !showTags }).padding(vertical = 6.dp),
                 )
                 AnimatedVisibility(
