@@ -127,9 +127,11 @@ import com.menulango.core.ui.foodGroup
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.rememberLastNonNull
+import com.menulango.core.ui.tipTarget
 import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.quota.ScanQuota
+import com.menulango.data.tips.Tip
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.MoodDeck
 import com.menulango.feature.choose.dishHistoryKey
@@ -390,8 +392,9 @@ internal fun MenuContent(
                     ChooseButton(isPlus = ready?.isPlus == true, onClick = { choosing = true })
                 } else {
                     OrderBar(
-                        order,
-                        currency,
+                        modifier = Modifier.tipTarget(Tip.Picks),
+                        order = order,
+                        currencyPrefix = currency,
                         onOpen = { showingOrder = true },
                         onChoose = { choosing = true },
                         onClear = {
@@ -622,6 +625,7 @@ private fun DishList(
                         SectionHeading(section, Modifier.padding(top = Space.section - Space.sm, bottom = Space.sm))
                     }
                     DishRow(
+                        isFirst = index == 0,
                         dish = dish,
                         tint = Paper.colors.food(dish.foodGroup()),
                         selectedDishId = state.selectedDishId,
@@ -1172,6 +1176,7 @@ private fun MenuFacts(
  */
 @Composable
 private fun DishRow(
+    isFirst: Boolean,
     dish: Dish,
     tint: Color,
     selectedDishId: String?,
@@ -1193,6 +1198,7 @@ private fun DishRow(
     Row(
         Modifier
             .fillMaxWidth()
+            .then(if (isFirst) Modifier.tipTarget(Tip.TapDish) else Modifier)
             .graphicsLayer { this.alpha = alpha }
             .pressable(onClick)
             .clip(Shapes.card)
@@ -1228,7 +1234,14 @@ private fun DishRow(
         Spacer(Modifier.width(Space.sm))
         Box {
             DishPlate(dish, size = 72.dp)
-            AddToOrderBadge(quantity, onAdd, Modifier.align(Alignment.BottomEnd).offset(x = 6.dp, y = 6.dp))
+            AddToOrderBadge(
+                quantity,
+                onAdd,
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = 6.dp, y = 6.dp)
+                    .then(if (isFirst) Modifier.tipTarget(Tip.AddDish) else Modifier),
+            )
         }
     }
 }
@@ -1372,6 +1385,7 @@ private fun ChooseButton(
         Modifier
             .navigationBarsPadding()
             .padding(bottom = Space.md)
+            .tipTarget(Tip.HelpChoose)
             .pressable(onClick)
             .shadow(Elevation.floating, Shapes.pill, clip = false)
             .clip(Shapes.pill)

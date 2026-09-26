@@ -36,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +73,7 @@ import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
 import com.menulango.data.preferences.Appearance
+import com.menulango.data.tips.Tips
 import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DietaryFilters
 import com.menulango.feature.menu.FilterPill
@@ -117,7 +119,10 @@ import com.menulango.resources.settings_plus_title
 import com.menulango.resources.settings_restore
 import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
+import com.menulango.resources.settings_show_tips
+import com.menulango.resources.settings_tips_reset
 import com.menulango.resources.settings_title
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -137,6 +142,9 @@ internal fun SettingsScreen(
     val viewModel = koinViewModel<SettingsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val config = koinInject<AppConfig>()
+    val tips = koinInject<Tips>()
+    val scope = rememberCoroutineScope()
+    val tipsReset = stringResource(Res.string.settings_tips_reset)
     val uriHandler = LocalUriHandler.current
     val colors = Paper.colors
     var confirmDelete by remember { mutableStateOf(false) }
@@ -240,6 +248,10 @@ internal fun SettingsScreen(
                 SettingsRow(stringResource(Res.string.paywall_privacy)) { uriHandler.openUri(url) }
             }
             SettingsRow(stringResource(Res.string.paywall_terms)) { uriHandler.openUri(TERMS_URL) }
+            SettingsRow(stringResource(Res.string.settings_show_tips)) {
+                tips.reset()
+                scope.launch { snackbar.showSnackbar(tipsReset) }
+            }
             Text(
                 stringResource(Res.string.settings_ai_note),
                 style = Paper.type.caption,

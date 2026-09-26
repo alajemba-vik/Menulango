@@ -235,6 +235,14 @@
     <string name="mode_special_line">The dish the kitchen is proudest of.</string>
     <string name="mode_only_here_line">Eat what this place is famous for.</string>
     <string name="mode_simple_line">Nothing to decode. Just good food.</string>
+    <string name="tip_scan">Take one photo of the whole menu. MenuLango explains every dish on it.</string>
+    <string name="tip_tap_dish">Tap a dish to see what it is, what is in it and how it is cooked.</string>
+    <string name="tip_add_dish">Tap + to add it to your picks. You can pick for friends at the table too.</string>
+    <string name="tip_help_choose">Can't decide? Choose a mood and MenuLango picks a dish for you.</string>
+    <string name="tip_picks">Your picks live here. Open them and show the waiter, in their language.</string>
+    <string name="tip_got_it">Got it</string>
+    <string name="settings_show_tips">Show tips again</string>
+    <string name="settings_tips_reset">Tips will appear again as you use the app.</string>
     <string name="choose_prompt">What are you in the mood for?</string>
     <string name="choose_read_more">Read about it</string>
     <string name="choose_empty_new">You've eaten everything here that we'd call new. That's quite a trip.</string>

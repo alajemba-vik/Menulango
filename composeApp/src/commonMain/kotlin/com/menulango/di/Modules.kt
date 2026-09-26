@@ -12,6 +12,7 @@ import com.menulango.data.menu.remote.ProxyMenuApi
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.QuotaStorage
 import com.menulango.data.quota.ScanQuota
+import com.menulango.data.tips.Tips
 import com.menulango.feature.capture.CaptureViewModel
 import com.menulango.feature.choose.ChooseViewModel
 import com.menulango.feature.menu.MenuViewModel
@@ -71,6 +72,7 @@ internal fun sharedModule(config: AppConfig): Module =
         viewModel { CaptureViewModel(get(), get(), get(), get()) }
         single { PageInbox() }
         single { Preferences(get()) }
+        single { Tips(get()) }
         single { OrderBook() }
         viewModel { params -> MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get()) }
         viewModel { MenusViewModel(get(), ::nowMillis) }

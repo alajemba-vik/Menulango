@@ -74,7 +74,9 @@ import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
+import com.menulango.core.ui.tipTarget
 import com.menulango.data.menu.local.CachedMenuSummary
+import com.menulango.data.tips.Tip
 import com.menulango.feature.menu.PageInbox
 import com.menulango.platform.CameraController
 import com.menulango.platform.CameraState
@@ -282,10 +284,12 @@ internal fun CaptureContent(
                         actions.onGallery,
                     )
                 }
-                Shutter(
-                    enabled = camera.state == CameraState.Ready && ready?.isPreparingPhoto != true,
-                    onClick = actions.onShutter,
-                )
+                Box(Modifier.tipTarget(Tip.Scan)) {
+                    Shutter(
+                        enabled = camera.state == CameraState.Ready && ready?.isPreparingPhoto != true,
+                        onClick = actions.onShutter,
+                    )
+                }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
                     ready?.lastMenu?.let { last -> LastMenuButton(last, actions.onLastMenu) }
                 }
