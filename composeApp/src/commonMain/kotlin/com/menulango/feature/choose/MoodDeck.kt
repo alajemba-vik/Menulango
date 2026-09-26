@@ -179,12 +179,13 @@ private fun MoodCard(
                     }
                 }.padding(Space.cardPadding),
         ) {
-            Box(
-                Modifier.size(EMOJI_PLATE).clip(Shapes.pill).background(colors.raised.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(mode.emoji(), fontSize = 34.sp, modifier = Modifier.clearAndSetSemantics { })
-            }
+            // Words only: the colour of the felt already sets each mood apart.
+            Text(
+                where.uppercase(),
+                style = Paper.type.label,
+                color = colors.inkMuted,
+                modifier = Modifier.clearAndSetSemantics { },
+            )
             Spacer(Modifier.weight(1f))
             Text(title, style = Paper.type.headline, color = colors.ink, maxLines = 2)
             Spacer(Modifier.height(Space.xs))
@@ -257,5 +258,4 @@ private val CARD_HEIGHT = 300.dp
 private val DECK_PEEK = 44.dp
 private val DECK_DROP = 18.dp
 private val DECK_ROOM = 28.dp
-private val EMOJI_PLATE = 64.dp
 private const val TILT_DEGREES = -6f

@@ -133,6 +133,7 @@ import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.quota.ScanQuota
 import com.menulango.data.tips.Tip
+import com.menulango.data.tips.Tips
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.MoodDeck
 import com.menulango.feature.choose.dishHistoryKey
@@ -207,6 +208,7 @@ import com.menulango.resources.mode_simple
 import com.menulango.resources.mode_special
 import com.menulango.resources.note_add
 import com.menulango.resources.note_added
+import com.menulango.resources.note_hint_once
 import com.menulango.resources.order_cleared
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.launch
@@ -307,18 +309,23 @@ internal fun MenuContent(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var noting by remember { mutableStateOf<Dish?>(null) }
-    // Adding a pick is the moment to say how you want it, so the message offers exactly that.
+    // The first pick ever is the moment to mention notes, once. After that the picks sheet has a
+    // note on every line, and a message on every tap would only get in the way.
+    val tips = koinInject<Tips>()
     val addPick: (Dish) -> Unit = { dish ->
         onOrderChange { it.add(dish) }
-        snackbar.currentSnackbarData?.dismiss()
-        scope.launch {
-            val result =
-                snackbar.showSnackbar(
-                    getString(Res.string.note_added),
-                    getString(Res.string.note_add),
-                    duration = SnackbarDuration.Short,
-                )
-            if (result == SnackbarResult.ActionPerformed) noting = dish
+        if (Tip.NoteHint !in tips.seen.value) {
+            tips.markSeen(Tip.NoteHint)
+            snackbar.currentSnackbarData?.dismiss()
+            scope.launch {
+                val result =
+                    snackbar.showSnackbar(
+                        getString(Res.string.note_hint_once),
+                        getString(Res.string.note_add),
+                        duration = SnackbarDuration.Long,
+                    )
+                if (result == SnackbarResult.ActionPerformed) noting = dish
+            }
         }
     }
 
@@ -515,7 +522,11 @@ internal fun MenuContent(
 
             SnackbarHost(
                 snackbar,
-                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 88.dp),
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(horizontal = Space.gutter)
+                    .padding(bottom = 88.dp),
             ) { data ->
                 Snackbar(
                     data,
@@ -1243,11 +1254,7 @@ private fun DishRow(
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             DishName(dish, isSelected, sharedScope)
-            // The printed name only when it adds something: in the menu's own language it would just
-            // repeat the title. What the dish is earns the space instead.
-            if (!dish.readableName.sameDishNameAs(dish.originalName)) {
-                Text(dish.originalName, style = type.original, color = colors.inkMuted)
-            }
+            // One name per card; the printed original lives in the dish sheet and the waiter view.
             (dish.pitch ?: dish.whatItIs)?.let { line ->
                 Text(
                     line,
@@ -1465,10 +1472,28 @@ private val GARNISH_SPOTS =
 private val GARNISH_SIZES = listOf(64.sp, 52.sp, 44.sp, 38.sp, 48.sp, 40.sp)
 
 /** Whether two names are the same once case, spacing and punctuation are set aside. */
-internal fun String.sameDishNameAs(other: String): Boolean {
-    fun String.letters() = lowercase().filter { it.isLetterOrDigit() }
-    return letters() == other.letters()
-}
+internal fun String.sameDishNameAs(other: String): Boolean = foldedName() == other.foldedName()
+
+/** Lowercase letters and digits with common accents folded: "Crème Brûlée" and "creme brulee" match. */
+internal fun String.foldedName(): String =
+    lowercase()
+        .map { ACCENTS[it] ?: it }
+        .filter { it.isLetterOrDigit() }
+        .joinToString("")
+
+private val ACCENTS: Map<Char, Char> =
+    buildMap {
+        "àáâãäåā".forEach { put(it, 'a') }
+        "çćč".forEach { put(it, 'c') }
+        "èéêëēė".forEach { put(it, 'e') }
+        "ìíîïī".forEach { put(it, 'i') }
+        "ñń".forEach { put(it, 'n') }
+        "òóôõöøō".forEach { put(it, 'o') }
+        "ùúûüū".forEach { put(it, 'u') }
+        "ýÿ".forEach { put(it, 'y') }
+        "šś".forEach { put(it, 's') }
+        "žźż".forEach { put(it, 'z') }
+    }
 
 /**
  * "Help me choose", floating over the menu like a basket button: always in reach, never taking

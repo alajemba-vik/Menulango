@@ -266,7 +266,7 @@ private fun Tip.text(): StringResource =
         Tip.AddDish -> Res.string.tip_add_dish
         Tip.HelpChoose -> Res.string.tip_help_choose
         Tip.Picks -> Res.string.tip_picks
-        Tip.SwipeToDelete, Tip.Welcome -> Res.string.tip_picks
+        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint -> Res.string.tip_picks
     }
 
 private const val TIP_DELAY_MS = 700L

@@ -79,7 +79,6 @@ import com.menulango.feature.dish.DishOrderControl
 import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.emoji
-import com.menulango.feature.menu.sameDishNameAs
 import com.menulango.feature.menu.title
 import com.menulango.feature.order.label
 import com.menulango.resources.Res
@@ -382,8 +381,7 @@ private fun DeckCard(
                 modifier = Modifier.semantics { heading() },
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val original = dish.originalName.takeUnless { dish.readableName.sameDishNameAs(it) }.orEmpty()
-                Text(original, style = type.original, color = colors.inkMuted, modifier = Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
                 dish.price?.let {
                     Text(it.asPrinted, style = type.price.copy(fontWeight = FontWeight.Bold), color = colors.ink)
                 }

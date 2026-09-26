@@ -63,8 +63,10 @@ import com.menulango.core.ui.chips
 import com.menulango.core.ui.foodGroup
 import com.menulango.data.menu.model.Allergens
 import com.menulango.data.menu.model.Dish
+import com.menulango.feature.menu.sameDishNameAs
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
+import com.menulango.resources.dish_as_printed
 import com.menulango.resources.dish_ask_restaurant
 import com.menulango.resources.dish_best_guess_note
 import com.menulango.resources.dish_check_before
@@ -200,15 +202,18 @@ private fun SheetHeader(
         )
         // No close button: the handle, a tap outside, the back gesture and the screen reader's
         // "close" action all dismiss the sheet, and a button here crowded the plate.
-        Text(
-            text = dish.originalName,
-            style = type.original,
-            color = colors.inkFaint,
-            modifier = Modifier.padding(top = Space.md),
-        )
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = Space.xs)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = Space.md)) {
             Column(Modifier.weight(1f)) {
                 Text(dish.readableName, style = type.dishTitle, color = colors.ink, modifier = nameModifier)
+                // The name as printed, to point at on the menu, only when it is not the same words.
+                if (!dish.readableName.sameDishNameAs(dish.originalName)) {
+                    Text(
+                        text = stringResource(Res.string.dish_as_printed, dish.originalName),
+                        style = type.original,
+                        color = colors.inkMuted,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
                 dish.price?.let {
                     Text(
                         it.asPrinted,

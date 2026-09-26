@@ -47,6 +47,7 @@
     <string name="order_clear">Clear all picks</string>
     <string name="order_cleared">Picks cleared.</string>
     <string name="note_add">Add a note</string>
+    <string name="note_hint_once">Added. You can add a note for the waiter, like no onions.</string>
     <string name="note_added">Added to your picks.</string>
     <string name="note_title">How should the %1$s come?</string>
     <string name="note_hint">No onions, sauce on the side…</string>
@@ -226,6 +227,7 @@
     <string name="flag_best_guess">Best guess</string>
 
     <!-- Dish -->
+    <string name="dish_as_printed">On the menu as %1$s</string>
     <string name="dish_what_it_is">What it is</string>
     <string name="dish_ingredients">Ingredients</string>
     <string name="dish_how_it_is_made">How it is made</string>

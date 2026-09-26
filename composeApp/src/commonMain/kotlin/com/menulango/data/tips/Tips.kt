@@ -27,6 +27,9 @@ internal enum class Tip(
 
     /** Not a note: the page that introduces the app before the camera is ever opened. */
     Welcome(isNote = false),
+
+    /** Not a note: the one-time message after the first pick, saying notes exist. */
+    NoteHint(isNote = false),
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */

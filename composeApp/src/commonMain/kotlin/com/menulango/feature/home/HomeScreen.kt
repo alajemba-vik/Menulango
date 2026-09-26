@@ -91,7 +91,11 @@ internal fun HomeScreen(
         }
         SnackbarHost(
             snackbar,
-            Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = aboveBar),
+            Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = Space.gutter)
+                .padding(bottom = aboveBar),
         ) { data ->
             Snackbar(
                 data,
