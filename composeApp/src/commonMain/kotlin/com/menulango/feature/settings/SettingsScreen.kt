@@ -91,6 +91,7 @@ import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.SegmentedControl
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
+import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.tipTarget
 import com.menulango.data.preferences.Appearance
@@ -466,6 +467,7 @@ private fun BackupPassphraseDialog(
                     color = colors.inkMuted,
                 )
                 OutlinedTextField(
+                    colors = paperFieldColors(),
                     value = passphrase,
                     onValueChange = { passphrase = it },
                     label = { Text(stringResource(Res.string.settings_backup_passphrase)) },
@@ -656,6 +658,7 @@ private fun AvoidWords(
     Spacer(Modifier.height(Space.sm))
     Row(verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
+            colors = paperFieldColors(),
             value = draft,
             onValueChange = { draft = it.take(30) },
             singleLine = true,

@@ -62,6 +62,7 @@ import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SegmentedControl
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
+import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.suede
 import com.menulango.data.menu.model.Dish
@@ -747,6 +748,7 @@ internal fun NoteEditor(
                     }
                 }
                 OutlinedTextField(
+                    colors = paperFieldColors(),
                     value = note,
                     onValueChange = { note = it.take(MAX_NOTE) },
                     placeholder = {

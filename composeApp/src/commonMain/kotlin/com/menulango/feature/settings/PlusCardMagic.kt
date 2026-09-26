@@ -158,12 +158,30 @@ internal fun Modifier.plusCardInk(
         val path =
             Path().apply {
                 moveTo(start.x, start.y)
-                // A loose flourish down the right of the card to the button's top right corner...
+                // A flourish out to the card's right margin, down the empty lane between the text
+                // and the stitching (so it never crosses a word), then in to the button...
+                val lane = size.width - LANE_FROM_EDGE.toPx()
                 cubicTo(
-                    start.x + 40.dp.toPx(),
-                    start.y + 10.dp.toPx(),
-                    loop.right + 14.dp.toPx(),
-                    loop.top - 40.dp.toPx(),
+                    start.x + 12.dp.toPx(),
+                    start.y + 2.dp.toPx(),
+                    lane,
+                    start.y + 4.dp.toPx(),
+                    lane,
+                    start.y + 22.dp.toPx(),
+                )
+                cubicTo(
+                    lane + 3.dp.toPx(),
+                    start.y + (loop.top - start.y) * 0.45f,
+                    lane - 3.dp.toPx(),
+                    loop.top - 30.dp.toPx(),
+                    lane,
+                    loop.top - 16.dp.toPx(),
+                )
+                cubicTo(
+                    lane,
+                    loop.top - 4.dp.toPx(),
+                    loop.right + 10.dp.toPx(),
+                    loop.top - 2.dp.toPx(),
                     loop.right - 10.dp.toPx(),
                     loop.top,
                 )
@@ -210,3 +228,6 @@ private const val FIRST_SHEEN_MS = 6_000L
 private const val SHEEN_MS = 1_600
 private const val SHEEN_GAP_MIN_MS = 90_000L
 private const val SHEEN_GAP_MAX_MS = 180_000L
+
+/** The pen runs down this far in from the card's right edge: inside the stitching, outside the text. */
+private val LANE_FROM_EDGE = 14.dp

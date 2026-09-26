@@ -24,7 +24,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -176,3 +178,24 @@ private fun SearchTagToken(tag: SearchTag) {
 
 /** The height every text field in the app shares, search or not. */
 internal val FIELD_HEIGHT = 44.dp
+
+/**
+ * Text entry fields keep Material's rounded rectangle (search stays a capsule, as on iOS and
+ * Android), but share the search field's paper fill, hairline border and coral focus, so every
+ * field in the app reads as one family.
+ */
+@Composable
+internal fun paperFieldColors(): TextFieldColors {
+    val colors = Paper.colors
+    return OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = colors.raised,
+        unfocusedContainerColor = colors.raised,
+        focusedBorderColor = colors.seal,
+        unfocusedBorderColor = colors.rule,
+        cursorColor = colors.seal,
+        focusedTextColor = colors.ink,
+        unfocusedTextColor = colors.ink,
+        focusedLabelColor = colors.sealInk,
+        unfocusedLabelColor = colors.inkMuted,
+    )
+}
