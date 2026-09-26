@@ -26,6 +26,7 @@ import com.menulango.core.design.MenuLangoTheme
 import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.ui.BackGesture
+import com.menulango.core.ui.FeltSurface
 import com.menulango.data.preferences.Appearance
 import com.menulango.data.preferences.Preferences
 import com.menulango.feature.capture.CaptureScreen
@@ -56,15 +57,17 @@ public fun MenuLangoApp(reduceMotion: Boolean = false) {
 
         BackGesture(enabled = navigator.canGoBack) { navigator.pop() }
 
-        Box(Modifier.fillMaxSize().background(Paper.colors.paper)) {
-            AnimatedContent(
-                targetState = navigator.current,
-                transitionSpec = { screenTransition(initialState, targetState, navigator, reduceMotion) },
-                label = "screens",
-            ) { entry ->
-                saveableState.SaveableStateProvider(entry.id) {
-                    CompositionLocalProvider(LocalViewModelStoreOwner provides entry) {
-                        Screen(entry.route, navigator)
+        FeltSurface {
+            Box(Modifier.fillMaxSize().background(Paper.colors.paper)) {
+                AnimatedContent(
+                    targetState = navigator.current,
+                    transitionSpec = { screenTransition(initialState, targetState, navigator, reduceMotion) },
+                    label = "screens",
+                ) { entry ->
+                    saveableState.SaveableStateProvider(entry.id) {
+                        CompositionLocalProvider(LocalViewModelStoreOwner provides entry) {
+                            Screen(entry.route, navigator)
+                        }
                     }
                 }
             }

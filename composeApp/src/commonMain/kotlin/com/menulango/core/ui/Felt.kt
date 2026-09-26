@@ -1,6 +1,14 @@
 package com.menulango.core.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -16,11 +24,19 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import com.menulango.core.design.Paper
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -33,6 +49,10 @@ import kotlin.random.Random
  * The texture is pinned to the screen rather than to the element, so two felt surfaces that meet —
  * a pinned filter bar over the list, a header over the backdrop — continue into each other with no
  * seam, however they move.
+ *
+ * The fibres are not quite still, though: when anything scrolls, the whole felt drifts a little
+ * the same way, slower than the content (see [FeltDrift]). Cards glide and the cloth under them
+ * gives, so scrolling feels like sliding paper across a felt table rather than across glass.
  */
 internal fun Modifier.felt(
     base: Color,
@@ -43,6 +63,7 @@ internal fun Modifier.felt(
         val tile = remember(base, density.density) { feltTile(base, density.density) }
         val brush = remember(tile) { ShaderBrush(ImageShader(tile, TileMode.Repeated, TileMode.Repeated)) }
         val origin = remember { FloatArray(2) }
+        val drift = LocalFeltDrift.current
         val clipped = if (shape != null) clip(shape) else this
         clipped
             .onGloballyPositioned {
@@ -51,10 +72,86 @@ internal fun Modifier.felt(
                 origin[1] = position.y
             }.drawBehind {
                 // Draw the brush in screen space, then shift back: the fibres stay put as we move.
-                translate(-origin[0], -origin[1]) {
-                    drawRect(brush, topLeft = Offset(origin[0], origin[1]), size = size)
+                // Reading the drift here, in the draw phase, means scrolling redraws the felt
+                // without ever recomposing the screen.
+                val dx = drift.x
+                val dy = drift.y
+                translate(dx - origin[0], dy - origin[1]) {
+                    drawRect(brush, topLeft = Offset(origin[0] - dx, origin[1] - dy), size = size)
                 }
             }
+    }
+
+/**
+ * How far the felt has been dragged by scrolling, shared by every felt surface so neighbouring
+ * surfaces keep continuing into each other. Wrapped to one tile, so it never loses precision.
+ */
+@Stable
+internal class FeltDrift {
+    var x by mutableFloatStateOf(0f)
+        private set
+    var y by mutableFloatStateOf(0f)
+        private set
+    private var travelled = 0f
+
+    fun drag(
+        dx: Float,
+        dy: Float,
+        tilePx: Float,
+    ): Boolean {
+        x = (x + dx * DRIFT_RATIO).mod(tilePx)
+        y = (y + dy * DRIFT_RATIO).mod(tilePx)
+        travelled += abs(dx) + abs(dy)
+        if (travelled < grainPx) return false
+        travelled = 0f
+        return true
+    }
+
+    internal var grainPx = 0f
+}
+
+internal val LocalFeltDrift = staticCompositionLocalOf { FeltDrift() }
+
+/**
+ * Makes everything scrolled inside [content] drag the felt. While a finger is on the glass, a
+ * faint tick every [GRAIN_DP] reads as the grain of the cloth; flings glide silently, as a card
+ * thrown across felt would. With reduce-motion the felt stays still and silent.
+ */
+@Composable
+internal fun FeltSurface(content: @Composable () -> Unit) {
+    val drift = remember { FeltDrift() }
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current.density
+    val reduceMotion = Paper.reduceMotion
+    val connection =
+        remember(haptics, density, reduceMotion) {
+            drift.grainPx = GRAIN_DP * density
+            feltConnection(drift, haptics, TILE_DP * density, reduceMotion)
+        }
+    CompositionLocalProvider(LocalFeltDrift provides drift) {
+        Box(Modifier.nestedScroll(connection)) { content() }
+    }
+}
+
+private fun feltConnection(
+    drift: FeltDrift,
+    haptics: HapticFeedback,
+    tilePx: Float,
+    reduceMotion: Boolean,
+): NestedScrollConnection =
+    object : NestedScrollConnection {
+        override fun onPostScroll(
+            consumed: Offset,
+            available: Offset,
+            source: NestedScrollSource,
+        ): Offset {
+            if (reduceMotion || consumed == Offset.Zero) return Offset.Zero
+            val grain = drift.drag(consumed.x, consumed.y, tilePx)
+            if (grain && source == NestedScrollSource.UserInput) {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            return Offset.Zero
+        }
     }
 
 /** One seamless square of felt, drawn once per colour and screen density. */
@@ -119,6 +216,12 @@ private fun wrapOffsets(
     }
 
 private val TILE_DP = 224.dp.value
+
+/** The felt moves at a third of the content's speed: enough to feel, never enough to watch. */
+private const val DRIFT_RATIO = 0.35f
+
+/** Scroll distance between two grain ticks while dragging. */
+private const val GRAIN_DP = 120f
 
 /** The same density of fibres as the original felt, over the larger tile. */
 private const val FIBRES = 12000
