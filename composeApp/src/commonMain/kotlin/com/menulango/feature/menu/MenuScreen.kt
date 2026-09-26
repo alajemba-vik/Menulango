@@ -131,6 +131,7 @@ import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.quota.ScanQuota
 import com.menulango.feature.choose.ChoiceMode
+import com.menulango.feature.choose.MoodDeck
 import com.menulango.feature.choose.dishHistoryKey
 import com.menulango.feature.choose.hint
 import com.menulango.feature.dish.DishHistoryControl
@@ -1410,8 +1411,8 @@ private fun MoodSheet(
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.rule) },
     ) {
         Column(
-            Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.gutter).navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(Space.sm),
+            Modifier.padding(horizontal = Space.gutter),
+            verticalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
             Text(
                 stringResource(Res.string.menu_choose_title),
@@ -1420,40 +1421,9 @@ private fun MoodSheet(
                 modifier = Modifier.semantics { heading() },
             )
             Text(stringResource(Res.string.choose_prompt), style = Paper.type.bodySmall, color = colors.inkMuted)
-            Spacer(Modifier.height(Space.xs))
-            ChoiceMode.entries.chunked(2).forEach { pair ->
-                Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                    pair.forEach { mode -> MoodTile(mode, { onChoose(mode) }, Modifier.weight(1f)) }
-                }
-            }
+            Spacer(Modifier.height(Space.sm))
         }
-    }
-}
-
-@Composable
-private fun MoodTile(
-    mode: ChoiceMode,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = Paper.colors
-    Column(
-        modifier
-            .heightIn(min = 120.dp)
-            .pressable(onClick)
-            .clip(Shapes.tile)
-            .background(colors.sunk)
-            .padding(Space.md),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(mode.emoji(), fontSize = 28.sp, modifier = Modifier.clearAndSetSemantics { })
-        Spacer(Modifier.height(Space.xs))
-        Text(
-            stringResource(mode.title()),
-            style = Paper.type.title.copy(fontSize = Paper.type.bodySmall.fontSize),
-            color = colors.ink,
-        )
-        Text(stringResource(mode.hint()), style = Paper.type.caption, color = colors.inkMuted)
+        MoodDeck(onChoose = onChoose, modifier = Modifier.padding(bottom = Space.gutter).navigationBarsPadding())
     }
 }
 

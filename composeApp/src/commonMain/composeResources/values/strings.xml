@@ -228,6 +228,13 @@
     <string name="choose_swipe_hint">Swipe right to add it to your picks, left for another.</string>
     <string name="choose_picked_for">%1$d picked · next one is for %2$s</string>
     <string name="choose_next_person">Next person</string>
+    <string name="mood_pick">Pick for me</string>
+    <string name="mood_swipe_hint">Swipe for another mood</string>
+    <string name="mood_position">Mood %1$d of %2$d</string>
+    <string name="mode_new_line">Tonight, try what you have never tasted.</string>
+    <string name="mode_special_line">The dish the kitchen is proudest of.</string>
+    <string name="mode_only_here_line">Eat what this place is famous for.</string>
+    <string name="mode_simple_line">Nothing to decode. Just good food.</string>
     <string name="choose_prompt">What are you in the mood for?</string>
     <string name="choose_read_more">Read about it</string>
     <string name="choose_empty_new">You've eaten everything here that we'd call new. That's quite a trip.</string>
