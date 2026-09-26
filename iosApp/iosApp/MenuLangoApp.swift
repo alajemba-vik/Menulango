@@ -90,10 +90,16 @@ private final class BackupFileBridge: NSObject, IosBackupFileBridge, UIDocumentP
 /// Translates one note at a time to keep ML Kit's on-device model memory bounded.
 private final class MLKitNoteTranslationBridge: NSObject, IosNoteTranslationBridge {
     func prefetch(targetLanguageTag: String) {
-        guard let language = supportedLanguage(for: targetLanguageTag) else { return }
-        let model = TranslateRemoteModel.translateRemoteModel(language: language)
         let conditions = ModelDownloadConditions(allowsCellularAccess: false, allowsBackgroundDownloading: true)
-        _ = ModelManager.modelManager().download(model, conditions: conditions)
+        [targetLanguageTag, Locale.current.identifier]
+            .compactMap(supportedLanguage(for:))
+            .reduce(into: [TranslateLanguage]()) { languages, language in
+                if !languages.contains(language) { languages.append(language) }
+            }
+            .forEach { language in
+                let model = TranslateRemoteModel.translateRemoteModel(language: language)
+                _ = ModelManager.modelManager().download(model, conditions: conditions)
+            }
     }
 
     func translate(
@@ -111,18 +117,20 @@ private final class MLKitNoteTranslationBridge: NSObject, IosNoteTranslationBrid
             callback.onSuccess(translations: notes)
             return
         }
+        let modelManager = ModelManager.modelManager()
+        let sourceModel = TranslateRemoteModel.translateRemoteModel(language: source)
+        let targetModel = TranslateRemoteModel.translateRemoteModel(language: target)
+        // Translation must never delay the waiter view. Background prefetch happens when the menu
+        // opens; if either model is not ready now, retain the original note and use its fallback.
+        guard modelManager.isModelDownloaded(sourceModel), modelManager.isModelDownloaded(targetModel) else {
+            callback.onFailure()
+            return
+        }
 
         let translator = Translator.translator(
             options: TranslatorOptions(sourceLanguage: source, targetLanguage: target)
         )
-        let conditions = ModelDownloadConditions(allowsCellularAccess: false, allowsBackgroundDownloading: true)
-        translator.downloadModelIfNeeded(with: conditions) { [weak self] (error: Error?) in
-            guard error == nil else {
-                callback.onFailure()
-                return
-            }
-            self?.translate(notes, with: translator, at: 0, results: [], callback: callback)
-        }
+        translate(notes, with: translator, at: 0, results: [], callback: callback)
     }
 
     private func supportedLanguage(for languageTag: String) -> TranslateLanguage? {
