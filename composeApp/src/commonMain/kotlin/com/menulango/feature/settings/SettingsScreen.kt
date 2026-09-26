@@ -607,7 +607,13 @@ private fun AvoidWords(
             value = draft,
             onValueChange = { draft = it.take(30) },
             singleLine = true,
-            placeholder = { Text(stringResource(Res.string.settings_avoid_hint), style = Paper.type.bodySmall) },
+            placeholder = {
+                Text(
+                    stringResource(Res.string.settings_avoid_hint),
+                    style = Paper.type.bodySmall,
+                    color = Paper.colors.inkFaint,
+                )
+            },
             shape = Shapes.button,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { add() }),

@@ -177,6 +177,7 @@ internal fun PaywallContent(
                 .padding(horizontal = Space.gutter)
                 .widthIn(max = Space.readingWidth),
         ) {
+            Spacer(Modifier.height(Space.md))
             state.reason.label()?.let { SectionLabel(stringResource(it), color = colors.sealInk) }
             Spacer(Modifier.height(Space.sm))
             Text(

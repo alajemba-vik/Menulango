@@ -245,7 +245,6 @@ private fun NoteBubble(
         horizontalArrangement = Arrangement.spacedBy(Space.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("👋", style = Paper.type.title)
         Column(Modifier.weight(1f, fill = false)) {
             Text(text, style = Paper.type.bodySmall, color = colors.ink)
             Text(

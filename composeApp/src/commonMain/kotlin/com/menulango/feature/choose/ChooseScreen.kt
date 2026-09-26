@@ -79,6 +79,7 @@ import com.menulango.feature.dish.DishOrderControl
 import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.emoji
+import com.menulango.feature.menu.sameDishNameAs
 import com.menulango.feature.menu.title
 import com.menulango.feature.order.label
 import com.menulango.resources.Res
@@ -381,18 +382,35 @@ private fun DeckCard(
                 modifier = Modifier.semantics { heading() },
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(dish.originalName, style = type.original, color = colors.inkMuted, modifier = Modifier.weight(1f))
+                val original = dish.originalName.takeUnless { dish.readableName.sameDishNameAs(it) }.orEmpty()
+                Text(original, style = type.original, color = colors.inkMuted, modifier = Modifier.weight(1f))
                 dish.price?.let {
                     Text(it.asPrinted, style = type.price.copy(fontWeight = FontWeight.Bold), color = colors.ink)
                 }
             }
             FlagChips(dish.chips(), container = colors.raised.copy(alpha = if (colors.isDark) 0.12f else 0.7f))
             Spacer(Modifier.weight(1f))
+            // On a short phone the reason gives way first, a line at a time, so "Read about it"
+            // always keeps its full height at the bottom of the card.
             dish.pitch?.let {
                 SectionLabel(stringResource(Res.string.choose_why))
-                Text(it, style = type.method, color = colors.ink, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                Text(
+                    it,
+                    style = type.method,
+                    color = colors.ink,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
             }
-            if (interactive) QuietButton(stringResource(Res.string.choose_read_more), onRead, color = colors.sealInk)
+            if (interactive) {
+                QuietButton(
+                    stringResource(Res.string.choose_read_more),
+                    onRead,
+                    color = colors.sealInk,
+                    singleLine = true,
+                )
+            }
         }
         if (interactive) {
             // The stamps that answer the swipe: coral "add" on the left, ink "pass" on the right.

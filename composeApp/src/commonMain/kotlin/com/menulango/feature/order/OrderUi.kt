@@ -429,7 +429,8 @@ private fun OrderLineRow(
                         .padding(vertical = Space.xs),
             )
         }
-        // A stepper, as in every basket: fewer, how many, more.
+        // A stepper, as in every basket: fewer, how many, more. Kept a clear gap from the name.
+        Spacer(Modifier.width(Space.md))
         Row(
             Modifier.clip(Shapes.chip).background(colors.sunk),
             verticalAlignment = Alignment.CenterVertically,
@@ -761,7 +762,13 @@ internal fun NoteEditor(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it.take(MAX_NOTE) },
-                    placeholder = { Text(stringResource(Res.string.note_hint), style = Paper.type.bodySmall) },
+                    placeholder = {
+                        Text(
+                            stringResource(Res.string.note_hint),
+                            style = Paper.type.bodySmall,
+                            color = Paper.colors.inkFaint,
+                        )
+                    },
                     shape = Shapes.button,
                     modifier = Modifier.fillMaxWidth(),
                 )

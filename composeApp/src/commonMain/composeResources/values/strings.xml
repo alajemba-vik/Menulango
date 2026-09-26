@@ -109,8 +109,8 @@
     <string name="settings_avoid_add">Add word</string>
     <string name="settings_avoid_remove_hint">Tap a word to stop leaving it out.</string>
     <string name="settings_menus">Menus</string>
-    <string name="settings_featured">Suggest dishes not to miss</string>
-    <string name="settings_featured_body">Shows the local favourites at the top of each menu.</string>
+    <string name="settings_featured">Show local specialities</string>
+    <string name="settings_featured_body">Adds the dishes this region is known for at the end of each menu.</string>
     <string name="settings_data">Your data</string>
     <string name="settings_backup">Back up my data</string>
     <string name="settings_backup_body">Make one encrypted file of your menus, picks and preferences. Keep the passphrase somewhere safe.</string>
@@ -164,8 +164,8 @@
     <string name="menu_known">You've read this menu before, so this one was free.</string>
     <string name="menu_last_free_scan">That was your last free scan this month. This menu stays fully explained.</string>
     <string name="menu_choose_title">Help me choose</string>
-    <string name="menu_featured_title">Don't leave without trying</string>
-    <string name="menu_featured_why">Local favourites you'll struggle to find anywhere else.</string>
+    <string name="menu_featured_title">Local specialities</string>
+    <string name="menu_featured_why">What this place is known for. Worth a look before you order.</string>
     <string name="menu_plus_badge">Plus</string>
     <string name="filter_vegetarian">Vegetarian</string>
     <string name="filter_vegan">Vegan</string>

@@ -570,7 +570,7 @@ private fun ReadingPlaceholder() {
         Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.gutter),
         verticalArrangement = Arrangement.spacedBy(Space.sm),
     ) {
-        SectionLabel(stringResource(Res.string.menu_reading))
+        // The header already says "Reading the menu…"; the list only shows the dishes arriving.
         listOf(190.dp, 150.dp, 210.dp, 130.dp, 170.dp).forEach { width ->
             DishRowPlaceholder(nameWidth = width)
         }
@@ -597,13 +597,10 @@ private fun DishList(
     val showFeatured = state.showFeatured && featured.isNotEmpty() && !state.isFiltering && !state.isReading
     // A new set of filters is a new list: start it from the top rather than halfway down.
     LaunchedEffect(state.filters) { listState.scrollToItem(0) }
-    LaunchedEffect(showFeatured) {
-        if (showFeatured && listState.firstVisibleItemIndex <= 1) listState.animateScrollToItem(0)
-    }
     val pageOf = state.pages?.pageOfDish.orEmpty()
     val pageCount = state.pages?.total ?: 1
     // Items before the first dish, so a dish's place in the list can be found without scrolling to it.
-    val leadingItems = listOf(hasFilters, dishes.isEmpty() && state.isFiltering, showFeatured).count { it }
+    val leadingItems = listOf(hasFilters, dishes.isEmpty() && state.isFiltering).count { it }
     Box(Modifier.fillMaxSize()) {
         // No horizontal content padding: the filter pills scroll edge to edge, so each item insets itself.
         LazyColumn(
@@ -631,11 +628,6 @@ private fun DishList(
                     }
                 }
             }
-            if (showFeatured) {
-                item(key = "featured") {
-                    FeaturedDishes(featured, actions.onSelectDish, Modifier.animateItem())
-                }
-            }
             itemsIndexed(dishes, key = { _, dish -> dish.id }) { index, dish ->
                 val section = sections[index]
                 Column(gutter.dealtIn(dish.id, dealt)) {
@@ -657,6 +649,13 @@ private fun DishList(
                         onAdd = { onAdd(dish) },
                     )
                     Spacer(Modifier.height(Space.sm))
+                }
+            }
+            // The region's specialities close the menu, once it is all read: a "before you order"
+            // note, not something to wade through before the dishes.
+            if (showFeatured) {
+                item(key = "featured") {
+                    FeaturedDishes(featured, actions.onSelectDish, Modifier.animateItem().padding(top = Space.section))
                 }
             }
             if (state.isReading) {
@@ -1231,7 +1230,21 @@ private fun DishRow(
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             DishName(dish, isSelected, sharedScope)
-            Text(dish.originalName, style = type.original, color = colors.inkMuted)
+            // The printed name only when it adds something: in the menu's own language it would just
+            // repeat the title. What the dish is earns the space instead.
+            if (!dish.readableName.sameDishNameAs(dish.originalName)) {
+                Text(dish.originalName, style = type.original, color = colors.inkMuted)
+            }
+            (dish.pitch ?: dish.whatItIs)?.let { line ->
+                Text(
+                    line,
+                    style = type.bodySmall,
+                    color = colors.inkMuted,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -1391,6 +1404,12 @@ private fun DishName(
             )
         }
     }
+}
+
+/** Whether two names are the same once case, spacing and punctuation are set aside. */
+internal fun String.sameDishNameAs(other: String): Boolean {
+    fun String.letters() = lowercase().filter { it.isLetterOrDigit() }
+    return letters() == other.letters()
 }
 
 /**
