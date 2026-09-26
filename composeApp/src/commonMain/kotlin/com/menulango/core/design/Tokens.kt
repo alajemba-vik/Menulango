@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Easing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -48,6 +49,38 @@ internal data class PaperColors(
     }
 
     fun food(group: FoodGroup): Color = foodColors[group.ordinal]
+
+    /** Part-way from this palette to [to]: how a theme change fades rather than snaps. */
+    fun blend(
+        to: PaperColors,
+        fraction: Float,
+    ): PaperColors {
+        if (fraction <= 0f) return this
+        if (fraction >= 1f) return to
+
+        fun mix(
+            a: Color,
+            b: Color,
+        ) = lerp(a, b, fraction)
+        return PaperColors(
+            paper = mix(paper, to.paper),
+            raised = mix(raised, to.raised),
+            sunk = mix(sunk, to.sunk),
+            ink = mix(ink, to.ink),
+            inkMuted = mix(inkMuted, to.inkMuted),
+            inkFaint = mix(inkFaint, to.inkFaint),
+            rule = mix(rule, to.rule),
+            seal = mix(seal, to.seal),
+            sealInk = mix(sealInk, to.sealInk),
+            onSeal = mix(onSeal, to.onSeal),
+            ember = mix(ember, to.ember),
+            alarm = mix(alarm, to.alarm),
+            scrim = mix(scrim, to.scrim),
+            onPhoto = mix(onPhoto, to.onPhoto),
+            foodColors = foodColors.zip(to.foodColors) { a, b -> mix(a, b) },
+            isDark = if (fraction < 0.5f) isDark else to.isDark,
+        )
+    }
 
     /** A peach tint of the brand colour: selected cards, fact tiles, the stepper. */
     val sealWash: Color get() = seal.copy(alpha = if (isDark) 0.18f else 0.12f)

@@ -92,6 +92,7 @@ import com.menulango.resources.order_title
 import com.menulango.resources.order_total
 import com.menulango.resources.order_total_note
 import com.menulango.resources.order_view
+import com.menulango.resources.order_view_table
 import com.menulango.resources.order_waiter_for_me
 import com.menulango.resources.order_waiter_for_restaurant
 import com.menulango.resources.order_waiter_hint
@@ -201,12 +202,28 @@ internal fun OrderBar(
                 .padding(start = Space.gutter),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                stringResource(Res.string.order_view),
-                style = Paper.type.button,
-                color = colors.onSeal,
-                modifier = Modifier.weight(1f),
-            )
+            // One person: "Your picks". Several: "Table picks", and who has picked how many, so the
+            // bar never hides that it holds other people's choices too.
+            val pickers = order.diners.filter { order.linesFor(it.id).isNotEmpty() }
+            Column(Modifier.weight(1f).padding(vertical = Space.xs)) {
+                Text(
+                    stringResource(if (pickers.size > 1) Res.string.order_view_table else Res.string.order_view),
+                    style = Paper.type.button,
+                    color = colors.onSeal,
+                    maxLines = 1,
+                )
+                if (pickers.size > 1) {
+                    Text(
+                        pickers
+                            .map { diner -> "${order.label(diner)} ${order.linesFor(diner.id).sumOf { it.quantity }}" }
+                            .joinToString("  ·  "),
+                        style = Paper.type.caption,
+                        color = colors.onSeal.copy(alpha = 0.85f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
             Text(
                 listOfNotNull(
                     stringResource(Res.string.order_count, order.dishCount),

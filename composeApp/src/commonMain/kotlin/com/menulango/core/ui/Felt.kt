@@ -60,7 +60,9 @@ internal fun Modifier.felt(
 ): Modifier =
     composed {
         val density = LocalDensity.current
-        val tile = remember(base, density.density) { feltTile(base, density.density) }
+        // The fibres are the same on every colour, so they are drawn once, transparently, and laid
+        // over a plain fill: a colour can then change every frame (a theme fading) at no cost.
+        val tile = remember(density.density) { feltTile(density.density) }
         val brush = remember(tile) { ShaderBrush(ImageShader(tile, TileMode.Repeated, TileMode.Repeated)) }
         val origin = remember { FloatArray(2) }
         val drift = LocalFeltDrift.current
@@ -76,6 +78,7 @@ internal fun Modifier.felt(
                 // without ever recomposing the screen.
                 val dx = drift.x
                 val dy = drift.y
+                drawRect(base)
                 translate(dx - origin[0], dy - origin[1]) {
                     drawRect(brush, topLeft = Offset(origin[0] - dx, origin[1] - dy), size = size)
                 }
@@ -154,17 +157,12 @@ private fun feltConnection(
         }
     }
 
-/** One seamless square of felt, drawn once per colour and screen density. */
-private fun feltTile(
-    base: Color,
-    density: Float,
-): ImageBitmap {
+/** One seamless square of felt fibres on transparency, drawn once per screen density. */
+private fun feltTile(density: Float): ImageBitmap {
     val size = (TILE_DP * density).roundToInt()
     val bitmap = ImageBitmap(size, size)
     val canvas = Canvas(bitmap)
     val paint = Paint().apply { strokeCap = StrokeCap.Round }
-    paint.color = base
-    canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), paint)
 
     // Real felt is clumpy: fibres bunch in some places and thin out in others. Most fibres gather
     // round random clumps of different sizes; the rest are scattered evenly between them. The tile

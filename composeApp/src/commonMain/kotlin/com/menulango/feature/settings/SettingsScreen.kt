@@ -1,7 +1,14 @@
 package com.menulango.feature.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
@@ -11,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -658,30 +666,56 @@ private fun AppearancePicker(
     onSelect: (Appearance) -> Unit,
 ) {
     val colors = Paper.colors
-    Row(
+    val options = Appearance.entries
+    // One lens that slides to the chosen option, like iOS's segmented control, instead of the
+    // highlight jumping between cells.
+    BoxWithConstraints(
         Modifier
             .fillMaxWidth()
             .clip(Shapes.button)
             .background(colors.sunk)
-            .padding(4.dp)
-            .selectableGroup(),
+            .padding(4.dp),
     ) {
-        Appearance.entries.forEach { option ->
-            val isSelected = option == selected
-            Text(
-                stringResource(option.label()),
-                style = Paper.type.button.copy(fontSize = Paper.type.bodySmall.fontSize),
-                color = if (isSelected) colors.ink else colors.inkMuted,
-                textAlign = TextAlign.Center,
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .then(if (isSelected) Modifier.shadow(Elevation.resting, Shapes.chip) else Modifier)
-                        .clip(Shapes.chip)
-                        .background(if (isSelected) colors.raised else Color.Transparent)
-                        .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(option) })
-                        .padding(vertical = Space.sm),
-            )
+        val segment = maxWidth / options.size
+        val offset by animateDpAsState(
+            targetValue = segment * options.indexOf(selected),
+            animationSpec =
+                if (Paper.reduceMotion) {
+                    tween(0)
+                } else {
+                    spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)
+                },
+            label = "appearance-lens",
+        )
+        Box(
+            Modifier
+                .matchParentSize()
+                .padding(end = maxWidth - segment)
+                .offset(x = offset)
+                .shadow(Elevation.resting, Shapes.chip)
+                .clip(Shapes.chip)
+                .background(colors.raised),
+        )
+        Row(Modifier.fillMaxWidth().selectableGroup()) {
+            options.forEach { option ->
+                val isSelected = option == selected
+                val tint by animateColorAsState(
+                    if (isSelected) colors.ink else colors.inkMuted,
+                    label = "appearance-text",
+                )
+                Text(
+                    stringResource(option.label()),
+                    style = Paper.type.button.copy(fontSize = Paper.type.bodySmall.fontSize),
+                    color = tint,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .clip(Shapes.chip)
+                            .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(option) })
+                            .padding(vertical = Space.sm),
+                )
+            }
         }
     }
 }

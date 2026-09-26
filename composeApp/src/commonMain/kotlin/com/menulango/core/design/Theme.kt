@@ -1,5 +1,7 @@
 package com.menulango.core.design
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
@@ -165,10 +168,16 @@ internal fun MenuLangoTheme(
     reduceMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colors = if (darkTheme) DarkPaper else LightPaper
+    // The whole palette fades between light and dark instead of snapping, as the system does.
+    val darkness by animateFloatAsState(
+        targetValue = if (darkTheme) 1f else 0f,
+        animationSpec = tween(if (reduceMotion) 0 else THEME_FADE_MS, easing = Motion.standard),
+        label = "theme",
+    )
+    val colors = LightPaper.blend(DarkPaper, darkness)
     val type = rememberPaperType()
     val material =
-        if (darkTheme) {
+        if (colors.isDark) {
             darkColorScheme(
                 primary = colors.seal,
                 onPrimary = colors.onSeal,
@@ -213,3 +222,5 @@ internal fun MenuLangoTheme(
         }
     }
 }
+
+private const val THEME_FADE_MS = 450

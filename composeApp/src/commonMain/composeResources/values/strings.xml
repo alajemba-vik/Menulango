@@ -46,6 +46,7 @@
     <string name="note_allergic">Allergic to</string>
     <string name="note_waiter">Note: %1$s</string>
     <string name="order_view">Your picks</string>
+    <string name="order_view_table">Table picks</string>
     <string name="order_count">%1$d</string>
     <string name="order_title">Your picks</string>
     <string name="order_for">Picking for %1$s</string>

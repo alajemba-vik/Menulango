@@ -57,47 +57,43 @@ private fun Modifier.material(
 ): Modifier =
     composed {
         val density = LocalDensity.current.density
-        background(ShaderBrush(ImageShader(tile(material, base, density), TileMode.Repeated, TileMode.Repeated)), shape)
+        // Colour and grain are separate layers: the grain tile is the same on every colour, so a
+        // colour can animate (a theme fading) without a single tile being redrawn.
+        background(base, shape)
+            .background(ShaderBrush(ImageShader(tile(material, density), TileMode.Repeated, TileMode.Repeated)), shape)
     }
 
 /**
- * Tiles are drawn once per material, colour and density and then shared: a menu of sixty cards
+ * Tiles are drawn once per material and density and then shared: a menu of sixty cards
  * paints one bitmap sixty times, it does not draw sixty. Composition runs on one thread, so a
  * plain map is enough.
  */
-private val tiles = HashMap<Triple<Material, Color, Float>, ImageBitmap>()
+private val tiles = HashMap<Pair<Material, Float>, ImageBitmap>()
 
 private fun tile(
     material: Material,
-    base: Color,
     density: Float,
 ): ImageBitmap =
-    tiles.getOrPut(Triple(material, base, density)) {
+    tiles.getOrPut(material to density) {
         when (material) {
-            Material.Paper -> paperTile(base, density)
-            Material.Weave -> weaveTile(base, density)
-            Material.Suede -> suedeTile(base, density)
+            Material.Paper -> paperTile(density)
+            Material.Weave -> weaveTile(density)
+            Material.Suede -> suedeTile(density)
         }
     }
 
 private fun blank(
-    base: Color,
     sizeDp: Float,
     density: Float,
 ): Triple<ImageBitmap, Canvas, Int> {
     val size = (sizeDp * density).roundToInt()
     val bitmap = ImageBitmap(size, size)
-    val canvas = Canvas(bitmap)
-    canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), Paint().apply { color = base })
-    return Triple(bitmap, canvas, size)
+    return Triple(bitmap, Canvas(bitmap), size)
 }
 
 /** A fine tooth of light and dark specks, and a few short paper fibres. */
-private fun paperTile(
-    base: Color,
-    density: Float,
-): ImageBitmap {
-    val (bitmap, canvas, size) = blank(base, PAPER_TILE_DP, density)
+private fun paperTile(density: Float): ImageBitmap {
+    val (bitmap, canvas, size) = blank(PAPER_TILE_DP, density)
     val random = Random(PAPER_SEED)
     val paint = Paint()
     repeat(PAPER_SPECKS) {
@@ -130,11 +126,8 @@ private fun paperTile(
 }
 
 /** Warp and weft: close threads each way, each a shade apart, so the cloth reads up close only. */
-private fun weaveTile(
-    base: Color,
-    density: Float,
-): ImageBitmap {
-    val (bitmap, canvas, size) = blank(base, WEAVE_TILE_DP, density)
+private fun weaveTile(density: Float): ImageBitmap {
+    val (bitmap, canvas, size) = blank(WEAVE_TILE_DP, density)
     val random = Random(WEAVE_SEED)
     val paint = Paint().apply { strokeWidth = 0.6f * density }
     val pitch = WEAVE_PITCH_DP * density
@@ -150,11 +143,8 @@ private fun weaveTile(
 }
 
 /** A soft nap: short strokes mostly one way, as suede lies when brushed. */
-private fun suedeTile(
-    base: Color,
-    density: Float,
-): ImageBitmap {
-    val (bitmap, canvas, size) = blank(base, SUEDE_TILE_DP, density)
+private fun suedeTile(density: Float): ImageBitmap {
+    val (bitmap, canvas, size) = blank(SUEDE_TILE_DP, density)
     val random = Random(SUEDE_SEED)
     val paint = Paint().apply { strokeCap = StrokeCap.Round }
     repeat(SUEDE_STROKES) {
