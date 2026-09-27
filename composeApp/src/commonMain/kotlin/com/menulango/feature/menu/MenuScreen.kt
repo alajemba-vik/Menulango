@@ -11,8 +11,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -217,6 +221,9 @@ import com.menulango.resources.note_add
 import com.menulango.resources.note_added
 import com.menulango.resources.note_hint_once
 import com.menulango.resources.order_cleared
+import com.menulango.resources.search_hint_combo
+import com.menulango.resources.search_hint_price
+import com.menulango.resources.search_hint_range
 import com.menulango.resources.search_menu_hint
 import com.menulango.resources.search_open
 import com.menulango.resources.search_tag_description
@@ -784,8 +791,28 @@ private fun FilterBar(
 ) {
     val colors = Paper.colors
     Column(Modifier.fillMaxWidth().felt(colors.paper).padding(top = Space.gutter, bottom = Space.sm)) {
-        if (state.search.open) {
+        // The field grows out from where the Search chip sat, and the filters settle in beneath it.
+        AnimatedVisibility(
+            visible = state.search.open,
+            enter =
+                fadeIn(tween(Motion.QUICK_MS)) +
+                    expandHorizontally(
+                        tween(Motion.SCREEN_MS, easing = Motion.standard),
+                        expandFrom = Alignment.Start,
+                    ) +
+                    expandVertically(tween(Motion.SCREEN_MS, easing = Motion.standard), expandFrom = Alignment.Top),
+            exit =
+                fadeOut(tween(Motion.QUICK_MS)) +
+                    shrinkHorizontally(tween(Motion.QUICK_MS), shrinkTowards = Alignment.Start) +
+                    shrinkVertically(tween(Motion.QUICK_MS), shrinkTowards = Alignment.Top),
+        ) {
             SearchField(
+                hints =
+                    listOf(
+                        stringResource(Res.string.search_hint_price),
+                        stringResource(Res.string.search_hint_combo),
+                        stringResource(Res.string.search_hint_range),
+                    ),
                 query = state.search.query,
                 onQuery = actions.onSearch,
                 placeholder = stringResource(Res.string.search_menu_hint),

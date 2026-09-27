@@ -22,6 +22,7 @@ import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.ScanQuota
 import com.menulango.data.search.DishSearch
 import com.menulango.data.search.DishSearchTag
+import com.menulango.data.search.PriceQuery
 import com.menulango.data.search.TextSearch
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.dishHistoryKey
@@ -75,21 +76,24 @@ internal sealed interface MenuUiState {
         private val filtering = DishFilters(dishes)
 
         /** The dishes left after the diner's filters, in menu order. */
+        private val priceQuery = PriceQuery.parse(search.query)
+
         val visibleDishes: List<Dish> =
             filtering.apply(filters, avoid).filter { dish ->
-                TextSearch.matches(
-                    search.query,
-                    buildList {
-                        add(dish.readableName)
-                        add(dish.originalName)
-                        if (DishSearchTag.Ingredients in search.tags) addAll(dish.ingredients)
-                        if (DishSearchTag.Description in search.tags) {
-                            add(dish.whatItIs)
-                            add(dish.howItIsMade)
-                            add(dish.pitch)
-                        }
-                    },
-                )
+                priceQuery.allows(dish.price?.amount) &&
+                    TextSearch.matches(
+                        priceQuery.text,
+                        buildList {
+                            add(dish.readableName)
+                            add(dish.originalName)
+                            if (DishSearchTag.Ingredients in search.tags) addAll(dish.ingredients)
+                            if (DishSearchTag.Description in search.tags) {
+                                add(dish.whatItIs)
+                                add(dish.howItIsMade)
+                                add(dish.pitch)
+                            }
+                        },
+                    )
             }
 
         val filterOptions: List<DishFilter> = filtering.options(filters)

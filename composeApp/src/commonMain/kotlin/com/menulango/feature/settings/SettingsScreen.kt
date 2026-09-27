@@ -796,6 +796,8 @@ private fun AvoidWords(
             add,
             tint = colors.onSeal,
             background = colors.seal,
+            // Nothing to add until a word is typed.
+            enabled = draft.isNotBlank(),
         )
     }
     if (words.isNotEmpty()) {

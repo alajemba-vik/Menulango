@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -124,14 +125,16 @@ internal fun IconAction(
     modifier: Modifier = Modifier,
     tint: Color = Paper.colors.ink,
     background: Color = Color.Transparent,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier =
             modifier
                 .size(Space.touchTarget)
+                .graphicsLayer { alpha = if (enabled) 1f else 0.4f }
                 .clip(CircleShape)
                 .background(background)
-                .clickable(role = Role.Button, onClick = onClick)
+                .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                 .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
