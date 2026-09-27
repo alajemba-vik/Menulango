@@ -109,7 +109,6 @@ import com.menulango.resources.capture_hint
 import com.menulango.resources.capture_hint_next_page
 import com.menulango.resources.capture_last_menu
 import com.menulango.resources.capture_last_menu_description
-import com.menulango.resources.capture_plus
 import com.menulango.resources.capture_preparing
 import com.menulango.resources.capture_quota
 import com.menulango.resources.capture_quota_none
@@ -353,27 +352,21 @@ private fun AllowanceLine(
     onClick: () -> Unit,
     tint: Color,
 ) {
+    // Plus has no limit to warn about, so the line simply isn't there.
+    if (allowance !is Allowance.Free) return
     val text =
-        when (allowance) {
-            Allowance.Plus -> {
-                stringResource(Res.string.capture_plus)
-            }
-
-            is Allowance.Free -> {
-                if (allowance.quota.isExhausted) {
-                    stringResource(Res.string.capture_quota_none)
-                } else {
-                    stringResource(Res.string.capture_quota, allowance.quota.remaining, allowance.quota.allowance)
-                }
-            }
+        if (allowance.quota.isExhausted) {
+            stringResource(Res.string.capture_quota_none)
+        } else {
+            stringResource(Res.string.capture_quota, allowance.quota.remaining, allowance.quota.allowance)
         }
     Text(
         text = text,
         style = Paper.type.caption,
-        color = if (allowance is Allowance.Plus) tint else tint.copy(alpha = 0.75f),
+        color = tint.copy(alpha = 0.75f),
         modifier =
             Modifier
-                .clickable(enabled = allowance is Allowance.Free, role = Role.Button, onClick = onClick)
+                .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = Space.related, vertical = Space.xs),
     )
 }

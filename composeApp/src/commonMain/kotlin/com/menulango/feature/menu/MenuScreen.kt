@@ -164,7 +164,6 @@ import com.menulango.resources.Res
 import com.menulango.resources.action_back
 import com.menulango.resources.action_retake
 import com.menulango.resources.action_try_again
-import com.menulango.resources.capture_plus
 import com.menulango.resources.choose_prompt
 import com.menulango.resources.filter_avoid
 import com.menulango.resources.filter_budget
@@ -1585,7 +1584,8 @@ private fun FeaturedDishes(
             stringResource(Res.string.menu_featured_see_why),
             { explaining = true },
             color = Paper.colors.sealInk,
-            modifier = Modifier.padding(start = Space.gutter - Space.xs, bottom = Space.xs),
+            // The button's own inner padding takes it back to the gutter, level with the text above.
+            modifier = Modifier.padding(start = Space.gutter - Space.sm, bottom = Space.xs),
         )
         if (explaining) FeaturedReasonDialog(language) { explaining = false }
         LazyRow(

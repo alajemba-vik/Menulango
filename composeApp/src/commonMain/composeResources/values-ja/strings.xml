@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">前回のメニューを開く、%1$d 品</string>
     <string name="capture_quota">今月の無料スキャン残り %1$d 回（全 %2$d 回）</string>
     <string name="capture_quota_none">今月の無料スキャンは残っていません</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">メニューを読むにはカメラが必要です</string>
     <string name="capture_camera_body">カメラへのアクセスを許可してメニューを撮影するか、撮影済みの写真を選んでください。</string>
     <string name="capture_camera_allow">カメラを許可</string>

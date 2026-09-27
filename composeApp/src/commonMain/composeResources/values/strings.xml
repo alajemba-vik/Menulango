@@ -19,7 +19,6 @@
     <string name="capture_last_menu_description">Reopen the last menu, %1$d dishes</string>
     <string name="capture_quota">%1$d of %2$d free scans left this month</string>
     <string name="capture_quota_none">No free scans left this month</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">MenuLango needs the camera to read</string>
     <string name="capture_camera_body">Allow camera access to photograph a menu, or choose a photo you have already taken.</string>
     <string name="capture_camera_allow">Allow camera</string>

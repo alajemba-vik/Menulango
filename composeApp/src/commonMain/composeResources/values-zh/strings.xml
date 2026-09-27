@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">重新打开上一份菜单，%1$d 道菜</string>
     <string name="capture_quota">本月还剩 %1$d 次免费扫描，共 %2$d 次</string>
     <string name="capture_quota_none">本月已没有免费扫描次数</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">MenuLango 需要相机来读取菜单</string>
     <string name="capture_camera_body">允许使用相机来拍摄菜单，或选择一张已拍好的照片。</string>
     <string name="capture_camera_allow">允许使用相机</string>

@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">Volver a abrir la última carta, %1$d platos</string>
     <string name="capture_quota">Te quedan %1$d de %2$d escaneos gratis este mes</string>
     <string name="capture_quota_none">No te quedan escaneos gratis este mes</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">MenuLango necesita la cámara para leer</string>
     <string name="capture_camera_body">Permite el acceso a la cámara para fotografiar una carta, o elige una foto que ya hayas hecho.</string>
     <string name="capture_camera_allow">Permitir la cámara</string>

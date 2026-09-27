@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">पिछला मेन्यू फिर से खोलें, %1$d व्यंजन</string>
     <string name="capture_quota">इस महीने %2$d में से %1$d मुफ़्त स्कैन बाकी</string>
     <string name="capture_quota_none">इस महीने कोई मुफ़्त स्कैन बाकी नहीं</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">मेन्यू पढ़ने के लिए MenuLango को कैमरा चाहिए</string>
     <string name="capture_camera_body">मेन्यू की फ़ोटो लेने के लिए कैमरे की अनुमति दें, या पहले से ली गई फ़ोटो चुनें।</string>
     <string name="capture_camera_allow">कैमरे की अनुमति दें</string>

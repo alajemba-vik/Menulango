@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">إعادة فتح آخر قائمة، %1$d أطباق</string>
     <string name="capture_quota">تبقّى %1$d من %2$d مسحًا مجانيًا هذا الشهر</string>
     <string name="capture_quota_none">لم يتبقَّ أي مسح مجاني هذا الشهر</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">يحتاج MenuLango إلى الكاميرا ليقرأ</string>
     <string name="capture_camera_body">اسمح بالوصول إلى الكاميرا لتصوير قائمة طعام، أو اختر صورة التقطتها من قبل.</string>
     <string name="capture_camera_allow">السماح بالكاميرا</string>

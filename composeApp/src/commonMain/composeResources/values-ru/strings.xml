@@ -14,7 +14,6 @@
     <string name="capture_last_menu_description">Снова открыть последнее меню, блюд: %1$d</string>
     <string name="capture_quota">Осталось бесплатных сканирований в этом месяце: %1$d из %2$d</string>
     <string name="capture_quota_none">Бесплатные сканирования в этом месяце закончились</string>
-    <string name="capture_plus">MenuLango Plus</string>
     <string name="capture_camera_title">Чтобы читать меню, MenuLango нужна камера</string>
     <string name="capture_camera_body">Разрешите доступ к камере, чтобы сфотографировать меню, или выберите уже сделанное фото.</string>
     <string name="capture_camera_allow">Разрешить камеру</string>
