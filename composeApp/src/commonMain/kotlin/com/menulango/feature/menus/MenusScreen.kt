@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarDuration
@@ -78,11 +80,15 @@ import com.menulango.core.ui.paper
 import com.menulango.core.ui.pressable
 import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.local.SavedMenuItem
+import com.menulango.data.menu.model.Dish
 import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
+import com.menulango.feature.dish.DishSheet
+import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.menuTitle
 import com.menulango.resources.Res
+import com.menulango.resources.list_joiner
 import com.menulango.resources.menu_context_dishes
 import com.menulango.resources.menu_context_one_dish
 import com.menulango.resources.menu_snapshot_description
@@ -92,13 +98,19 @@ import com.menulango.resources.menus_deleted
 import com.menulango.resources.menus_empty_action
 import com.menulango.resources.menus_empty_body
 import com.menulango.resources.menus_empty_title
+import com.menulango.resources.menus_journal_open
 import com.menulango.resources.menus_reading_body
 import com.menulango.resources.menus_reading_page
 import com.menulango.resources.menus_reading_title
 import com.menulango.resources.menus_subtitle
+import com.menulango.resources.menus_summary
 import com.menulango.resources.menus_title
 import com.menulango.resources.menus_today
 import com.menulango.resources.menus_undo
+import com.menulango.resources.menus_when_all
+import com.menulango.resources.menus_when_month
+import com.menulango.resources.menus_when_older
+import com.menulango.resources.menus_when_week
 import com.menulango.resources.menus_yesterday
 import com.menulango.resources.search_menus_hint
 import com.menulango.resources.search_menus_none
@@ -107,6 +119,7 @@ import com.menulango.resources.search_tag_dishes
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -159,20 +172,30 @@ internal fun MenusScreen(
         var searching by rememberSaveable { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
         var searchDishes by rememberSaveable { mutableStateOf(false) }
-        val dishNames by viewModel.dishNames.collectAsState()
-        LaunchedEffect(searchDishes, ready.menus) {
-            if (searchDishes) viewModel.loadDishNames(ready.menus.map { it.cacheKey })
-        }
-        val titles = ready.menus.associate { it.cacheKey to menuTitle(it.language, it.venueType) }
+        var period by rememberSaveable { mutableStateOf(MenuPeriod.All) }
+        var journalFor by remember { mutableStateOf<String?>(null) }
+        var viewing by remember { mutableStateOf<Pair<String, Dish>?>(null) }
+        val dishes by viewModel.dishes.collectAsState()
+        val marks by viewModel.marks.collectAsState()
+        val titles =
+            ready.menus.associate {
+                it.cacheKey to (marks[it.cacheKey]?.name ?: menuTitle(it.language, it.venueType))
+            }
         val shown =
             ready.menus.filter { menu ->
-                TextSearch.matches(
-                    query,
-                    buildList {
-                        add(titles[menu.cacheKey])
-                        if (searchDishes) addAll(dishNames[menu.cacheKey].orEmpty())
-                    },
-                )
+                period.contains(menu.savedAtMillis, ready.nowMillis) &&
+                    TextSearch.matches(
+                        query,
+                        buildList {
+                            add(titles[menu.cacheKey])
+                            if (searchDishes) {
+                                dishes[menu.cacheKey].orEmpty().forEach { dish ->
+                                    add(dish.readableName)
+                                    add(dish.originalName)
+                                }
+                            }
+                        },
+                    )
             }
         val list = rememberLazyListState()
         val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
@@ -239,6 +262,23 @@ internal fun MenusScreen(
                     )
                 }
             }
+            // Filtering by when, as Photos and Files do, once there are enough menus to need it.
+            if (ready.menus.size >= PERIOD_FILTER_FROM) {
+                item(key = "period") {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(Space.related),
+                    ) {
+                        MenuPeriod.entries.forEach { option ->
+                            FilterPill(
+                                text = stringResource(option.label),
+                                selected = option == period,
+                                onClick = { period = option },
+                            )
+                        }
+                    }
+                }
+            }
             if (ready.menus.isNotEmpty() && shown.isEmpty()) {
                 item(key = "no-match") {
                     Text(
@@ -272,6 +312,10 @@ internal fun MenusScreen(
                 ) {
                     SavedMenuCard(
                         menu = menu,
+                        title = titles[menu.cacheKey].orEmpty(),
+                        summary = dishes[menu.cacheKey]?.let { summaryOf(it) },
+                        picked = marks[menu.cacheKey]?.picked?.size ?: 0,
+                        onJournal = { journalFor = menu.cacheKey },
                         nowMillis = ready.nowMillis,
                         stillReading = menu.cacheKey in readingKeys,
                         onOpen = { navigate(Route.Menu(MenuSource.Saved(menu.cacheKey))) },
@@ -281,6 +325,30 @@ internal fun MenusScreen(
             }
         }
         ScrollTitleBar(stringResource(Res.string.menus_title), progress, Modifier.align(Alignment.TopCenter))
+        journalFor?.let { key ->
+            val all = dishes[key].orEmpty()
+            val mark = marks[key]
+            PickJournalSheet(
+                title = titles[key].orEmpty(),
+                picked = mark?.picked.orEmpty().mapNotNull { id -> all.firstOrNull { it.id == id } },
+                notes = mark?.notes.orEmpty(),
+                onNote = { dishId, text -> viewModel.note(key, dishId, text) },
+                onOpen = { dish ->
+                    journalFor = null
+                    viewing = key to dish
+                },
+                onDismiss = { journalFor = null },
+            )
+        }
+        viewing?.let { (key, dish) ->
+            DishSheet(
+                dish = dish,
+                onDismiss = {
+                    viewing = null
+                    journalFor = key
+                },
+            )
+        }
     }
 }
 
@@ -331,6 +399,10 @@ private fun SwipeToDelete(
 @Composable
 private fun SavedMenuCard(
     menu: SavedMenuItem,
+    title: String,
+    summary: String?,
+    picked: Int,
+    onJournal: () -> Unit,
     nowMillis: Long,
     stillReading: Boolean = false,
     onOpen: () -> Unit,
@@ -368,7 +440,7 @@ private fun SavedMenuCard(
         Spacer(Modifier.width(Space.md))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(
-                menuTitle(menu.language, menu.venueType),
+                title,
                 style = Paper.type.dishName,
                 color = colors.ink,
                 maxLines = 2,
@@ -386,7 +458,27 @@ private fun SavedMenuCard(
                 style = Paper.type.caption,
                 color = colors.inkMuted,
             )
+            // What the menu was mostly made of, so a long list of menus stays recognisable.
+            summary?.let {
+                Text(
+                    stringResource(Res.string.menus_summary, it),
+                    style = Paper.type.caption,
+                    color = colors.ink,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (stillReading) ReadingNote(Modifier.padding(top = Space.xs))
+            // The dishes picked here, and the diner's notes on them: a quiet way back to "what was
+            // that great thing we had?".
+            if (picked > 0) {
+                Text(
+                    stringResource(Res.string.menus_journal_open, picked),
+                    style = Paper.type.caption.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.sealInk,
+                    modifier = Modifier.clip(Shapes.chip).pressable(onJournal).padding(vertical = Space.xs),
+                )
+            }
         }
         Icon(
             PaperIcons.ChevronRight,
@@ -478,3 +570,53 @@ private fun ReadingNote(
                 .padding(horizontal = Space.sm, vertical = 4.dp),
     )
 }
+
+/** When a menu was read, for the filter above the list. */
+internal enum class MenuPeriod(
+    val label: StringResource,
+) {
+    All(Res.string.menus_when_all),
+    Week(Res.string.menus_when_week),
+    Month(Res.string.menus_when_month),
+    Older(Res.string.menus_when_older),
+    ;
+
+    fun contains(
+        savedAt: Long,
+        now: Long,
+    ): Boolean {
+        val age = now - savedAt
+        return when (this) {
+            All -> true
+            Week -> age <= 7 * DAY_MS
+            Month -> age <= 30 * DAY_MS
+            Older -> age > 30 * DAY_MS
+        }
+    }
+}
+
+private const val DAY_MS = 24 * 60 * 60 * 1000L
+private const val PERIOD_FILTER_FROM = 4
+
+/**
+ * The few ingredients that run through a menu, in the words the menu was explained in:
+ * "yoghurt, rice and lamb". Only ingredients in at least two dishes count; a menu without
+ * repeats gets no summary rather than a misleading one.
+ */
+@Composable
+private fun summaryOf(dishes: List<Dish>): String? {
+    val common =
+        dishes
+            .flatMap { dish -> dish.ingredients.map { it.trim().lowercase() }.distinct() }
+            .filter { it.isNotEmpty() && it.length <= SUMMARY_WORD_MAX }
+            .groupingBy { it }
+            .eachCount()
+            .filter { it.value >= 2 }
+            .entries
+            .sortedByDescending { it.value }
+            .take(3)
+            .map { it.key }
+    return common.takeIf { it.isNotEmpty() }?.joinToString(stringResource(Res.string.list_joiner))
+}
+
+private const val SUMMARY_WORD_MAX = 24

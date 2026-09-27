@@ -37,6 +37,8 @@ import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.ui.BackGesture
 import com.menulango.core.ui.FeltSurface
+import com.menulango.core.ui.KeptState
+import com.menulango.core.ui.LocalKeptState
 import com.menulango.core.ui.TipHost
 import com.menulango.data.preferences.AppLanguage
 import com.menulango.data.preferences.Appearance
@@ -79,7 +81,12 @@ public fun MenuLangoApp(reduceMotion: Boolean = false) {
     // Kept above the language switch, so changing language keeps the diner where they are.
     val navigator = remember { Navigator() }
     val saveableState = rememberSaveableStateHolder()
-    CompositionLocalProvider(LocalAppLocale provides language.languageTag, LocalLayoutDirection provides direction) {
+    val kept = remember { KeptState() }
+    CompositionLocalProvider(
+        LocalAppLocale provides language.languageTag,
+        LocalLayoutDirection provides direction,
+        LocalKeptState provides kept,
+    ) {
         // A new language rebuilds the tree, so every string is read again in it.
         key(language) {
             val script = language.languageTag ?: Locale.current.language

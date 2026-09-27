@@ -2,8 +2,11 @@ package com.menulango.feature.menus
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.menulango.data.marks.MenuMark
+import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.menu.local.SavedMenuItem
+import com.menulango.data.menu.model.Dish
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +31,7 @@ internal sealed interface MenusUiState {
 internal class MenusViewModel(
     private val repository: MenuRepository,
     private val nowMillis: () -> Long,
+    private val menuMarks: MenuMarks,
 ) : ViewModel() {
     private val pendingDeletes = MutableStateFlow<Set<String>>(emptySet())
 
@@ -37,27 +41,37 @@ internal class MenusViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MenusUiState.Loading)
 
     /**
-     * The dish names inside each saved menu, loaded only once the diner adds the "Dishes" tag to
-     * their search: a plain search never has to open every saved menu.
+     * Each saved menu's dishes, read once in the background: they give every card a one-line
+     * summary, let the "Dishes" search tag look inside, and fill the diner's notes.
      */
-    val dishNames = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val dishes = MutableStateFlow<Map<String, List<Dish>>>(emptyMap())
 
-    fun loadDishNames(cacheKeys: List<String>) {
-        val missing = cacheKeys.filterNot { it in dishNames.value }
-        if (missing.isEmpty()) return
+    /** The diner's marks on each menu: a name, dishes picked, notes on them. */
+    val marks: StateFlow<Map<String, MenuMark>> = menuMarks.all
+
+    init {
         viewModelScope.launch {
-            val loaded =
-                missing.associateWith { key ->
-                    repository
-                        .open(key)
-                        ?.menu
-                        ?.dishes
-                        ?.flatMap { listOf(it.readableName, it.originalName) }
-                        .orEmpty()
-                }
-            dishNames.value = dishNames.value + loaded
+            repository.saved().collect { menus ->
+                val missing = menus.map { it.cacheKey }.filterNot { it in dishes.value }
+                if (missing.isEmpty()) return@collect
+                val loaded =
+                    missing.associateWith { key ->
+                        repository
+                            .open(key)
+                            ?.menu
+                            ?.dishes
+                            .orEmpty()
+                    }
+                dishes.value = dishes.value + loaded
+            }
         }
     }
+
+    fun note(
+        cacheKey: String,
+        dishId: String,
+        text: String,
+    ) = menuMarks.note(cacheKey, dishId, text)
 
     fun hide(cacheKey: String) {
         pendingDeletes.value += cacheKey
@@ -70,6 +84,7 @@ internal class MenusViewModel(
     fun commit(cacheKey: String) {
         viewModelScope.launch {
             repository.forget(cacheKey)
+            menuMarks.forget(cacheKey)
             pendingDeletes.value -= cacheKey
         }
     }

@@ -322,6 +322,13 @@ internal class MenuViewModel(
 
     init {
         load()
+        // Every dish that joins this menu's order, from the list or from Help me choose, is kept
+        // for the diner's notes on Menus.
+        viewModelScope.launch {
+            combine(order, menuKey) { o, key -> o to key }.collect { (o, key) ->
+                key?.let { k -> o.lines.forEach { marks.recordPick(k, it.dish.id) } }
+            }
+        }
         viewModelScope.launch {
             inbox.incoming.collect { delivery -> if (delivery.sessionId == sessionId) addPages(delivery.pages) }
         }

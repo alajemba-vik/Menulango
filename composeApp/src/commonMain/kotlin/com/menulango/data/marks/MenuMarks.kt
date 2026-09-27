@@ -54,7 +54,9 @@ internal class MenuMarks(
     fun recordPick(
         menuKey: String,
         dishId: String,
-    ) = update(menuKey) { if (dishId in it.picked) it else it.copy(picked = it.picked + dishId) }
+    ) {
+        if (dishId !in current(menuKey).picked) update(menuKey) { it.copy(picked = it.picked + dishId) }
+    }
 
     fun note(
         menuKey: String,

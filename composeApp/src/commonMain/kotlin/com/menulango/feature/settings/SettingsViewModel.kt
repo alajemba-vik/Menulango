@@ -6,6 +6,7 @@ import com.menulango.data.backup.BackupRestoreResult
 import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.billing.PurchaseOutcome
+import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.preferences.AppLanguage
 import com.menulango.data.preferences.Appearance
@@ -60,6 +61,7 @@ internal class SettingsViewModel(
     private val repository: MenuRepository,
     private val backup: BackupService,
     config: AppConfig,
+    private val marks: MenuMarks,
 ) : ViewModel() {
     /** Test builds only: the sample menu and a free Plus switch live in Settings. */
     val showsTestTools: Boolean = config.showsTestTools
@@ -152,6 +154,7 @@ internal class SettingsViewModel(
     fun deleteSavedMenus() {
         viewModelScope.launch {
             repository.forgetAll()
+            marks.clear()
             messages.emit(SettingsMessage.MenusDeleted)
         }
     }

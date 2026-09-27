@@ -86,8 +86,8 @@ internal fun sharedModule(config: AppConfig): Module =
         viewModel { params ->
             MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope), get(), get())
         }
-        viewModel { MenusViewModel(get(), ::nowMillis) }
-        viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }
+        viewModel { MenusViewModel(get(), ::nowMillis, get()) }
+        viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
         viewModel { params -> ChooseViewModel(params.get(), params.get(), params.get(), get(), get(), get()) }
         viewModel { params -> PaywallViewModel(params.get(), get()) }
     }

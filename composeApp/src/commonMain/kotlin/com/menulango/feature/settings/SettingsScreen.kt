@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,6 +96,7 @@ import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
+import com.menulango.core.ui.rememberKept
 import com.menulango.core.ui.tipTarget
 import com.menulango.data.preferences.AppLanguage
 import com.menulango.data.preferences.Appearance
@@ -216,7 +218,8 @@ internal fun SettingsScreen(
         viewModel.backupShare.collect { backupFiles.share(it.filename, it.contents) }
     }
 
-    val scroll = rememberScrollState()
+    // Kept across a language change, so the diner stays by the language setting they just used.
+    val scroll = rememberKept("settings-scroll") { ScrollState(0) }
     val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
     val progress = { (scroll.value / titleGone.toFloat()).coerceIn(0f, 1f) }
     Box(Modifier.fillMaxSize()) {
