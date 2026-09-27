@@ -187,10 +187,13 @@ import com.menulango.resources.menu_context_average
 import com.menulango.resources.menu_context_dishes
 import com.menulango.resources.menu_context_one_dish
 import com.menulango.resources.menu_context_pages
+import com.menulango.resources.menu_dish_hidden
 import com.menulango.resources.menu_empty_body
 import com.menulango.resources.menu_empty_title
+import com.menulango.resources.menu_featured_see_why
 import com.menulango.resources.menu_featured_title
 import com.menulango.resources.menu_featured_why
+import com.menulango.resources.menu_hidden_count
 import com.menulango.resources.menu_known
 import com.menulango.resources.menu_last_free_scan
 import com.menulango.resources.menu_more_pages_action
@@ -207,6 +210,7 @@ import com.menulango.resources.menu_reading
 import com.menulango.resources.menu_reading_more
 import com.menulango.resources.menu_reading_page
 import com.menulango.resources.menu_reading_waiting
+import com.menulango.resources.menu_rename_title
 import com.menulango.resources.menu_snapshot_description
 import com.menulango.resources.menu_title_language
 import com.menulango.resources.menu_title_unknown
@@ -284,6 +288,10 @@ internal fun MenuScreen(
                     tips.markSeen(Tip.AddPageCard)
                     navigate(viewModel.routeForAddPage())
                 },
+                onHideDish = viewModel::hideDish,
+                onUnhideDish = viewModel::unhideDish,
+                onRename = viewModel::rename,
+                onPicked = viewModel::recordPick,
             ),
     )
 }
@@ -304,6 +312,10 @@ internal data class MenuActions(
     val onToggleSearchTag: (DishSearchTag) -> Unit = {},
     val onOpenSearch: () -> Unit = {},
     val onCloseSearch: () -> Unit = {},
+    val onHideDish: (String) -> Unit = {},
+    val onUnhideDish: (String) -> Unit = {},
+    val onRename: (String) -> Unit = {},
+    val onPicked: (String) -> Unit = {},
 ) {
     companion object {
         val Preview = MenuActions({}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {})
@@ -340,11 +352,26 @@ internal fun MenuContent(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var noting by remember { mutableStateOf<Dish?>(null) }
+    // Hiding is instant and undoable from the message, like deleting mail.
+    val hideDish: (Dish) -> Unit = { dish ->
+        actions.onHideDish(dish.id)
+        snackbar.currentSnackbarData?.dismiss()
+        scope.launch {
+            val result =
+                snackbar.showSnackbar(
+                    getString(Res.string.menu_dish_hidden, dish.readableName),
+                    getString(Res.string.menus_undo),
+                    duration = SnackbarDuration.Short,
+                )
+            if (result == SnackbarResult.ActionPerformed) actions.onUnhideDish(dish.id)
+        }
+    }
     // The first pick ever is the moment to mention notes, once. After that the picks sheet has a
     // note on every line, and a message on every tap would only get in the way.
     val tips = koinInject<Tips>()
     val addPick: (Dish) -> Unit = { dish ->
         onOrderChange { it.add(dish) }
+        actions.onPicked(dish.id)
         if (Tip.NoteHint !in tips.seen.value) {
             tips.markSeen(Tip.NoteHint)
             snackbar.currentSnackbarData?.dismiss()
@@ -404,7 +431,7 @@ internal fun MenuContent(
                         }
 
                         is MenuUiState.Ready -> {
-                            DishList(state, actions, sharedScope, order, addPick)
+                            DishList(state, actions, sharedScope, order, addPick, hideDish)
                         }
 
                         is MenuUiState.Empty -> {
@@ -633,9 +660,16 @@ private fun DishList(
     sharedScope: SharedTransitionScope?,
     order: TableOrder,
     onAdd: (Dish) -> Unit,
+    onHide: (Dish) -> Unit,
 ) {
     val dealt = remember { DealtItems() }
     val listState = rememberLazyListState()
+    var showHidden by remember { mutableStateOf(false) }
+    // Scrolling back and forth over a long menu without choosing is the classic sign of too many
+    // options at once (Hick's law; Iyengar and Lepper's choice overload). That, once, is when
+    // swiping a dish away is worth mentioning.
+    val browsing = remember { BrowsingSignal() }
+    val viewport = with(LocalDensity.current) { 600.dp.toPx() }
     val dishes = state.visibleDishes
     val sections = remember(dishes) { dishes.map { it.section } }
     val gutter = Modifier.padding(horizontal = Space.gutter)
@@ -657,7 +691,15 @@ private fun DishList(
         // No horizontal content padding: the filter pills scroll edge to edge, so each item insets itself.
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier.fillMaxSize().nestedScroll(
+                    remember(browsing) {
+                        browsing.connection(
+                            viewport = viewport,
+                            eligible = { state.dishes.size >= BROWSE_MIN_DISHES && order.isEmpty && state.markable },
+                        )
+                    },
+                ),
             // The pinned filter bar carries its own top space, so pills never sit on the sheet's edge.
             contentPadding = PaddingValues(top = if (hasFilters) 0.dp else Space.gutter, bottom = CHOOSE_BAR_CLEARANCE),
         ) {
@@ -701,16 +743,27 @@ private fun DishList(
                     if (section != null && section != sections.getOrNull(index - 1)) {
                         SectionHeading(section, Modifier.padding(top = Space.section - Space.sm, bottom = Space.sm))
                     }
-                    DishRow(
-                        isFirst = index == 0,
-                        dish = dish,
-                        tint = Paper.colors.food(dish.foodGroup()),
-                        selectedDishId = state.selectedDishId,
-                        onClick = { actions.onSelectDish(dish.id) },
-                        sharedScope = sharedScope,
-                        quantity = order.quantityOf(dish.id),
-                        onAdd = { onAdd(dish) },
-                    )
+                    SwipeToHide(
+                        enabled = state.markable,
+                        onHide = { onHide(dish) },
+                        modifier =
+                            if (browsing.hinting && index == listState.firstVisibleItemIndex - leadingItems + 1) {
+                                Modifier.tipTarget(Tip.HideDish)
+                            } else {
+                                Modifier
+                            },
+                    ) {
+                        DishRow(
+                            isFirst = index == 0,
+                            dish = dish,
+                            tint = Paper.colors.food(dish.foodGroup()),
+                            selectedDishId = state.selectedDishId,
+                            onClick = { actions.onSelectDish(dish.id) },
+                            sharedScope = sharedScope,
+                            quantity = order.quantityOf(dish.id),
+                            onAdd = { onAdd(dish) },
+                        )
+                    }
                     Spacer(Modifier.height(Space.sm))
                 }
             }
@@ -718,7 +771,12 @@ private fun DishList(
             // note, not something to wade through before the dishes.
             if (showFeatured) {
                 item(key = "featured") {
-                    FeaturedDishes(featured, actions.onSelectDish, Modifier.animateItem().padding(top = Space.section))
+                    FeaturedDishes(
+                        featured,
+                        state.meta.language,
+                        actions.onSelectDish,
+                        Modifier.animateItem().padding(top = Space.section),
+                    )
                 }
             }
             if (state.isReading) {
@@ -747,6 +805,17 @@ private fun DishList(
                     }
                 }
             }
+            val hiddenCount = state.hiddenByYou.size + state.hiddenByWords.size
+            if (hiddenCount > 0 && !state.isReading) {
+                item(key = "hidden") {
+                    QuietButton(
+                        stringResource(Res.string.menu_hidden_count, hiddenCount),
+                        { showHidden = true },
+                        color = Paper.colors.inkMuted,
+                        modifier = gutter.padding(top = Space.sm),
+                    )
+                }
+            }
             state.pages?.unreadable?.takeIf { it.isNotEmpty() }?.let { unreadable ->
                 item(key = "unreadable") {
                     Text(
@@ -766,6 +835,18 @@ private fun DishList(
                     MorePagesCard(pages, actions.onAddPage, gutter.padding(top = Space.gutter))
                 }
             }
+        }
+        if (showHidden) {
+            HiddenDishesSheet(
+                byYou = state.hiddenByYou,
+                byWords = state.hiddenByWords,
+                onUnhide = actions.onUnhideDish,
+                onOpen = {
+                    showHidden = false
+                    actions.onSelectDish(it)
+                },
+                onDismiss = { showHidden = false },
+            )
         }
         if (pageCount > 1) {
             PageChip(
@@ -1053,14 +1134,49 @@ private fun MenuHeader(
                     Modifier.weight(1f).padding(start = Space.related),
                     verticalArrangement = Arrangement.spacedBy(Space.xs),
                 ) {
-                    Text(
-                        text = title,
-                        style = type.hero,
-                        color = onHeader,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.semantics { heading() },
-                    )
+                    // A pencil beside the title, as Notes and Photos do: menus rarely print the
+                    // restaurant's name, so the diner can add it. Tapping the title works too.
+                    var renaming by remember { mutableStateOf(false) }
+                    val canRename = ready?.markable == true
+                    val renameLabel = stringResource(Res.string.menu_rename_title)
+                    Row(verticalAlignment = Alignment.Top) {
+                        Text(
+                            text = title,
+                            style = type.hero,
+                            color = onHeader,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier =
+                                Modifier
+                                    .weight(1f, fill = false)
+                                    .then(
+                                        if (canRename) {
+                                            Modifier.clickable(onClickLabel = renameLabel) { renaming = true }
+                                        } else {
+                                            Modifier
+                                        },
+                                    ).semantics { heading() },
+                        )
+                        if (canRename) {
+                            IconAction(
+                                PaperIcons.Pencil,
+                                renameLabel,
+                                { renaming = true },
+                                tint = onHeader.copy(alpha = 0.8f),
+                                modifier = Modifier.tipTarget(Tip.RenameMenu),
+                            )
+                        }
+                    }
+                    if (renaming && ready != null) {
+                        RenameMenuDialog(
+                            current = ready.customName.orEmpty(),
+                            onSave = {
+                                actions.onRename(it)
+                                renaming = false
+                            },
+                            onDismiss = { renaming = false },
+                        )
+                    }
                     ready?.let {
                         MenuFacts(it, onHeader)
                     }
@@ -1295,7 +1411,8 @@ private fun headerFallback(state: MenuUiState): StringResource =
     if (state is MenuUiState.Loading) Res.string.menu_reading else Res.string.menu_title_unknown
 
 @Composable
-private fun menuTitle(state: MenuUiState.Ready): String = menuTitle(state.meta.language, state.meta.venueType)
+private fun menuTitle(state: MenuUiState.Ready): String =
+    state.customName ?: menuTitle(state.meta.language, state.meta.venueType)
 
 /** "Greek taverna", "Greek menu" or "Taverna" — whatever the model could tell about the menu. */
 @Composable
@@ -1437,6 +1554,7 @@ private fun DishRow(
 @Composable
 private fun FeaturedDishes(
     dishes: List<Dish>,
+    language: String?,
     onOpen: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1446,12 +1564,21 @@ private fun FeaturedDishes(
             Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs),
         )
         // Say how the picks are made: a recommendation nobody can question is one nobody trusts.
+        var explaining by remember { mutableStateOf(false) }
         Text(
             stringResource(Res.string.menu_featured_why),
             style = Paper.type.caption,
             color = Paper.colors.inkMuted,
-            modifier = Modifier.padding(start = Space.gutter, end = Space.gutter, top = 2.dp, bottom = Space.sm),
+            modifier = Modifier.padding(start = Space.gutter, end = Space.gutter, top = 2.dp),
         )
+        // How they're chosen, one tap away: we never know where the diner is.
+        QuietButton(
+            stringResource(Res.string.menu_featured_see_why),
+            { explaining = true },
+            color = Paper.colors.sealInk,
+            modifier = Modifier.padding(start = Space.gutter - Space.xs, bottom = Space.xs),
+        )
+        if (explaining) FeaturedReasonDialog(language) { explaining = false }
         LazyRow(
             contentPadding = PaddingValues(horizontal = Space.gutter),
             horizontalArrangement = Arrangement.spacedBy(Space.sm),

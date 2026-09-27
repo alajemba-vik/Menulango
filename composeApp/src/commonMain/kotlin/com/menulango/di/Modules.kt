@@ -5,6 +5,7 @@ import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.db.MenuLangoDatabase
 import com.menulango.data.history.EatenHistory
+import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.menu.local.MenuCache
@@ -61,7 +62,7 @@ internal fun sharedModule(config: AppConfig): Module =
         single { MenuLangoDatabase(get()) }
         single { MenuCache(get(), get(), Dispatchers.IO, ::nowMillis) }
         single { EatenHistory(get(), Dispatchers.IO, ::nowMillis) }
-        single { BackupService(get(), get(), get(), get()) }
+        single { BackupService(get(), get(), get(), get(), get()) }
         single {
             MenuRepository(
                 api = get(),
@@ -80,9 +81,10 @@ internal fun sharedModule(config: AppConfig): Module =
         single { Preferences(get()) }
         single { Tips(get()) }
         single { OrderBook(get()) }
+        single { MenuMarks(get()) }
         single<NoteTranslator> { onDeviceNoteTranslator() }
         viewModel { params ->
-            MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope), get())
+            MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope), get(), get())
         }
         viewModel { MenusViewModel(get(), ::nowMillis) }
         viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }

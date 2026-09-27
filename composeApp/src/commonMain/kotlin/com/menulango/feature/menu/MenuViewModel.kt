@@ -10,6 +10,8 @@ import com.menulango.core.result.AppError
 import com.menulango.core.ui.menuColourOf
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.history.EatenHistory
+import com.menulango.data.marks.MenuMark
+import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.menu.PageMerger
@@ -29,6 +31,7 @@ import com.menulango.feature.choose.dishHistoryKey
 import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.TableOrder
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -36,6 +39,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -70,6 +75,12 @@ internal sealed interface MenuUiState {
         val pages: PageStatus? = null,
         /** What the diner typed in the menu's search, and which extra fields they chose to include. */
         val search: DishSearch = DishSearch(),
+        /** The restaurant's name if the diner gave one; menus rarely print it. */
+        val customName: String? = null,
+        /** Dishes the diner swiped out of view on this menu. */
+        val hidden: Set<String> = emptySet(),
+        /** Whether this menu is saved yet, so it can be renamed and have dishes hidden. */
+        val markable: Boolean = false,
     ) : MenuUiState {
         val selectedDish: Dish? get() = dishes.firstOrNull { it.id == selectedDishId }
 
@@ -80,7 +91,8 @@ internal sealed interface MenuUiState {
 
         val visibleDishes: List<Dish> =
             filtering.apply(filters, avoid).filter { dish ->
-                priceQuery.allows(dish.price?.amount) &&
+                dish.id !in hidden &&
+                    priceQuery.allows(dish.price?.amount) &&
                     TextSearch.matches(
                         priceQuery.text,
                         buildList {
@@ -99,6 +111,13 @@ internal sealed interface MenuUiState {
         val filterOptions: List<DishFilter> = filtering.options(filters)
 
         val budgetLimit: Double? get() = filtering.budgetLimit
+
+        /** Swiped away by the diner, in menu order. */
+        val hiddenByYou: List<Dish> get() = dishes.filter { it.id in hidden }
+
+        /** Kept out by one of the diner's Leave out words, with the word that did it. */
+        val hiddenByWords: List<Pair<Dish, String>>
+            get() = dishes.mapNotNull { dish -> avoid.firstOrNull { mentions(dish, it) }?.let { dish to it } }
 
         /** Anything narrowing the menu, the diner's own words included. */
         val isFiltering: Boolean get() = filters.isNotEmpty() || avoid.isNotEmpty() || search.isActive
@@ -171,6 +190,7 @@ internal class MenuViewModel(
     /** Outlives this screen: a menu being read keeps reading, and is saved, after the diner leaves. */
     private val appScope: CoroutineScope,
     private val activeScans: ActiveScans,
+    private val marks: MenuMarks,
 ) : ViewModel() {
     private val reading = MutableStateFlow<Reading>(Reading.Loading)
     private val selectedDishId = MutableStateFlow<String?>(null)
@@ -179,6 +199,43 @@ internal class MenuViewModel(
     private val filters = MutableStateFlow(preferences.dietary.value.toFilters())
     private val avoid = MutableStateFlow(preferences.avoid.value)
     private val search = MutableStateFlow(DishSearch())
+
+    /**
+     * The saved menu's key, for the diner's marks on it: known at once for a saved menu, and as
+     * soon as the first page is saved for a new one.
+     */
+    private val menuKey =
+        MutableStateFlow(
+            when (source) {
+                is MenuSource.Saved -> source.cacheKey
+                MenuSource.Sample -> SAMPLE_KEY
+                is MenuSource.Photos -> null
+            },
+        )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val mark = menuKey.flatMapLatest { key -> key?.let(marks::of) ?: flowOf(MenuMark()) }
+
+    /** Swipes a dish out of view on this menu; undone from the message that follows. */
+    fun hideDish(dishId: String) {
+        menuKey.value?.let { marks.hide(it, dishId) }
+    }
+
+    fun unhideDish(dishId: String) {
+        menuKey.value?.let { marks.unhide(it, dishId) }
+    }
+
+    fun rename(name: String) {
+        menuKey.value?.let { marks.rename(it, name) }
+    }
+
+    /** Remembered for the diner's notes on Menus: a picked dish may well be an ordered one. */
+    fun recordPick(dishId: String) {
+        menuKey.value?.let { marks.recordPick(it, dishId) }
+    }
+
+    /** Hiding and renaming need somewhere to keep them; a new menu has one once a page is saved. */
+    val canMark: Boolean get() = menuKey.value != null
     private val showFeatured = preferences.showFeatured.value
     private var job: Job? = null
 
@@ -213,8 +270,8 @@ internal class MenuViewModel(
             selectedDishId,
             billing.isPlus,
             history.keys,
-            combine(filters, avoid, search) { f, a, s -> Triple(f, a, s) },
-        ) { reading, selected, isPlus, eaten, (filters, avoid, search) ->
+            combine(filters, avoid, search, mark) { f, a, s, m -> Narrowing(f, a, s, m) },
+        ) { reading, selected, isPlus, eaten, (filters, avoid, search, mark) ->
             val photo = pages.cover ?: reading.cachedPhoto
             when (reading) {
                 Reading.Loading -> {
@@ -243,6 +300,9 @@ internal class MenuViewModel(
                             filters = filters,
                             avoid = avoid,
                             search = search,
+                            customName = mark.name,
+                            markable = menuKey.value != null,
+                            hidden = mark.hidden,
                             showFeatured = showFeatured,
                             pages =
                                 reading.pages?.let {
@@ -451,6 +511,7 @@ internal class MenuViewModel(
         val firstSave = pages.cacheKey == null
         val saved = repository.remember(menu, pages.cover, replacing = pages.cacheKey)
         pages.cacheKey = saved.cacheKey
+        menuKey.value = saved.cacheKey
         if (firstSave) {
             val charged = !saved.isKnownMenu && !billing.isPlus.value
             if (charged) quota.recordScan()
@@ -671,3 +732,12 @@ private class PageSession {
 }
 
 private const val MAX_QUERY = 60
+
+private const val SAMPLE_KEY = "sample"
+
+private data class Narrowing(
+    val filters: Set<DishFilter>,
+    val avoid: Set<String>,
+    val search: DishSearch,
+    val mark: MenuMark,
+)

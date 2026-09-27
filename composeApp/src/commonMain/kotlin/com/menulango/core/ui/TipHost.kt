@@ -68,7 +68,9 @@ import com.menulango.resources.Res
 import com.menulango.resources.tip_add_dish
 import com.menulango.resources.tip_got_it
 import com.menulango.resources.tip_help_choose
+import com.menulango.resources.tip_hide_dish
 import com.menulango.resources.tip_picks
+import com.menulango.resources.tip_rename_menu
 import com.menulango.resources.tip_scan
 import com.menulango.resources.tip_start_on_camera
 import com.menulango.resources.tip_start_on_camera_here
@@ -219,15 +221,24 @@ private fun TipOverlay(
     }
 }
 
-/** A butter-yellow felt note, like the ones pinned to a café's letter board. */
 @Composable
 private fun NoteBubble(
     tip: Tip,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+) = TipNote(stringResource(tip.text()), onDismiss, modifier)
+
+/**
+ * A butter-yellow felt note, like the ones pinned to a café's letter board. Also used in place,
+ * inside sheets, where a floating note would sit behind the sheet.
+ */
+@Composable
+internal fun TipNote(
+    text: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
-    val text = stringResource(tip.text())
     val gotIt = stringResource(Res.string.tip_got_it)
     Row(
         modifier
@@ -270,7 +281,9 @@ private fun Tip.text(): StringResource =
         Tip.Picks -> Res.string.tip_picks
         Tip.StartOnCamera -> Res.string.tip_start_on_camera
         Tip.StartOnCameraHere -> Res.string.tip_start_on_camera_here
-        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard -> Res.string.tip_picks
+        Tip.RenameMenu -> Res.string.tip_rename_menu
+        Tip.HideDish -> Res.string.tip_hide_dish
+        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard, Tip.GuestAdded -> Res.string.tip_picks
     }
 
 private const val TIP_DELAY_MS = 700L

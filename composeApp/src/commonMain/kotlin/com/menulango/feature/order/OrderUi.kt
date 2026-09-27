@@ -32,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,7 @@ import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SegmentedControl
+import com.menulango.core.ui.TipNote
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
@@ -67,6 +69,8 @@ import com.menulango.core.ui.pressable
 import com.menulango.core.ui.suede
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.preferences.Preferences
+import com.menulango.data.tips.Tip
+import com.menulango.data.tips.Tips
 import com.menulango.feature.menu.FilterPill
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
@@ -105,6 +109,7 @@ import com.menulango.resources.order_waiter_translated_by_google
 import com.menulango.resources.order_waiter_unavailable
 import com.menulango.resources.order_you
 import com.menulango.resources.settings_cancel
+import com.menulango.resources.tip_guest_added
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import kotlin.math.roundToLong
@@ -317,6 +322,18 @@ internal fun OrderSheet(
                 )
             }
             Text(stringResource(Res.string.order_rename_hint), style = Paper.type.caption, color = colors.inkFaint)
+            // The first time someone joins the table, say what just changed: picks now go to them,
+            // back on the menu, and their name can be changed. Shown once, in the sheet itself.
+            val tips = koinInject<Tips>()
+            val seen by tips.seen.collectAsState()
+            val guest = order.diners.firstOrNull { it.id == order.activeDinerId && it.id != TableOrder.OWNER }
+            if (guest != null && Tip.GuestAdded !in seen) {
+                TipNote(
+                    stringResource(Res.string.tip_guest_added, order.label(guest)),
+                    onDismiss = { tips.markSeen(Tip.GuestAdded) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
             order.diners.forEach { diner ->
                 val lines = order.linesFor(diner.id)

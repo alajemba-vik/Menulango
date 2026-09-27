@@ -22,6 +22,12 @@ internal enum class Tip(
     HelpChoose,
     Picks,
 
+    /** On a menu, once the diner has seen the basics: the pencil beside the title renames it. */
+    RenameMenu,
+
+    /** Shown only after scrolling back and forth over a long menu without picking: swipe to hide. */
+    HideDish,
+
     /** Suggested only to diners who keep going straight to the camera: points at Settings... */
     StartOnCamera,
 
@@ -39,6 +45,9 @@ internal enum class Tip(
 
     /** Not a note: the "add another page" card at the end of a menu, until pages are first added. */
     AddPageCard(isNote = false),
+
+    /** Not a note: the card inside the picks sheet the first time a guest joins the table. */
+    GuestAdded(isNote = false),
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */
