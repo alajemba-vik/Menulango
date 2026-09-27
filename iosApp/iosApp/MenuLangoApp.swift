@@ -10,12 +10,17 @@ struct MenuLangoApp: App {
         let info = Bundle.main.infoDictionary ?? [:]
         #if DEBUG
         let isDebug = true
+        // Debug builds run from Xcode buy from RevenueCat's Test Store when a `test_` key is
+        // set. TestFlight and App Store builds are Release and always use the real Apple key.
+        let testKey = info["MenuLangoRevenueCatTestKey"] as? String ?? ""
+        let revenueCatKey = testKey.isEmpty ? (info["MenuLangoRevenueCatKey"] as? String ?? "") : testKey
         #else
         let isDebug = false
+        let revenueCatKey = info["MenuLangoRevenueCatKey"] as? String ?? ""
         #endif
         MainViewControllerKt.startMenuLango(
             proxyUrl: info["MenuLangoProxyURL"] as? String ?? "",
-            revenueCatApiKey: info["MenuLangoRevenueCatKey"] as? String ?? "",
+            revenueCatApiKey: revenueCatKey,
             isDebug: isDebug,
             betaTools: (info["MenuLangoBetaTools"] as? String) == "YES",
             noteTranslationBridge: MLKitNoteTranslationBridge(),

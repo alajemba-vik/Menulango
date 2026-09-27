@@ -93,7 +93,13 @@ internal class BillingRepository(
                     }.sortedBy { it.kind.ordinal }
             AppResult.Ok(offers)
         } catch (e: PurchasesException) {
-            AppResult.Err(if (e.error.code.isOffline()) AppError.Offline else AppError.Upstream)
+            when {
+                e.error.code.isOffline() -> AppResult.Err(AppError.Offline)
+                // No store on this device (or purchases blocked): retrying can't help, so the
+                // paywall says purchases aren't available here instead of "try again".
+                e.error.code == PurchasesErrorCode.PurchaseNotAllowedError -> AppResult.Ok(emptyList())
+                else -> AppResult.Err(AppError.Upstream)
+            }
         }
     }
 
@@ -158,9 +164,10 @@ private fun PurchasesErrorCode.toFailure(): BillingFailure =
     when {
         isOffline() -> BillingFailure.Offline
 
-        this == PurchasesErrorCode.StoreProblemError ||
-            this == PurchasesErrorCode.PurchaseNotAllowedError ||
-            this == PurchasesErrorCode.ProductNotAvailableForPurchaseError -> BillingFailure.StoreUnavailable
+        this == PurchasesErrorCode.PurchaseNotAllowedError ||
+            this == PurchasesErrorCode.ProductNotAvailableForPurchaseError -> BillingFailure.NotAllowed
+
+        this == PurchasesErrorCode.StoreProblemError -> BillingFailure.StoreUnavailable
 
         else -> BillingFailure.Unknown
     }

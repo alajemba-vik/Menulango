@@ -331,10 +331,11 @@
     <string name="paywall_terms">उपयोग की शर्तें</string>
     <string name="paywall_privacy">गोपनीयता</string>
     <string name="paywall_unavailable_title">यहाँ खरीदारी उपलब्ध नहीं है</string>
-    <string name="paywall_unavailable_body">यह वर्शन स्टोर से कनेक्ट नहीं हो सकता। मुफ़्त सब कुछ अब भी काम करता है।</string>
+    <string name="paywall_unavailable_body">Plus खरीदने के लिए इस फ़ोन पर App Store या Google Play चाहिए, साइन इन किया हुआ और खरीदारी की अनुमति के साथ। मुफ़्त सब कुछ अब भी काम करता है।</string>
     <string name="paywall_plans_failed_title">प्लान लोड नहीं हो रहे</string>
     <string name="paywall_plans_failed_body">स्टोर ने अभी हमें प्लान नहीं भेजे। ऐसा टेस्ट वर्शन में या भुगतान सेट होते समय हो सकता है। थोड़ी देर में फिर कोशिश करें, या हमें बताएँ और हम देखेंगे।</string>
     <string name="paywall_report_issue">समस्या बताएँ</string>
+    <string name="paywall_not_allowed">आपका स्टोर खाता यहाँ यह खरीदारी नहीं कर सकता। जाँच लें कि आप App Store या Google Play में साइन इन हैं और खरीदारी की अनुमति है, फिर से कोशिश करें।</string>
     <string name="paywall_offline">आप ऑफ़लाइन हैं। वापस ऑनलाइन होने पर प्लान दिखेंगे।</string>
     <string name="paywall_store_error">स्टोर से संपर्क नहीं हो सका। थोड़ी देर में फिर कोशिश करें।</string>
     <string name="paywall_pending">आपका भुगतान मंज़ूरी का इंतज़ार कर रहा है। पूरा होते ही Plus खुल जाएगा।</string>

@@ -61,6 +61,13 @@ android {
     }
 
     buildTypes {
+        // Google Play billing only works in copies installed from Play, so debug builds from
+        // Android Studio buy from RevenueCat's Test Store instead when a `test_` key is set.
+        // Release builds, including Play testing tracks, always use the real Google key.
+        debug {
+            val testKey = secret("REVENUECAT_TEST_KEY")
+            if (testKey.isNotEmpty()) buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"$testKey\"")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

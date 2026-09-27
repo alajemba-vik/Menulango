@@ -38,6 +38,7 @@ Three values, all optional:
 | `PROXY_URL` | Your deployed Worker, e.g. `https://menulango-proxy.you.workers.dev` | `secrets.properties` | `iosApp/Configuration/Secrets.xcconfig` |
 | `REVENUECAT_ANDROID_KEY` | RevenueCat public SDK key (`goog_…`) | `secrets.properties` | — |
 | `REVENUECAT_IOS_KEY` | RevenueCat public SDK key (`appl_…`) | — | `Secrets.xcconfig` |
+| `REVENUECAT_TEST_KEY` | Optional RevenueCat Test Store key (`test_…`), used only by debug builds | `secrets.properties` | `Secrets.xcconfig` |
 
 ```properties
 # secrets.properties (repository root, git-ignored)

@@ -47,7 +47,7 @@ internal sealed interface PaywallUiState {
 
 internal enum class Busy { Purchasing, Restoring }
 
-internal enum class PaywallMessage { Pending, NothingToRestore, Offline, StoreError }
+internal enum class PaywallMessage { Pending, NothingToRestore, Offline, StoreError, NotAllowed }
 
 /**
  * Sells Plus. The Trip Pass is selected by default — it is the product for how the app is used.
@@ -134,7 +134,11 @@ internal class PaywallViewModel(
                 }
 
                 is PurchaseOutcome.Failed -> {
-                    if (outcome.reason == BillingFailure.Offline) PaywallMessage.Offline else PaywallMessage.StoreError
+                    when (outcome.reason) {
+                        BillingFailure.Offline -> PaywallMessage.Offline
+                        BillingFailure.NotAllowed -> PaywallMessage.NotAllowed
+                        else -> PaywallMessage.StoreError
+                    }
                 }
             }
         state.update { current ->

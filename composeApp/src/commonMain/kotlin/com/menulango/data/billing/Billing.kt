@@ -40,5 +40,8 @@ internal sealed interface PurchaseOutcome {
 internal enum class BillingFailure {
     Offline,
     StoreUnavailable,
+
+    /** The store won't sell on this device or account: no store, not signed in, purchases blocked. */
+    NotAllowed,
     Unknown,
 }

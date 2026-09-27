@@ -12,6 +12,8 @@ MARKETING_VERSION=1.0.0
 OTHER_LDFLAGS=$(inherited) -lsqlite3
 
 PROXY_URL=
+// Optional: RevenueCat Test Store key, used only by Debug builds run from Xcode.
+REVENUECAT_TEST_KEY=
 REVENUECAT_IOS_KEY=
 
 // Test builds for friends only: YES shows the sample menu and the Plus toggle. Keep NO for the App Store.

@@ -24,5 +24,7 @@
 	<string>$(PROXY_URL)</string>
 	<key>MenuLangoRevenueCatKey</key>
 	<string>$(REVENUECAT_IOS_KEY)</string>
+	<key>MenuLangoRevenueCatTestKey</key>
+	<string>$(REVENUECAT_TEST_KEY)</string>
 </dict>
 </plist>

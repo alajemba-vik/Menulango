@@ -331,10 +331,11 @@
     <string name="paywall_terms">شروط الاستخدام</string>
     <string name="paywall_privacy">الخصوصية</string>
     <string name="paywall_unavailable_title">المشتريات غير متاحة هنا</string>
-    <string name="paywall_unavailable_body">لا يستطيع هذا الإصدار الاتصال بالمتجر. كل ما هو مجاني ما زال يعمل.</string>
+    <string name="paywall_unavailable_body">لشراء Plus تحتاج إلى App Store أو Google Play على هذا الهاتف، مع تسجيل الدخول والسماح بالشراء. كل ما هو مجاني ما زال يعمل.</string>
     <string name="paywall_plans_failed_title">الخطط لا تُحمّل</string>
     <string name="paywall_plans_failed_body">لم يرسل المتجر الخطط الآن. قد يحدث هذا في النسخ التجريبية أو أثناء إعداد المدفوعات. حاول مجددًا بعد لحظات، أو أخبرنا وسنتحقق من الأمر.</string>
     <string name="paywall_report_issue">الإبلاغ عن المشكلة</string>
+    <string name="paywall_not_allowed">لا يستطيع حساب المتجر إتمام هذا الشراء هنا. تأكد من تسجيل الدخول إلى App Store أو Google Play ومن السماح بالمشتريات، ثم حاول مجددًا.</string>
     <string name="paywall_offline">أنت غير متصل. ستظهر الخطط عند عودتك إلى الاتصال.</string>
     <string name="paywall_store_error">تعذّر الوصول إلى المتجر. حاول مجددًا بعد لحظات.</string>
     <string name="paywall_pending">دفعتك بانتظار الموافقة. سيُفتح Plus فور تأكيدها.</string>

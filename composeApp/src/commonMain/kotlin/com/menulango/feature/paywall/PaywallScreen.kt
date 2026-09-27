@@ -76,6 +76,7 @@ import com.menulango.resources.paywall_lifetime_detail
 import com.menulango.resources.paywall_monthly
 import com.menulango.resources.paywall_monthly_detail
 import com.menulango.resources.paywall_nothing_to_restore
+import com.menulango.resources.paywall_not_allowed
 import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
 import com.menulango.resources.paywall_plans_failed_body
@@ -434,6 +435,7 @@ private fun PaywallMessage.text(): StringResource =
         PaywallMessage.NothingToRestore -> Res.string.paywall_nothing_to_restore
         PaywallMessage.Offline -> Res.string.paywall_offline
         PaywallMessage.StoreError -> Res.string.paywall_store_error
+        PaywallMessage.NotAllowed -> Res.string.paywall_not_allowed
     }
 
 /** Apple's standard licence agreement; the subscription terms both stores already show at purchase. */

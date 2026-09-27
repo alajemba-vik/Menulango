@@ -331,10 +331,11 @@
     <string name="paywall_terms">Conditions d'utilisation</string>
     <string name="paywall_privacy">Confidentialité</string>
     <string name="paywall_unavailable_title">Les achats ne sont pas disponibles ici</string>
-    <string name="paywall_unavailable_body">Cette version ne peut pas se connecter à la boutique. Tout ce qui est gratuit fonctionne toujours.</string>
+    <string name="paywall_unavailable_body">Pour acheter Plus, il faut l'App Store ou Google Play sur ce téléphone, connecté et autorisé à faire des achats. Tout ce qui est gratuit fonctionne toujours.</string>
     <string name="paywall_plans_failed_title">Les offres ne se chargent pas</string>
     <string name="paywall_plans_failed_body">La boutique ne nous a pas envoyé les offres pour le moment. Cela peut arriver dans les versions de test ou pendant la mise en place des paiements. Réessayez dans un instant, ou prévenez-nous et nous regarderons.</string>
     <string name="paywall_report_issue">Signaler le problème</string>
+    <string name="paywall_not_allowed">Votre compte ne peut pas faire cet achat ici. Vérifiez que vous êtes connecté à l'App Store ou à Google Play et que les achats sont autorisés, puis réessayez.</string>
     <string name="paywall_offline">Vous êtes hors ligne. Les offres s'afficheront quand vous serez de nouveau en ligne.</string>
     <string name="paywall_store_error">Impossible de joindre la boutique. Réessayez dans un instant.</string>
     <string name="paywall_pending">Votre paiement attend une validation. Plus se débloque dès qu'il est confirmé.</string>

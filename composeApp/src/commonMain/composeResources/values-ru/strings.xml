@@ -331,10 +331,11 @@
     <string name="paywall_terms">Условия использования</string>
     <string name="paywall_privacy">Конфиденциальность</string>
     <string name="paywall_unavailable_title">Покупки здесь недоступны</string>
-    <string name="paywall_unavailable_body">Эта версия не может подключиться к магазину. Всё бесплатное продолжает работать.</string>
+    <string name="paywall_unavailable_body">Чтобы купить Plus, на телефоне нужен App Store или Google Play с выполненным входом и разрешёнными покупками. Всё бесплатное продолжает работать.</string>
     <string name="paywall_plans_failed_title">Тарифы не загружаются</string>
     <string name="paywall_plans_failed_body">Магазин сейчас не прислал тарифы. Так бывает в тестовых версиях или пока настраиваются платежи. Попробуйте через минуту или сообщите нам, и мы разберёмся.</string>
     <string name="paywall_report_issue">Сообщить о проблеме</string>
+    <string name="paywall_not_allowed">Ваш аккаунт магазина не может совершить эту покупку здесь. Проверьте, что вы вошли в App Store или Google Play и покупки разрешены, и попробуйте снова.</string>
     <string name="paywall_offline">Вы не в сети. Тарифы появятся, когда подключение восстановится.</string>
     <string name="paywall_store_error">Не удалось связаться с магазином. Попробуйте через минуту.</string>
     <string name="paywall_pending">Платёж ожидает подтверждения. Plus откроется, как только он пройдёт.</string>
