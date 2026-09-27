@@ -48,6 +48,9 @@ internal enum class Tip(
 
     /** Not a note: the card inside the picks sheet the first time a guest joins the table. */
     GuestAdded(isNote = false),
+
+    /** Not a note: the info mark beside Restore purchases, until its explanation has been read. */
+    RestoreInfo(isNote = false),
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */

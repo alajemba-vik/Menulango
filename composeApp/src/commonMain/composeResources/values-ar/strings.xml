@@ -337,6 +337,9 @@
     <string name="paywall_report_issue">الإبلاغ عن المشكلة</string>
     <string name="paywall_not_allowed">لا يستطيع حساب المتجر إتمام هذا الشراء هنا. تأكد من تسجيل الدخول إلى App Store أو Google Play ومن السماح بالمشتريات، ثم حاول مجددًا.</string>
     <string name="paywall_not_from_store">لا تستطيع هذه النسخة من MenuLango قبول المدفوعات. ثبّتها من App Store أو Google Play للاشتراك.</string>
+    <string name="restore_info_label">ما الذي تفعله استعادة المشتريات</string>
+    <string name="restore_info_title">استعادة المشتريات</string>
+    <string name="restore_info_body">اشتريت Plus من قبل؟ على هاتف جديد، أو بعد إعادة التثبيت، أو على جهاز آخر بحساب Apple أو Google نفسه، اضغط استعادة المشتريات وسيُفتح Plus مجددًا. يتحقق من حساب المتجر ولا يخصم منك أي مبلغ.</string>
     <string name="paywall_offline">أنت غير متصل. ستظهر الخطط عند عودتك إلى الاتصال.</string>
     <string name="paywall_store_error">تعذّر الوصول إلى المتجر. حاول مجددًا بعد لحظات.</string>
     <string name="paywall_pending">دفعتك بانتظار الموافقة. سيُفتح Plus فور تأكيدها.</string>

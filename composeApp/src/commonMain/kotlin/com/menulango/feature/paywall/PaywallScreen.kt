@@ -51,6 +51,7 @@ import com.menulango.core.ui.ErrorMessage
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
+import com.menulango.core.ui.RestoreButton
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.felt
@@ -309,7 +310,7 @@ internal fun PaywallContent(
                 horizontalArrangement = Arrangement.Center,
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                QuietButton(stringResource(Res.string.paywall_restore), actions.onRestore, singleLine = true)
+                RestoreButton(stringResource(Res.string.paywall_restore), actions.onRestore)
                 QuietButton(
                     stringResource(Res.string.paywall_terms),
                     actions.onTerms,

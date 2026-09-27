@@ -88,6 +88,7 @@ import com.menulango.core.design.Space
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
+import com.menulango.core.ui.RestoreButton
 import com.menulango.core.ui.ScrollTitleBar
 import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.SegmentedControl
@@ -251,7 +252,7 @@ internal fun SettingsScreen(
                 onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
                 perform = viewModel.performPlusCard,
             )
-            QuietButton(
+            RestoreButton(
                 stringResource(Res.string.settings_restore),
                 viewModel::restore,
                 color = colors.sealInk,

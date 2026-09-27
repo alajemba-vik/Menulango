@@ -338,6 +338,9 @@
     <string name="paywall_report_issue">問題を報告</string>
     <string name="paywall_not_allowed">ストアのアカウントではここで購入できません。App Store または Google Play にサインインし、購入が許可されているか確認してから、もう一度お試しください。</string>
     <string name="paywall_not_from_store">この MenuLango では支払いができません。登録するには App Store または Google Play からインストールしてください。</string>
+    <string name="restore_info_label">「購入を復元」について</string>
+    <string name="restore_info_title">購入を復元</string>
+    <string name="restore_info_body">Plus を購入済みですか？新しいスマートフォンや再インストール後、同じ Apple または Google アカウントの別の端末で「購入を復元」をタップすると、Plus が再び使えるようになります。ストアのアカウントを確認するだけで、料金はかかりません。</string>
     <string name="paywall_offline">オフラインです。オンラインに戻るとプランが表示されます。</string>
     <string name="paywall_store_error">ストアに接続できませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="paywall_pending">お支払いは承認待ちです。確認され次第 Plus が使えるようになります。</string>

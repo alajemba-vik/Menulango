@@ -312,7 +312,7 @@ private fun Tip.text(): StringResource =
         Tip.StartOnCameraHere -> Res.string.tip_start_on_camera_here
         Tip.RenameMenu -> Res.string.tip_rename_menu
         Tip.HideDish -> Res.string.tip_hide_dish
-        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard, Tip.GuestAdded -> Res.string.tip_picks
+        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard, Tip.GuestAdded, Tip.RestoreInfo -> Res.string.tip_picks
     }
 
 private const val TIP_DELAY_MS = 700L

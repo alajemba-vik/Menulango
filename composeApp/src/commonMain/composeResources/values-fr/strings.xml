@@ -337,6 +337,9 @@
     <string name="paywall_report_issue">Signaler le problème</string>
     <string name="paywall_not_allowed">Votre compte ne peut pas faire cet achat ici. Vérifiez que vous êtes connecté à l'App Store ou à Google Play et que les achats sont autorisés, puis réessayez.</string>
     <string name="paywall_not_from_store">Cette copie de MenuLango ne peut pas accepter de paiement. Installez-la depuis l'App Store ou Google Play pour vous abonner.</string>
+    <string name="restore_info_label">À quoi sert Restaurer les achats</string>
+    <string name="restore_info_title">Restaurer les achats</string>
+    <string name="restore_info_body">Vous avez déjà acheté Plus ? Sur un nouveau téléphone, après une réinstallation ou sur un autre appareil avec le même compte Apple ou Google, touchez Restaurer les achats et Plus se débloque à nouveau. Cela vérifie votre compte et ne vous facture jamais.</string>
     <string name="paywall_offline">Vous êtes hors ligne. Les offres s'afficheront quand vous serez de nouveau en ligne.</string>
     <string name="paywall_store_error">Impossible de joindre la boutique. Réessayez dans un instant.</string>
     <string name="paywall_pending">Votre paiement attend une validation. Plus se débloque dès qu'il est confirmé.</string>

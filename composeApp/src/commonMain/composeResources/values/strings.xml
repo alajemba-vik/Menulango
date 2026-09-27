@@ -366,6 +366,9 @@
     <string name="paywall_report_issue">Report the issue</string>
     <string name="paywall_not_allowed">Your store account can't make this purchase here. Check you're signed in to the App Store or Google Play and that purchases are allowed, then try again.</string>
     <string name="paywall_not_from_store">This copy of MenuLango can't take payments. Install it from the App Store or Google Play to subscribe.</string>
+    <string name="restore_info_label">What Restore purchases does</string>
+    <string name="restore_info_title">Restore purchases</string>
+    <string name="restore_info_body">Already bought Plus? On a new phone, after reinstalling, or on another device with the same Apple or Google account, tap Restore purchases and Plus unlocks again. It checks your store account and never charges you.</string>
     <string name="paywall_offline">You're offline. The plans will show up when you're back online.</string>
     <string name="paywall_store_error">The store couldn't be reached. Try again in a moment.</string>
     <string name="paywall_pending">Your payment is waiting for approval. Plus unlocks as soon as it clears.</string>

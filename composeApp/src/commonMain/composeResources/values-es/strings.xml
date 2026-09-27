@@ -337,6 +337,9 @@
     <string name="paywall_report_issue">Informar del problema</string>
     <string name="paywall_not_allowed">Tu cuenta de la tienda no puede hacer esta compra aquí. Comprueba que has iniciado sesión en la App Store o Google Play y que las compras están permitidas, y vuelve a intentarlo.</string>
     <string name="paywall_not_from_store">Esta copia de MenuLango no puede aceptar pagos. Instálala desde la App Store o Google Play para suscribirte.</string>
+    <string name="restore_info_label">Qué hace Restaurar compras</string>
+    <string name="restore_info_title">Restaurar compras</string>
+    <string name="restore_info_body">¿Ya compraste Plus? En un teléfono nuevo, tras reinstalar o en otro dispositivo con la misma cuenta de Apple o Google, toca Restaurar compras y Plus se desbloquea de nuevo. Comprueba tu cuenta de la tienda y nunca te cobra.</string>
     <string name="paywall_offline">No tienes conexión. Los planes aparecerán cuando vuelvas a estar en línea.</string>
     <string name="paywall_store_error">No se ha podido conectar con la tienda. Inténtalo de nuevo en un momento.</string>
     <string name="paywall_pending">Tu pago está pendiente de aprobación. Plus se desbloqueará en cuanto se confirme.</string>

@@ -338,6 +338,9 @@
     <string name="paywall_report_issue">报告问题</string>
     <string name="paywall_not_allowed">你的商店账号无法在这里完成购买。请确认已登录 App Store 或 Google Play 并允许购买，然后重试。</string>
     <string name="paywall_not_from_store">这份 MenuLango 无法付款。请从 App Store 或 Google Play 安装后再订阅。</string>
+    <string name="restore_info_label">“恢复购买”有什么用</string>
+    <string name="restore_info_title">恢复购买</string>
+    <string name="restore_info_body">已经买过 Plus？换了新手机、重新安装后，或在使用同一 Apple 或 Google 账号的其他设备上，点“恢复购买”即可再次解锁 Plus。它只会检查你的商店账号，绝不会扣费。</string>
     <string name="paywall_offline">你已离线。恢复联网后方案就会显示。</string>
     <string name="paywall_store_error">无法连接商店，请稍后再试。</string>
     <string name="paywall_pending">你的付款正在等待批准。确认后 Plus 即会解锁。</string>
