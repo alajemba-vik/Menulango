@@ -43,5 +43,8 @@ internal enum class BillingFailure {
 
     /** The store won't sell on this device or account: no store, not signed in, purchases blocked. */
     NotAllowed,
+
+    /** The store rejects this copy of the app itself: not installed from it, or signed differently. */
+    NotInstalledFromStore,
     Unknown,
 }

@@ -336,6 +336,7 @@
     <string name="paywall_plans_failed_body">스토어에서 지금 요금제를 보내지 않았어요. 테스트 버전이거나 결제를 설정하는 중에 생길 수 있어요. 잠시 후 다시 시도하거나 알려 주시면 확인할게요.</string>
     <string name="paywall_report_issue">문제 신고</string>
     <string name="paywall_not_allowed">스토어 계정으로 여기서 구매할 수 없어요. App Store 또는 Google Play에 로그인되어 있고 구매가 허용되어 있는지 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="paywall_not_from_store">이 MenuLango에서는 결제할 수 없어요. 구독하려면 App Store 또는 Google Play에서 설치해 주세요.</string>
     <string name="paywall_offline">오프라인 상태예요. 다시 연결되면 요금제가 표시돼요.</string>
     <string name="paywall_store_error">스토어에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.</string>
     <string name="paywall_pending">결제 승인을 기다리는 중이에요. 확인되는 대로 Plus가 열려요.</string>

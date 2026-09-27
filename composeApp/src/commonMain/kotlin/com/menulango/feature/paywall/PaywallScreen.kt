@@ -77,6 +77,7 @@ import com.menulango.resources.paywall_monthly
 import com.menulango.resources.paywall_monthly_detail
 import com.menulango.resources.paywall_nothing_to_restore
 import com.menulango.resources.paywall_not_allowed
+import com.menulango.resources.paywall_not_from_store
 import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
 import com.menulango.resources.paywall_plans_failed_body
@@ -268,7 +269,8 @@ internal fun PaywallContent(
                 Text(
                     stringResource(message.text()),
                     style = type.caption,
-                    color = colors.inkMuted,
+                    // Problems read as problems; "waiting for approval" is news, not an error.
+                    color = if (message.isProblem) colors.sealInk else colors.inkMuted,
                     modifier =
                         Modifier
                             .padding(
@@ -436,6 +438,7 @@ private fun PaywallMessage.text(): StringResource =
         PaywallMessage.Offline -> Res.string.paywall_offline
         PaywallMessage.StoreError -> Res.string.paywall_store_error
         PaywallMessage.NotAllowed -> Res.string.paywall_not_allowed
+        PaywallMessage.NotInstalledFromStore -> Res.string.paywall_not_from_store
     }
 
 /** Apple's standard licence agreement; the subscription terms both stores already show at purchase. */

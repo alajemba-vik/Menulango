@@ -47,7 +47,19 @@ internal sealed interface PaywallUiState {
 
 internal enum class Busy { Purchasing, Restoring }
 
-internal enum class PaywallMessage { Pending, NothingToRestore, Offline, StoreError, NotAllowed }
+internal enum class PaywallMessage(
+    /** Shown in the error colour; the others are just news. */
+    val isProblem: Boolean,
+) {
+    Pending(false),
+    NothingToRestore(false),
+    Offline(true),
+    StoreError(true),
+    NotAllowed(true),
+
+    /** A copy the store didn't install (sideloaded, or signed differently) can't take payments. */
+    NotInstalledFromStore(true),
+}
 
 /**
  * Sells Plus. The Trip Pass is selected by default — it is the product for how the app is used.
@@ -137,6 +149,7 @@ internal class PaywallViewModel(
                     when (outcome.reason) {
                         BillingFailure.Offline -> PaywallMessage.Offline
                         BillingFailure.NotAllowed -> PaywallMessage.NotAllowed
+                        BillingFailure.NotInstalledFromStore -> PaywallMessage.NotInstalledFromStore
                         else -> PaywallMessage.StoreError
                     }
                 }

@@ -336,6 +336,7 @@
     <string name="paywall_plans_failed_body">स्टोर ने अभी हमें प्लान नहीं भेजे। ऐसा टेस्ट वर्शन में या भुगतान सेट होते समय हो सकता है। थोड़ी देर में फिर कोशिश करें, या हमें बताएँ और हम देखेंगे।</string>
     <string name="paywall_report_issue">समस्या बताएँ</string>
     <string name="paywall_not_allowed">आपका स्टोर खाता यहाँ यह खरीदारी नहीं कर सकता। जाँच लें कि आप App Store या Google Play में साइन इन हैं और खरीदारी की अनुमति है, फिर से कोशिश करें।</string>
+    <string name="paywall_not_from_store">MenuLango की यह कॉपी भुगतान नहीं ले सकती। सदस्यता लेने के लिए इसे App Store या Google Play से इंस्टॉल करें।</string>
     <string name="paywall_offline">आप ऑफ़लाइन हैं। वापस ऑनलाइन होने पर प्लान दिखेंगे।</string>
     <string name="paywall_store_error">स्टोर से संपर्क नहीं हो सका। थोड़ी देर में फिर कोशिश करें।</string>
     <string name="paywall_pending">आपका भुगतान मंज़ूरी का इंतज़ार कर रहा है। पूरा होते ही Plus खुल जाएगा।</string>

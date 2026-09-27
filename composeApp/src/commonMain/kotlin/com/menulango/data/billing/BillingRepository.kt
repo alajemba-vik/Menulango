@@ -169,5 +169,9 @@ private fun PurchasesErrorCode.toFailure(): BillingFailure =
 
         this == PurchasesErrorCode.StoreProblemError -> BillingFailure.StoreUnavailable
 
+        // Google's DEVELOPER_ERROR ("ensure the app is signed correctly") arrives as this: the
+        // copy on the phone isn't one the store distributed, so no retry will ever work.
+        this == PurchasesErrorCode.PurchaseInvalidError -> BillingFailure.NotInstalledFromStore
+
         else -> BillingFailure.Unknown
     }

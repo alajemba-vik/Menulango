@@ -337,6 +337,7 @@
     <string name="paywall_plans_failed_body">ストアからプランが届きませんでした。テスト版や支払いの設定中に起こることがあります。しばらくしてからもう一度試すか、お知らせいただければ確認します。</string>
     <string name="paywall_report_issue">問題を報告</string>
     <string name="paywall_not_allowed">ストアのアカウントではここで購入できません。App Store または Google Play にサインインし、購入が許可されているか確認してから、もう一度お試しください。</string>
+    <string name="paywall_not_from_store">この MenuLango では支払いができません。登録するには App Store または Google Play からインストールしてください。</string>
     <string name="paywall_offline">オフラインです。オンラインに戻るとプランが表示されます。</string>
     <string name="paywall_store_error">ストアに接続できませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="paywall_pending">お支払いは承認待ちです。確認され次第 Plus が使えるようになります。</string>
