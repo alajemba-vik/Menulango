@@ -9,14 +9,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.menulango.core.design.Elevation
 import com.menulango.core.design.FoodGroup
 import com.menulango.core.design.Paper
+import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.felt
@@ -161,12 +166,15 @@ private fun MoodCard(
     val line = stringResource(mode.line())
     val pick = stringResource(Res.string.mood_pick)
     val where = stringResource(Res.string.mood_position, position, total)
+    // A poster, not a form: the mood in big type at the top, a large faint numeral set into the
+    // felt, and the one action across the bottom. Typography fills the card; no pictures needed.
     Box(modifier.padding(top = Space.xs), contentAlignment = Alignment.TopCenter) {
-        Column(
+        Box(
             Modifier
                 .fillMaxWidth()
                 .height(CARD_HEIGHT)
                 .shadow(Elevation.raised, Shapes.card, clip = false)
+                .clip(Shapes.card)
                 .felt(colors.food(mode.tint()), Shapes.card)
                 .pressable(onPick, pressedScale = 0.97f)
                 .semantics(mergeDescendants = true) {
@@ -177,31 +185,48 @@ private fun MoodCard(
                         onPick()
                         true
                     }
-                }.padding(Space.cardPadding),
+                },
         ) {
-            // Words only: the colour of the felt already sets each mood apart.
             Text(
-                where.uppercase(),
-                style = Paper.type.label,
-                color = colors.inkMuted,
-                modifier = Modifier.clearAndSetSemantics { },
-            )
-            Spacer(Modifier.weight(1f))
-            Text(title, style = Paper.type.headline, color = colors.ink, maxLines = 2)
-            Spacer(Modifier.height(Space.xs))
-            Text(line, style = Paper.type.bodySmall, color = colors.inkMuted, maxLines = 3)
-            Spacer(Modifier.height(Space.md))
-            Text(
-                pick,
-                style = Paper.type.button,
-                color = colors.paper,
-                textAlign = TextAlign.Center,
+                position.toString().padStart(2, '0'),
+                style = Paper.type.hero.copy(fontSize = NUMERAL_SIZE, lineHeight = NUMERAL_SIZE),
+                color = colors.ink.copy(alpha = 0.1f),
                 modifier =
                     Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = NUMERAL_BLEED, y = NUMERAL_DROP)
+                        .clearAndSetSemantics { },
+            )
+            Column(Modifier.fillMaxSize().padding(Space.cardPadding + Space.xs)) {
+                Text(
+                    where.uppercase(),
+                    style = Paper.type.label,
+                    color = colors.inkMuted,
+                    modifier = Modifier.clearAndSetSemantics { },
+                )
+                Spacer(Modifier.height(Space.sm))
+                Text(title, style = Paper.type.hero, color = colors.ink, maxLines = 3)
+                Spacer(Modifier.height(Space.sm))
+                Text(line, style = Paper.type.body, color = colors.ink.copy(alpha = 0.72f), maxLines = 3)
+                Spacer(Modifier.weight(1f))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp)
                         .clip(Shapes.pill)
                         .background(colors.ink)
-                        .padding(horizontal = Space.gutter, vertical = Space.sm),
-            )
+                        .padding(horizontal = Space.gutter),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(pick, style = Paper.type.button, color = colors.paper, modifier = Modifier.weight(1f))
+                    Icon(
+                        PaperIcons.ArrowUpRight,
+                        contentDescription = null,
+                        tint = colors.paper,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -254,7 +279,12 @@ private fun ChoiceMode.line(): StringResource =
         ChoiceMode.KeepItSimple -> Res.string.mode_simple_line
     }
 
-private val CARD_HEIGHT = 300.dp
+private val CARD_HEIGHT = 320.dp
+private val NUMERAL_SIZE = 132.sp
+private val NUMERAL_BLEED = 10.dp
+
+/** Lifts the numeral into the open space above the button, its foot just touching it. */
+private val NUMERAL_DROP = (-58).dp
 private val DECK_PEEK = 44.dp
 private val DECK_DROP = 18.dp
 private val DECK_ROOM = 28.dp
