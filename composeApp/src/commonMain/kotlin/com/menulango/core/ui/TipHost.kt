@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +63,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.menulango.core.design.Elevation
 import com.menulango.core.design.FoodGroup
+import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
@@ -175,14 +179,26 @@ private fun TipOverlay(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val screenW = constraints.maxWidth.toFloat()
         val screenH = constraints.maxHeight.toFloat()
-        val below = target.center.y < screenH / 2f
         val gap = with(density) { ARROW_GAP.toPx() }
         val margin = with(density) { Space.gutter.toPx() }
+        // Notes live between the status bar (and any camera cutout) and the navigation bar, never
+        // under them. If the target scrolls out of that band, the note steps aside until it's back.
+        val safe = WindowInsets.safeDrawing
+        val safeTop = safe.getTop(density) + margin / 2f
+        val safeBottom = screenH - safe.getBottom(density) - margin / 2f
+        val targetInView = target.bottom > safeTop && target.top < safeBottom
+        val presence by animateFloatAsState(
+            if (targetInView) 1f else 0f,
+            tween(if (reduceMotion) 0 else Motion.QUICK_MS),
+            label = "tip-presence",
+        )
+        if (presence == 0f && !targetInView) return@BoxWithConstraints
+        val preferBelow = target.center.y < screenH / 2f
 
         // The pulse: a ring that swells out of the target and fades, like a finger's ripple.
         val grow = with(density) { (RING_GROW * (if (reduceMotion) 0.5f else ring)).toPx() }
         val inset = with(density) { 6.dp.toPx() }
-        Canvas(Modifier.fillMaxSize()) {
+        Canvas(Modifier.fillMaxSize().graphicsLayer { alpha = presence }) {
             val r = target.inflate(inset + grow)
             drawRoundRect(
                 color = colors.seal.copy(alpha = if (reduceMotion) 0.6f else 0.7f * (1f - ring)),
@@ -203,9 +219,9 @@ private fun TipOverlay(
                             val e = entrance.value
                             scaleX = 0.7f + 0.3f * e
                             scaleY = 0.7f + 0.3f * e
-                            alpha = e.coerceIn(0f, 1f)
+                            alpha = e.coerceIn(0f, 1f) * presence
                             rotationZ = if (reduceMotion) 0f else wobble
-                            transformOrigin = TransformOrigin(0.5f, if (below) 0f else 1f)
+                            transformOrigin = TransformOrigin(0.5f, if (preferBelow) 0f else 1f)
                         },
                 )
             },
@@ -214,8 +230,21 @@ private fun TipOverlay(
             val placeable = measurables.first().measure(Constraints(maxWidth = maxW))
             layout(constraints.maxWidth, constraints.maxHeight) {
                 val x = (target.center.x - placeable.width / 2f).coerceIn(margin, screenW - margin - placeable.width)
-                val y = if (below) target.bottom + gap else target.top - gap - placeable.height
-                placeable.place(IntOffset(x.roundToInt(), y.coerceIn(0f, screenH - placeable.height).roundToInt()))
+                val h = placeable.height
+                val underY = target.bottom + gap
+                val overY = target.top - gap - h
+                val fitsUnder = underY + h <= safeBottom
+                val fitsOver = overY >= safeTop
+                // The preferred side if there's room, else the other, and always inside the band.
+                val y =
+                    when {
+                        preferBelow && fitsUnder -> underY
+                        !preferBelow && fitsOver -> overY
+                        fitsUnder -> underY
+                        fitsOver -> overY
+                        else -> if (preferBelow) underY else overY
+                    }.coerceIn(safeTop, (safeBottom - h).coerceAtLeast(safeTop))
+                placeable.place(IntOffset(x.roundToInt(), y.roundToInt()))
             }
         }
     }

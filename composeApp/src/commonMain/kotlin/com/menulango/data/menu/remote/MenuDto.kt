@@ -22,6 +22,8 @@ internal data class MenuMetaDto(
     val languageTag: String? = null,
     val currency: String? = null,
     val venueType: String? = null,
+    /** Only when printed on the menu; the model is told never to guess one. */
+    val restaurantName: String? = null,
     val truncated: Boolean? = null,
     val confidence: Double? = null,
 )

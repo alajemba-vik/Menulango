@@ -7,6 +7,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -54,6 +56,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -376,32 +379,47 @@ private fun AllowanceLine(
 }
 
 /**
- * The shutter: a soft coral square with rounded corners, a thin cream line drawn just inside
- * its edge. Quiet at rest. Pressed, it melts into a circle and the inner line lets go, the way
- * Material's shape morphs answer a touch, then settles back as the photo lands. No spinning, no
- * lens: one shape doing one thing well. Under reduce motion it only dims.
+ * The shutter is the MenuLango mark itself: the amber bubble, the coral bubble and the fork,
+ * the thing the thumb learns to find. A soft diffused glow sits behind it, and every few
+ * seconds a band of light drifts across the bubbles, like a sheen on glazed tile. Pressing
+ * presses the mark in and springs it back. Under reduce motion it is still and only dims.
  */
 @Composable
 private fun Shutter(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val colors = Paper.colors
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val reduceMotion = Paper.reduceMotion
-    val squash = pressed && !reduceMotion
-    val settle = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)
-    val round by animateFloatAsState(
-        if (squash) 1f else 0f,
-        if (pressed) tween(SHUTTER_PRESS_MS) else settle,
-        label = "shutter-round",
-    )
     val scale by animateFloatAsState(
-        if (squash) 0.9f else 1f,
-        if (pressed) tween(SHUTTER_PRESS_MS) else settle,
+        if (pressed && !reduceMotion) 0.88f else 1f,
+        if (pressed) {
+            tween(SHUTTER_PRESS_MS)
+        } else {
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)
+        },
         label = "shutter-scale",
     )
+    val sheen =
+        if (reduceMotion) {
+            null
+        } else {
+            rememberInfiniteTransition(label = "shutter-sheen").animateFloat(
+                initialValue = -0.6f,
+                targetValue = 1.6f,
+                animationSpec =
+                    infiniteRepeatable(
+                        keyframes {
+                            durationMillis = SHEEN_CYCLE_MS
+                            -0.6f at 0
+                            -0.6f at SHEEN_REST_MS
+                            1.6f at SHEEN_CYCLE_MS using FastOutSlowInEasing
+                        },
+                    ),
+                label = "shutter-sheen-x",
+            )
+        }
     val description = stringResource(Res.string.capture_shutter)
     Box(
         Modifier
@@ -426,26 +444,92 @@ private fun Shutter(
             ).semantics { contentDescription = description },
     ) {
         Canvas(Modifier.matchParentSize()) {
-            val corner = SHUTTER_CORNER.toPx() + (size.minDimension / 2 - SHUTTER_CORNER.toPx()) * round
-            // A soft shadow of light around it, so it reads on a dark or a bright camera image.
-            drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(0f, 2.dp.toPx()), size, CornerRadius(corner))
-            drawRoundRect(colors.seal, cornerRadius = CornerRadius(corner))
-            val inset = SHUTTER_INSET.toPx()
-            drawRoundRect(
-                colors.onPhoto.copy(alpha = 0.9f * (1f - round)),
-                topLeft = Offset(inset, inset),
-                size = Size(size.width - inset * 2, size.height - inset * 2),
-                cornerRadius = CornerRadius((corner - inset).coerceAtLeast(0f)),
-                style = Stroke(width = 1.5.dp.toPx()),
+            // A diffused warm glow behind the mark, so it lifts off any camera image.
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(LOGO_CORAL.copy(alpha = 0.45f), LOGO_AMBER.copy(alpha = 0.18f), Color.Transparent),
+                    center = center,
+                    radius = size.minDimension * 0.62f,
+                ),
             )
+            // The logo's 108-unit canvas, with the mark (x 28..80, y 30..80) centred and filling it.
+            val unit = size.minDimension * 0.78f / 52f
+            val ox = (size.width - 52f * unit) / 2f - 28f * unit
+            val oy = (size.height - 50f * unit) / 2f - 30f * unit
+
+            fun bubble(
+                x0: Float,
+                y0: Float,
+                x1: Float,
+                y1: Float,
+                r: Float,
+                sharpBottomLeft: Boolean,
+            ) = Path().apply {
+                val round = CornerRadius(r * unit)
+                addRoundRect(
+                    RoundRect(
+                        left = ox + x0 * unit,
+                        top = oy + y0 * unit,
+                        right = ox + x1 * unit,
+                        bottom = oy + y1 * unit,
+                        topLeftCornerRadius = round,
+                        topRightCornerRadius = round,
+                        bottomRightCornerRadius = if (sharpBottomLeft) round else CornerRadius.Zero,
+                        bottomLeftCornerRadius = if (sharpBottomLeft) CornerRadius.Zero else round,
+                    ),
+                )
+            }
+            val back = bubble(47f, 30f, 80f, 61f, 13f, sharpBottomLeft = false)
+            val front = bubble(28f, 44f, 68f, 80f, 15f, sharpBottomLeft = true)
+            val gap = bubble(25.4f, 41.4f, 70.6f, 82.6f, 17.6f, sharpBottomLeft = true)
+            val backCut = Path.combine(PathOperation.Difference, back, gap)
+            val mark = Path.combine(PathOperation.Union, backCut, front)
+            drawPath(backCut, LOGO_AMBER)
+            drawPath(front, LOGO_CORAL)
+
+            // The fork, in white.
+            fun bar(
+                x0: Float,
+                y0: Float,
+                x1: Float,
+                y1: Float,
+                r: Float,
+            ) = drawRoundRect(
+                Color.White,
+                topLeft = Offset(ox + x0 * unit, oy + y0 * unit),
+                size = Size((x1 - x0) * unit, (y1 - y0) * unit),
+                cornerRadius = CornerRadius(r * unit),
+            )
+            bar(42.6f, 50f, 45f, 59f, 1.2f)
+            bar(46.8f, 50f, 49.2f, 59f, 1.2f)
+            bar(51f, 50f, 53.4f, 59f, 1.2f)
+            bar(42.6f, 57f, 53.4f, 62.5f, 2.7f)
+            bar(46.5f, 60f, 49.5f, 73.5f, 1.5f)
+            // The sheen: a soft diagonal band of light, only over the bubbles.
+            sheen?.value?.let { at ->
+                val x = size.width * at
+                clipPath(mark) {
+                    drawRect(
+                        Brush.linearGradient(
+                            listOf(Color.Transparent, Color.White.copy(alpha = 0.42f), Color.Transparent),
+                            start = Offset(x - size.width * 0.3f, 0f),
+                            end = Offset(x + size.width * 0.1f, size.height),
+                        ),
+                    )
+                }
+            }
         }
     }
 }
 
-private val SHUTTER_SIZE = 76.dp
-private val SHUTTER_CORNER = 24.dp
-private val SHUTTER_INSET = 6.dp
+private val SHUTTER_SIZE = 84.dp
 private const val SHUTTER_PRESS_MS = 120
+private const val SHEEN_CYCLE_MS = 4_200
+private const val SHEEN_REST_MS = 2_600
+
+/** The logo's own colours, the same in light and dark: it is a mark, not a theme colour. */
+private val LOGO_CORAL = Color(0xFFE4572E)
+private val LOGO_AMBER = Color(0xFFF4B63F)
 
 @Composable
 private fun ChromeButton(

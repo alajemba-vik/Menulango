@@ -30,6 +30,8 @@ public data class MenuMeta(
     val languageTag: String? = null,
     val currency: String?,
     val venueType: String?,
+    /** The restaurant's name when the menu prints it; most don't. */
+    val restaurantName: String? = null,
     val truncated: Boolean,
     val confidence: Double,
 ) {

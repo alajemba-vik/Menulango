@@ -38,6 +38,9 @@ Rules:
 Field guide:
 - menu.language: the printed menu's language, written in English (for example, "Greek").
 - menu.languageTag: its BCP-47 language tag (for example, "el", "fr", or "ja").
+- menu.restaurantName: the restaurant's name exactly as printed, only if it is
+  visibly on the photo (a logo, header, footer, website, social handle or
+  "Welcome to" line). Never guess or invent one; omit it if it isn't printed.
 - id: a short lowercase ascii slug of the readable name, unique on this menu.
 - readableName: how a traveller would say the dish; transliterate non-Latin
   scripts (Kokoretsi, Tonkotsu ramen, Mansaf).
@@ -124,9 +127,9 @@ export const RESPONSE_SCHEMA = {
   properties: {
     menu: {
       type: "OBJECT",
-      properties: { language: str, languageTag: str, currency: str, venueType: str, truncated: bool, confidence: num },
+      properties: { language: str, languageTag: str, currency: str, venueType: str, restaurantName: str, truncated: bool, confidence: num },
       required: ["language", "languageTag", "truncated", "confidence"],
-      propertyOrdering: ["language", "languageTag", "currency", "venueType", "truncated", "confidence"],
+      propertyOrdering: ["language", "languageTag", "currency", "venueType", "restaurantName", "truncated", "confidence"],
     },
     dishes: { type: "ARRAY", items: dish },
   },

@@ -50,6 +50,7 @@ internal object PageMerger {
                 languageTag = pages.firstNotNullOfOrNull { it.languageTag },
                 currency = pages.firstNotNullOfOrNull { it.currency },
                 venueType = pages.firstNotNullOfOrNull { it.venueType },
+                restaurantName = pages.firstNotNullOfOrNull { it.restaurantName },
                 truncated = pages.any { it.truncated },
                 confidence = pages.maxOf { it.confidence },
             )

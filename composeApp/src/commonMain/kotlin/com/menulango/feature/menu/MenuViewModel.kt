@@ -300,7 +300,8 @@ internal class MenuViewModel(
                             filters = filters,
                             avoid = avoid,
                             search = search,
-                            customName = mark.name,
+                            // The diner's own name wins; otherwise the one printed on the menu.
+                            customName = mark.name ?: reading.meta.restaurantName,
                             markable = menuKey.value != null,
                             hidden = mark.hidden,
                             showFeatured = showFeatured,
@@ -519,6 +520,10 @@ internal class MenuViewModel(
         val saved = repository.remember(menu, pages.cover, replacing = pages.cacheKey)
         pages.cacheKey = saved.cacheKey
         menuKey.value = saved.cacheKey
+        // Kept with the diner's marks so Menus shows it too; never over a name they chose.
+        menu.meta.restaurantName?.let { name ->
+            if (marks.current(saved.cacheKey).name == null) marks.rename(saved.cacheKey, name)
+        }
         if (firstSave) {
             val charged = !saved.isKnownMenu && !billing.isPlus.value
             if (charged) quota.recordScan()

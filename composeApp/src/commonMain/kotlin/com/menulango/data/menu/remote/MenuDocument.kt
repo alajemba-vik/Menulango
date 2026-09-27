@@ -18,6 +18,7 @@ internal fun Menu.toDocument(): String {
                     languageTag = meta.languageTag,
                     currency = meta.currency,
                     venueType = meta.venueType,
+                    restaurantName = meta.restaurantName,
                     truncated = meta.truncated,
                     confidence = meta.confidence,
                 ),

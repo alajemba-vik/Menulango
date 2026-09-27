@@ -75,7 +75,6 @@
     <string name="menus_reading_title">새 메뉴</string>
     <string name="menus_reading_body">메뉴를 읽는 중…</string>
     <string name="menus_reading_page">%2$d페이지 중 %1$d페이지 읽는 중…</string>
-    <string name="menus_summary">자주 나오는 재료: %1$s</string>
     <string name="menus_when_all">전체</string>
     <string name="menus_when_week">최근 7일</string>
     <string name="menus_when_month">최근 30일</string>

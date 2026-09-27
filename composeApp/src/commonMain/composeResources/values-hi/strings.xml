@@ -75,7 +75,6 @@
     <string name="menus_reading_title">नया मेन्यू</string>
     <string name="menus_reading_body">मेन्यू पढ़ा जा रहा है…</string>
     <string name="menus_reading_page">%2$d में से पेज %1$d पढ़ा जा रहा है…</string>
-    <string name="menus_summary">अक्सर: %1$s</string>
     <string name="menus_when_all">सभी</string>
     <string name="menus_when_week">पिछले 7 दिन</string>
     <string name="menus_when_month">पिछले 30 दिन</string>

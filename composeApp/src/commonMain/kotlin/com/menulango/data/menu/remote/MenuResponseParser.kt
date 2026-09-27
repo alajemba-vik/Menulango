@@ -228,6 +228,7 @@ private fun MenuMetaDto.toDomain(): MenuMeta {
         languageTag = languageTag.cleaned()?.takeIf(::isLanguageTag),
         currency = currency.cleaned(),
         venueType = venueType.cleaned(),
+        restaurantName = restaurantName.cleaned()?.take(MAX_RESTAURANT_NAME),
         truncated = truncated == true,
         confidence = score,
     )
@@ -258,3 +259,5 @@ internal fun String?.prose(): String? =
 private val DASH = Regex("\\s*[\u2014\u2013]\\s*")
 
 private fun List<String>?.cleanedList(): List<String> = orEmpty().mapNotNull { it.cleaned() }
+
+private const val MAX_RESTAURANT_NAME = 60

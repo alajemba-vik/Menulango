@@ -1164,7 +1164,15 @@ private fun MenuHeader(
                                 renameLabel,
                                 { renaming = true },
                                 tint = onHeader.copy(alpha = 0.8f),
-                                modifier = Modifier.tipTarget(Tip.RenameMenu),
+                                // The tip only when there was no name to find on the menu.
+                                modifier =
+                                    if (ready?.customName ==
+                                        null
+                                    ) {
+                                        Modifier.tipTarget(Tip.RenameMenu)
+                                    } else {
+                                        Modifier
+                                    },
                             )
                         }
                     }

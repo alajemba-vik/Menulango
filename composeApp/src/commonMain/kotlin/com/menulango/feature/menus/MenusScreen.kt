@@ -103,7 +103,6 @@ import com.menulango.resources.menus_reading_body
 import com.menulango.resources.menus_reading_page
 import com.menulango.resources.menus_reading_title
 import com.menulango.resources.menus_subtitle
-import com.menulango.resources.menus_summary
 import com.menulango.resources.menus_title
 import com.menulango.resources.menus_today
 import com.menulango.resources.menus_undo
@@ -461,7 +460,7 @@ private fun SavedMenuCard(
             // What the menu was mostly made of, so a long list of menus stays recognisable.
             summary?.let {
                 Text(
-                    stringResource(Res.string.menus_summary, it),
+                    it,
                     style = Paper.type.caption,
                     color = colors.ink,
                     maxLines = 1,
