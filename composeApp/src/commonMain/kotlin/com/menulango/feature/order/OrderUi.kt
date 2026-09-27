@@ -42,11 +42,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,6 +75,7 @@ import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.feature.menu.FilterPill
+import com.menulango.platform.urlQueryComponent
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
 import com.menulango.resources.menu_choose_title
@@ -105,8 +109,10 @@ import com.menulango.resources.order_waiter_for_me
 import com.menulango.resources.order_waiter_for_restaurant
 import com.menulango.resources.order_waiter_hint
 import com.menulango.resources.order_waiter_preparing
+import com.menulango.resources.order_waiter_translate
 import com.menulango.resources.order_waiter_translated_by_google
 import com.menulango.resources.order_waiter_unavailable
+import com.menulango.resources.order_waiter_untranslated
 import com.menulango.resources.order_you
 import com.menulango.resources.settings_cancel
 import com.menulango.resources.tip_guest_added
@@ -575,8 +581,8 @@ internal fun WaiterView(
         }
     }
 
-    val restaurantCopyAvailable = notes.isEmpty() || translationState == WaiterTranslationState.Ready
-    if (!restaurantCopyAvailable && restaurantCopy) restaurantCopy = false
+    // The restaurant's view is always there: if the notes couldn't be translated it shows them as
+    // written, says so, and offers Google Translate beside each one.
     Column(
         Modifier
             .fillMaxSize()
@@ -617,7 +623,7 @@ internal fun WaiterView(
                     ),
                 selected = if (restaurantCopy) 1 else 0,
                 onSelect = { restaurantCopy = it == 1 },
-                enabled = { it == 0 || restaurantCopyAvailable },
+                enabled = { true },
             )
             when (translationState) {
                 WaiterTranslationState.Preparing -> {
@@ -630,7 +636,7 @@ internal fun WaiterView(
 
                 WaiterTranslationState.Unavailable -> {
                     Text(
-                        stringResource(Res.string.order_waiter_unavailable),
+                        stringResource(Res.string.order_waiter_untranslated),
                         style = type.caption,
                         color = colors.sealInk,
                     )
@@ -663,6 +669,7 @@ internal fun WaiterView(
                             dinerNote = line.note,
                             restaurantNote = order.waiterNote(line.dish.id, line.dinerId),
                             restaurantCopy = restaurantCopy,
+                            targetLanguageTag = targetLanguageTag,
                         )
                     }
                 }
@@ -678,8 +685,13 @@ private fun WaiterLine(
     dinerNote: String?,
     restaurantNote: String?,
     restaurantCopy: Boolean,
+    targetLanguageTag: String?,
 ) {
     val colors = Paper.colors
+    val uriHandler = LocalUriHandler.current
+
+    @Suppress("DEPRECATION")
+    val clipboard = LocalClipboardManager.current
     Row(verticalAlignment = Alignment.Top) {
         Text(
             "$quantity ×",
@@ -694,7 +706,8 @@ private fun WaiterLine(
                 style = Paper.type.dishTitle,
                 color = colors.ink,
             )
-            (if (restaurantCopy) restaurantNote else dinerNote)?.let {
+            // For the restaurant, the translated note; if there isn't one, the note as written.
+            (if (restaurantCopy) restaurantNote ?: dinerNote else dinerNote)?.let {
                 Text(
                     stringResource(Res.string.note_waiter, it),
                     style = Paper.type.body.copy(fontWeight = FontWeight.SemiBold),
@@ -702,8 +715,29 @@ private fun WaiterLine(
                     modifier = Modifier.padding(top = Space.xs),
                 )
             }
+            // Untranslated: one tap copies the note and opens Google Translate with it filled in.
+            if (restaurantCopy && restaurantNote == null && dinerNote != null) {
+                QuietButton(
+                    stringResource(Res.string.order_waiter_translate),
+                    {
+                        clipboard.setText(AnnotatedString(dinerNote))
+                        uriHandler.openUri(googleTranslateUrl(dinerNote, targetLanguageTag))
+                    },
+                    color = colors.sealInk,
+                    singleLine = true,
+                )
+            }
         }
     }
+}
+
+/** Google Translate's web page with the note already filled in, into the menu's language when known. */
+private fun googleTranslateUrl(
+    text: String,
+    targetLanguageTag: String?,
+): String {
+    val target = targetLanguageTag?.substringBefore('-')?.lowercase() ?: "auto"
+    return "https://translate.google.com/?sl=auto&tl=$target&op=translate&text=${text.urlQueryComponent()}"
 }
 
 private enum class WaiterTranslationState { NotNeeded, Preparing, Ready, Unavailable }

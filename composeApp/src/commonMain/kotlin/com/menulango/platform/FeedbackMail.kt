@@ -28,7 +28,7 @@ internal fun feedbackMailUri(
     return "mailto:menulango@gmail.com?subject=$subject&body=${body.urlQueryComponent()}"
 }
 
-private fun String.urlQueryComponent(): String =
+internal fun String.urlQueryComponent(): String =
     encodeToByteArray().joinToString(separator = "") { byte ->
         val value = byte.toInt() and 0xff
         when {
