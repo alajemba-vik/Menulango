@@ -21,6 +21,32 @@ internal data class PlanOffer(
     val freeTrialDays: Int? = null,
 )
 
+/**
+ * The plans on sale, plus what the RevenueCat dashboard says about showing them, read from the
+ * offering's metadata so the paywall can be tuned without an app update:
+ *
+ * - `highlight`: the plan selected first: `trip_pass` (or `weekly`), `monthly`, `annual`, `lifetime`.
+ * - `headline`: the paywall's title, either one string or one per language, `{"en": "...", "fr": "..."}`.
+ *
+ * Anything missing or unreadable falls back to the app's own choices.
+ */
+internal data class PlanCatalog(
+    val offers: List<PlanOffer>,
+    val highlight: PlanKind? = null,
+    val headlines: Map<String, String> = emptyMap(),
+) {
+    /** The headline for a language tag ("fr", "zh-Hans"), else English, else the one given for all. */
+    fun headlineFor(languageTag: String): String? {
+        val language = languageTag.substringBefore('-').lowercase()
+        return headlines[languageTag.lowercase()] ?: headlines[language] ?: headlines["en"] ?: headlines[ANY_LANGUAGE]
+    }
+
+    companion object {
+        /** The key used when the dashboard gives one headline for every language. */
+        const val ANY_LANGUAGE = "*"
+    }
+}
+
 /** What happened when the diner tried to buy or restore. */
 internal sealed interface PurchaseOutcome {
     data object Unlocked : PurchaseOutcome

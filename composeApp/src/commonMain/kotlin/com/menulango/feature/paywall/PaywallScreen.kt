@@ -62,6 +62,7 @@ import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
 import com.menulango.di.AppConfig
 import com.menulango.platform.feedbackMailUri
+import com.menulango.data.preferences.Preferences
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
 import com.menulango.resources.action_try_again
@@ -117,6 +118,7 @@ internal fun PaywallScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val config = koinInject<AppConfig>()
     val uriHandler = LocalUriHandler.current
+    val languageTag = koinInject<Preferences>().contentLanguageTag
 
     val unlocked = (state as? PaywallUiState.Ready)?.unlocked == true
     LaunchedEffect(unlocked) {
@@ -138,6 +140,7 @@ internal fun PaywallScreen(
                 onTerms = { uriHandler.openUri(TERMS_URL) },
                 onPrivacy = config.privacyPolicyUrl?.let { url -> { uriHandler.openUri(url) } },
             ),
+        headline = (state as? PaywallUiState.Ready)?.catalog?.headlineFor(languageTag),
     )
 }
 
@@ -164,6 +167,8 @@ internal data class PaywallActions(
 internal fun PaywallContent(
     state: PaywallUiState,
     actions: PaywallActions,
+    /** The dashboard's headline in the diner's language, when the offering sets one. */
+    headline: String? = null,
 ) {
     val colors = Paper.colors
     val type = Paper.type
@@ -191,10 +196,9 @@ internal fun PaywallContent(
             Spacer(Modifier.height(Space.md))
             state.reason.label()?.let { SectionLabel(stringResource(it), color = colors.sealInk) }
             Spacer(Modifier.height(Space.sm))
+            // The dashboard can set the headline (per language); otherwise the app's own.
             Text(
-                stringResource(
-                    Res.string.paywall_title,
-                ),
+                headline ?: stringResource(Res.string.paywall_title),
                 style = type.hero,
                 color = colors.ink,
                 modifier =

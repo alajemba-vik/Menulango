@@ -6,6 +6,7 @@ import com.menulango.PaywallReason
 import com.menulango.core.result.AppError
 import com.menulango.core.result.AppResult
 import com.menulango.data.billing.BillingFailure
+import com.menulango.data.billing.PlanCatalog
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
@@ -26,6 +27,8 @@ internal sealed interface PaywallUiState {
     data class Ready(
         override val reason: PaywallReason,
         val offers: List<PlanOffer>,
+        /** The dashboard's settings for this paywall: highlighted plan and headline. */
+        val catalog: PlanCatalog = PlanCatalog(offers),
         val selectedId: String,
         val busy: Busy?,
         val message: PaywallMessage?,
@@ -112,13 +115,19 @@ internal class PaywallViewModel(
                     }
 
                     is AppResult.Ok -> {
-                        if (result.value.isEmpty()) {
+                        val catalog = result.value
+                        if (catalog.offers.isEmpty()) {
                             PaywallUiState.Empty(reason)
                         } else {
-                            val hero = result.value.firstOrNull { it.kind == PlanKind.TripPass } ?: result.value.first()
+                            // The dashboard's highlighted plan if it names one on sale, else the Trip Pass.
+                            val hero =
+                                catalog.offers.firstOrNull { it.kind == catalog.highlight }
+                                    ?: catalog.offers.firstOrNull { it.kind == PlanKind.TripPass }
+                                    ?: catalog.offers.first()
                             PaywallUiState.Ready(
                                 reason = reason,
-                                offers = result.value,
+                                offers = catalog.offers,
+                                catalog = catalog,
                                 selectedId = hero.id,
                                 busy = null,
                                 message = null,

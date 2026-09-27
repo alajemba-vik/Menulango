@@ -82,13 +82,14 @@ internal class BillingRepository(
         }
     }
 
-    suspend fun offers(): AppResult<List<PlanOffer>> {
-        if (!config.hasBilling) return AppResult.Ok(emptyList())
+    suspend fun offers(): AppResult<PlanCatalog> {
+        if (!config.hasBilling) return AppResult.Ok(PlanCatalog(emptyList()))
         return try {
             val offerings = Purchases.sharedInstance.awaitOfferings()
             // The current offering first: that is the one RevenueCat's Experiments and Targeting
             // choose, so prices and plans can be tested and changed from the dashboard alone.
-            val packages = (offerings.current ?: offerings.all[OFFERING_ID])?.availablePackages.orEmpty()
+            val offering = offerings.current ?: offerings.all[OFFERING_ID]
+            val packages = offering?.availablePackages.orEmpty()
             packagesById.clear()
             val offers =
                 packages
@@ -102,13 +103,19 @@ internal class BillingRepository(
                             freeTrialDays = pkg.storeProduct.freeTrialDays(),
                         )
                     }.sortedBy { it.kind.ordinal }
-            AppResult.Ok(offers)
+            AppResult.Ok(
+                PlanCatalog(
+                    offers = offers,
+                    highlight = offering?.metadata?.get("highlight")?.toString()?.toPlanKind(),
+                    headlines = offering?.metadata?.get("headline").toHeadlines(),
+                ),
+            )
         } catch (e: PurchasesException) {
             when {
                 e.error.code.isOffline() -> AppResult.Err(AppError.Offline)
                 // No store on this device (or purchases blocked): retrying can't help, so the
                 // paywall says purchases aren't available here instead of "try again".
-                e.error.code == PurchasesErrorCode.PurchaseNotAllowedError -> AppResult.Ok(emptyList())
+                e.error.code == PurchasesErrorCode.PurchaseNotAllowedError -> AppResult.Ok(PlanCatalog(emptyList()))
                 else -> AppResult.Err(AppError.Upstream)
             }
         }
@@ -158,6 +165,29 @@ internal class BillingRepository(
         const val OFFERING_ID = "default"
     }
 }
+
+/** "trip_pass", "weekly", "monthly", "annual" or "lifetime", in any case, as the dashboard spells it. */
+private fun String.toPlanKind(): PlanKind? =
+    when (trim().lowercase().replace('-', '_')) {
+        "trip_pass", "trippass", "weekly", "week" -> PlanKind.TripPass
+        "monthly", "month" -> PlanKind.Monthly
+        "annual", "yearly", "year" -> PlanKind.Annual
+        "lifetime" -> PlanKind.Lifetime
+        else -> null
+    }
+
+/** One headline for everyone, or a map of language tag to headline. Anything else is ignored. */
+private fun Any?.toHeadlines(): Map<String, String> =
+    when (this) {
+        is String -> if (isBlank()) emptyMap() else mapOf(PlanCatalog.ANY_LANGUAGE to trim())
+        is Map<*, *> ->
+            entries
+                .mapNotNull { (key, value) ->
+                    val text = (value as? String)?.trim()
+                    if (key is String && !text.isNullOrEmpty()) key.lowercase() to text else null
+                }.toMap()
+        else -> emptyMap()
+    }
 
 private fun PackageType.toPlanKind(): PlanKind? =
     when (this) {
