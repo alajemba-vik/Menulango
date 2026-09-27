@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * The language MenuLango speaks: its own words, and the language new menus are explained in.
  * [System] follows the phone (or the per-app language chosen in the phone's settings).
  */
+@Serializable
 internal enum class AppLanguage(
     val languageTag: String?,
     /** The language's name in itself, so anyone can find their own in the list. */
@@ -28,6 +29,7 @@ internal enum class AppLanguage(
 }
 
 /** Which tab the app opens on. */
+@Serializable
 internal enum class StartPage { Menus, Camera }
 
 /** How the app should look, whatever the phone is set to. */
@@ -41,6 +43,8 @@ internal data class PreferenceBackup(
     val avoid: Set<String>,
     val showFeatured: Boolean,
     val language: AppLanguage = AppLanguage.System,
+    val calmMotion: Boolean = false,
+    val startPage: StartPage = StartPage.Menus,
 )
 
 /**
@@ -144,7 +148,15 @@ internal class Preferences(
     }
 
     fun backup(): PreferenceBackup =
-        PreferenceBackup(appearance.value, dietary.value, avoid.value, showFeatured.value, language.value)
+        PreferenceBackup(
+            appearance = appearance.value,
+            dietary = dietary.value,
+            avoid = avoid.value,
+            showFeatured = showFeatured.value,
+            language = language.value,
+            calmMotion = calmMotion.value,
+            startPage = startPage.value,
+        )
 
     /** Keep stricter food choices from either device; leave an explicit appearance choice intact. */
     fun merge(incoming: PreferenceBackup) {
@@ -153,6 +165,9 @@ internal class Preferences(
         if (appearance.value == Appearance.System) setAppearance(incoming.appearance)
         if (language.value == AppLanguage.System) setLanguage(incoming.language)
         setShowFeatured(showFeatured.value && incoming.showFeatured)
+        // A comfort setting from either device holds; a start page only fills in the default.
+        if (incoming.calmMotion) setCalmMotion(true)
+        if (startPage.value == StartPage.Menus) setStartPage(incoming.startPage)
     }
 
     private fun readAppearance(): Appearance =

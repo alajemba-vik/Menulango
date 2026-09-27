@@ -8,6 +8,7 @@ import com.menulango.data.menu.local.BackupSavedMenu
 import com.menulango.data.menu.local.MenuCache
 import com.menulango.data.preferences.PreferenceBackup
 import com.menulango.data.preferences.Preferences
+import com.menulango.data.tips.Tips
 import com.menulango.feature.order.OrderBook
 import dev.whyoleg.cryptography.BinarySize.Companion.bytes
 import dev.whyoleg.cryptography.CryptographyProvider
@@ -33,6 +34,7 @@ internal class BackupService(
     private val history: EatenHistory,
     private val orders: OrderBook,
     private val marks: MenuMarks,
+    private val tips: Tips,
 ) {
     suspend fun export(passphrase: String): ByteArray {
         require(passphrase.isNotBlank()) { "A backup passphrase is required." }
@@ -43,6 +45,7 @@ internal class BackupService(
                 eatenDishes = history.backup(),
                 orders = orders.backup(),
                 marks = marks.backup(),
+                tips = tips.backup(),
             )
         return BackupCrypto.encrypt(json.encodeToString(payload).encodeToByteArray(), passphrase)
     }
@@ -68,6 +71,7 @@ internal class BackupService(
         history.merge(payload.eatenDishes)
         orders.merge(payload.orders)
         marks.merge(payload.marks)
+        tips.merge(payload.tips)
         return BackupRestoreResult.Restored
     }
 
@@ -102,6 +106,8 @@ private data class BackupPayload(
     val orders: Map<String, com.menulango.feature.order.TableOrder>,
     /** Added later; older backups simply have none. */
     val marks: Map<String, MenuMark> = emptyMap(),
+    /** Which how-to notes have been read. Also added later. */
+    val tips: Set<String> = emptySet(),
 )
 
 /** The self-contained file envelope. A new random salt and AES-GCM nonce are used every time. */

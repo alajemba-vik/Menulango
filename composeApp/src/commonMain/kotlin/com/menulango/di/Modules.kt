@@ -62,7 +62,7 @@ internal fun sharedModule(config: AppConfig): Module =
         single { MenuLangoDatabase(get()) }
         single { MenuCache(get(), get(), Dispatchers.IO, ::nowMillis) }
         single { EatenHistory(get(), Dispatchers.IO, ::nowMillis) }
-        single { BackupService(get(), get(), get(), get(), get()) }
+        single { BackupService(get(), get(), get(), get(), get(), get()) }
         single {
             MenuRepository(
                 api = get(),

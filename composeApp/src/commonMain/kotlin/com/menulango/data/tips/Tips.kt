@@ -64,6 +64,14 @@ internal class Tips(
         seenState.value = next
     }
 
+    /** Tips by name, so a backup survives tips being added or retired. */
+    fun backup(): Set<String> = seenState.value.map { it.name }.toSet()
+
+    /** Restoring onto a new phone shouldn't re-teach what the diner already knows. */
+    fun merge(names: Set<String>) {
+        Tip.entries.filter { it.name in names }.forEach(::markSeen)
+    }
+
     fun reset() {
         settings.remove(KEY)
         seenState.value = emptySet()
