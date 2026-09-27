@@ -66,8 +66,8 @@
     <string name="order_waiter_for_me">मेरे लिए</string>
     <string name="order_waiter_for_restaurant">रेस्टोरेंट के लिए</string>
     <string name="order_waiter_preparing">रेस्टोरेंट के लिए अनुवाद तैयार हो रहा है…</string>
-    <string name="order_waiter_untranslated">इस फ़ोन पर आपके नोट अनुवाद नहीं हो सके, इसलिए रेस्टोरेंट के लिए में वे वैसे ही दिख रहे हैं जैसे आपने लिखे। उन्हें वैसे ही वेटर को दिखाएँ, या नोट के नीचे अनुवाद करें पर टैप करके Google Translate में खोलें।</string>
-    <string name="order_waiter_translate">अनुवाद करें</string>
+    <string name="order_waiter_untranslated">इस फ़ोन पर आपके नोट अनुवाद नहीं हो सके, इसलिए रेस्टोरेंट के लिए में वे वैसे ही दिख रहे हैं जैसे आपने लिखे। उन्हें वैसे ही वेटर को दिखाएँ, या सभी को एक साथ Google Translate में खोलें।</string>
+    <string name="order_waiter_translate">Google में नोट अनुवाद करें</string>
     <string name="order_waiter_translated_by_google">इस डिवाइस पर Google से अनुवादित</string>
     <string name="menus_title">आपके मेन्यू</string>
     <string name="menus_subtitle">आपके पढ़े हर मेन्यू, ऑफ़लाइन भी।</string>

@@ -66,8 +66,8 @@
     <string name="order_waiter_for_me">나용</string>
     <string name="order_waiter_for_restaurant">식당용</string>
     <string name="order_waiter_preparing">식당용 번역을 준비하는 중…</string>
-    <string name="order_waiter_untranslated">이 휴대폰에서 메모를 번역하지 못해 식당용에는 쓰신 그대로 보여요. 그대로 직원에게 보여 주거나, 메모 아래 번역을 탭해 Google 번역에서 열어 보세요.</string>
-    <string name="order_waiter_translate">번역</string>
+    <string name="order_waiter_untranslated">이 휴대폰에서 메모를 번역하지 못해 식당용에는 쓰신 그대로 보여요. 그대로 직원에게 보여 주거나, 모두 Google 번역에서 열어 보세요.</string>
+    <string name="order_waiter_translate">Google에서 메모 번역</string>
     <string name="order_waiter_translated_by_google">이 기기에서 Google로 번역됨</string>
     <string name="menus_title">내 메뉴</string>
     <string name="menus_subtitle">읽은 모든 메뉴를 오프라인에서도 볼 수 있어요.</string>

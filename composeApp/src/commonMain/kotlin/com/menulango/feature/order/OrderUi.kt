@@ -634,11 +634,49 @@ internal fun WaiterView(
                 }
 
                 WaiterTranslationState.Unavailable -> {
-                    Text(
-                        stringResource(Res.string.order_waiter_untranslated),
-                        style = type.caption,
-                        color = colors.sealInk,
-                    )
+                    // One way out for every note at once: each dish as printed with its note,
+                    // copied and opened in Google Translate. Dish names are already in the
+                    // restaurant's language, so only the notes need translating.
+                    val uriHandler = LocalUriHandler.current
+
+                    @Suppress("DEPRECATION")
+                    val clipboard = LocalClipboardManager.current
+                    val allNotes =
+                        order.lines
+                            .filter { it.note != null }
+                            .joinToString("\n") { "${it.dish.originalName}: ${it.note}" }
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+                        Text(
+                            stringResource(Res.string.order_waiter_untranslated),
+                            style = type.caption,
+                            color = colors.sealInk,
+                        )
+                        Row(
+                            Modifier
+                                .heightIn(min = Space.touchTarget)
+                                .clip(Shapes.pill)
+                                .background(colors.sunk)
+                                .pressable({
+                                    clipboard.setText(AnnotatedString(allNotes))
+                                    uriHandler.openUri(googleTranslateUrl(allNotes, targetLanguageTag))
+                                })
+                                .padding(horizontal = Space.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+                        ) {
+                            Text(
+                                stringResource(Res.string.order_waiter_translate),
+                                style = type.button,
+                                color = colors.ink,
+                            )
+                            Icon(
+                                PaperIcons.ArrowUpRight,
+                                contentDescription = null,
+                                tint = colors.ink,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
                 }
 
                 WaiterTranslationState.Ready -> {
@@ -668,7 +706,6 @@ internal fun WaiterView(
                             dinerNote = line.note,
                             restaurantNote = order.waiterNote(line.dish.id, line.dinerId),
                             restaurantCopy = restaurantCopy,
-                            targetLanguageTag = targetLanguageTag,
                         )
                     }
                 }
@@ -684,13 +721,8 @@ private fun WaiterLine(
     dinerNote: String?,
     restaurantNote: String?,
     restaurantCopy: Boolean,
-    targetLanguageTag: String?,
 ) {
     val colors = Paper.colors
-    val uriHandler = LocalUriHandler.current
-
-    @Suppress("DEPRECATION")
-    val clipboard = LocalClipboardManager.current
     Row(verticalAlignment = Alignment.Top) {
         Text(
             "$quantity ×",
@@ -712,18 +744,6 @@ private fun WaiterLine(
                     style = Paper.type.body.copy(fontWeight = FontWeight.SemiBold),
                     color = colors.sealInk,
                     modifier = Modifier.padding(top = Space.xs),
-                )
-            }
-            // Untranslated: one tap copies the note and opens Google Translate with it filled in.
-            if (restaurantCopy && restaurantNote == null && dinerNote != null) {
-                QuietButton(
-                    stringResource(Res.string.order_waiter_translate),
-                    {
-                        clipboard.setText(AnnotatedString(dinerNote))
-                        uriHandler.openUri(googleTranslateUrl(dinerNote, targetLanguageTag))
-                    },
-                    color = colors.sealInk,
-                    singleLine = true,
                 )
             }
         }

@@ -66,8 +66,8 @@
     <string name="order_waiter_for_me">给我</string>
     <string name="order_waiter_for_restaurant">给餐厅</string>
     <string name="order_waiter_preparing">正在准备给餐厅的翻译…</string>
-    <string name="order_waiter_untranslated">无法在这部手机上翻译你的备注，所以“给餐厅”会按你写的原样显示。可以直接给服务员看，或点备注下方的“翻译”在 Google 翻译中打开。</string>
-    <string name="order_waiter_translate">翻译</string>
+    <string name="order_waiter_untranslated">无法在这部手机上翻译你的备注，所以“给餐厅”会按你写的原样显示。可以直接给服务员看，或全部在 Google 翻译中打开。</string>
+    <string name="order_waiter_translate">用 Google 翻译备注</string>
     <string name="order_waiter_translated_by_google">在此设备上由 Google 翻译</string>
     <string name="menus_title">你的菜单</string>
     <string name="menus_subtitle">你读过的每份菜单，离线也能看。</string>
