@@ -111,7 +111,6 @@ import com.menulango.resources.order_waiter_hint
 import com.menulango.resources.order_waiter_preparing
 import com.menulango.resources.order_waiter_translate
 import com.menulango.resources.order_waiter_translated_by_google
-import com.menulango.resources.order_waiter_unavailable
 import com.menulango.resources.order_waiter_untranslated
 import com.menulango.resources.order_you
 import com.menulango.resources.settings_cancel

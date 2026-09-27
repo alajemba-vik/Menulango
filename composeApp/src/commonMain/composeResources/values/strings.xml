@@ -77,7 +77,6 @@
     <string name="order_waiter_for_me">For me</string>
     <string name="order_waiter_for_restaurant">For the restaurant</string>
     <string name="order_waiter_preparing">Preparing restaurant translation…</string>
-    <string name="order_waiter_unavailable">Restaurant translation isn’t available on this device. Say or show this note.</string>
     <string name="order_waiter_untranslated">We couldn't translate your notes on this phone, so For the restaurant shows them as you wrote them. Show them to the waiter as they are, or tap Translate under a note to open it in Google Translate.</string>
     <string name="order_waiter_translate">Translate</string>
     <string name="order_waiter_translated_by_google">Translated on this device with Google</string>

@@ -72,6 +72,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -669,6 +670,9 @@ private fun DishList(
     // options at once (Hick's law; Iyengar and Lepper's choice overload). That, once, is when
     // swiping a dish away is worth mentioning.
     val browsing = remember { BrowsingSignal() }
+    // Read fresh on every scroll: the menu and the order change while the list stays put.
+    val browseEligible =
+        rememberUpdatedState(state.dishes.size >= BROWSE_MIN_DISHES && order.isEmpty && state.markable)
     val viewport = with(LocalDensity.current) { 600.dp.toPx() }
     val dishes = state.visibleDishes
     val sections = remember(dishes) { dishes.map { it.section } }
@@ -694,10 +698,7 @@ private fun DishList(
             modifier =
                 Modifier.fillMaxSize().nestedScroll(
                     remember(browsing) {
-                        browsing.connection(
-                            viewport = viewport,
-                            eligible = { state.dishes.size >= BROWSE_MIN_DISHES && order.isEmpty && state.markable },
-                        )
+                        browsing.connection(viewport = viewport, eligible = { browseEligible.value })
                     },
                 ),
             // The pinned filter bar carries its own top space, so pills never sit on the sheet's edge.

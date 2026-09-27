@@ -19,9 +19,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,6 +106,11 @@ private fun JournalEntry(
     val colors = Paper.colors
     val focus = LocalFocusManager.current
     var draft by remember(dish.id, saved) { mutableStateOf(saved) }
+    // Saved on the way out too: closing the sheet mid-sentence shouldn't lose the sentence.
+    val latest by rememberUpdatedState(draft)
+    DisposableEffect(dish.id) {
+        onDispose { if (latest != saved) onNote(dish.id, latest) }
+    }
     val openLabel = stringResource(Res.string.dish_sheet_description, dish.readableName)
     Column(Modifier.fillMaxWidth().padding(top = Space.sm), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(
