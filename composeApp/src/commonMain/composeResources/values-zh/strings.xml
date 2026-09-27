@@ -326,6 +326,8 @@
     <string name="paywall_lifetime">终身</string>
     <string name="paywall_lifetime_detail">一次付费，永久 Plus。</string>
     <string name="paywall_cta_trip">开始我的旅行通行证</string>
+    <string name="paywall_trial_line">免费 %1$d 天，之后 %2$s</string>
+    <string name="paywall_cta_free_trial">免费试用 %1$d 天</string>
     <string name="paywall_cta">继续</string>
     <string name="paywall_free_note">免费版每月始终包含三份菜单，完整解释食材、每道菜的做法和过敏原。</string>
     <string name="paywall_restore">恢复购买</string>

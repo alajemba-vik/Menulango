@@ -325,6 +325,8 @@
     <string name="paywall_lifetime">Навсегда</string>
     <string name="paywall_lifetime_detail">Один платёж. Plus навсегда.</string>
     <string name="paywall_cta_trip">Начать мой пропуск</string>
+    <string name="paywall_trial_line">Бесплатно %1$d дн., затем %2$s</string>
+    <string name="paywall_cta_free_trial">Попробовать бесплатно %1$d дн.</string>
     <string name="paywall_cta">Продолжить</string>
     <string name="paywall_free_note">Бесплатная версия всегда включает три меню в месяц с полным объяснением: ингредиенты, как готовят каждое блюдо и аллергены.</string>
     <string name="paywall_restore">Восстановить покупки</string>

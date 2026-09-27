@@ -325,6 +325,8 @@
     <string name="paywall_lifetime">평생</string>
     <string name="paywall_lifetime_detail">한 번 결제로 평생 Plus.</string>
     <string name="paywall_cta_trip">여행 패스 시작하기</string>
+    <string name="paywall_trial_line">%1$d일 무료, 이후 %2$s</string>
+    <string name="paywall_cta_free_trial">%1$d일 무료로 사용해 보기</string>
     <string name="paywall_cta">계속</string>
     <string name="paywall_free_note">무료로도 매달 메뉴 세 개를 재료, 요리 방법, 알레르기 유발 성분까지 모두 설명해 드려요.</string>
     <string name="paywall_restore">구매 복원</string>

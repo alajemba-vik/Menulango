@@ -14,6 +14,10 @@ import com.revenuecat.purchases.kmp.ktx.awaitRestore
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 import com.revenuecat.purchases.kmp.models.Package
 import com.revenuecat.purchases.kmp.models.PackageType
+import com.revenuecat.purchases.kmp.models.DiscountPaymentMode
+import com.revenuecat.purchases.kmp.models.Period
+import com.revenuecat.purchases.kmp.models.PeriodUnit
+import com.revenuecat.purchases.kmp.models.freePhase
 import com.revenuecat.purchases.kmp.models.PurchasesError
 import com.revenuecat.purchases.kmp.models.PurchasesErrorCode
 import com.revenuecat.purchases.kmp.models.PurchasesException
@@ -82,14 +86,21 @@ internal class BillingRepository(
         if (!config.hasBilling) return AppResult.Ok(emptyList())
         return try {
             val offerings = Purchases.sharedInstance.awaitOfferings()
-            val packages = (offerings.all[OFFERING_ID] ?: offerings.current)?.availablePackages.orEmpty()
+            // The current offering first: that is the one RevenueCat's Experiments and Targeting
+            // choose, so prices and plans can be tested and changed from the dashboard alone.
+            val packages = (offerings.current ?: offerings.all[OFFERING_ID])?.availablePackages.orEmpty()
             packagesById.clear()
             val offers =
                 packages
                     .mapNotNull { pkg ->
                         val kind = pkg.packageType.toPlanKind() ?: return@mapNotNull null
                         packagesById[pkg.identifier] = pkg
-                        PlanOffer(id = pkg.identifier, kind = kind, price = pkg.storeProduct.price.formatted)
+                        PlanOffer(
+                            id = pkg.identifier,
+                            kind = kind,
+                            price = pkg.storeProduct.price.formatted,
+                            freeTrialDays = pkg.storeProduct.freeTrialDays(),
+                        )
                     }.sortedBy { it.kind.ordinal }
             AppResult.Ok(offers)
         } catch (e: PurchasesException) {
@@ -155,6 +166,26 @@ private fun PackageType.toPlanKind(): PlanKind? =
         PackageType.ANNUAL -> PlanKind.Annual
         PackageType.LIFETIME -> PlanKind.Lifetime
         else -> null
+    }
+
+/**
+ * The free trial in days, from whichever store sold it: Apple's introductory offer, or Google's
+ * free phase on the default offer. Null when there is none.
+ */
+private fun StoreProduct.freeTrialDays(): Int? {
+    introductoryDiscount
+        ?.takeIf { it.paymentMode == DiscountPaymentMode.FREE_TRIAL }
+        ?.let { return it.subscriptionPeriod.inDays() * it.numberOfPeriods.toInt() }
+    return defaultOption?.freePhase?.let { it.billingPeriod.inDays() * (it.billingCycleCount ?: 1) }
+}
+
+private fun Period.inDays(): Int =
+    when (unit) {
+        PeriodUnit.DAY -> value
+        PeriodUnit.WEEK -> value * 7
+        PeriodUnit.MONTH -> value * 30
+        PeriodUnit.YEAR -> value * 365
+        PeriodUnit.UNKNOWN -> 0
     }
 
 private fun PurchasesErrorCode.isOffline(): Boolean =

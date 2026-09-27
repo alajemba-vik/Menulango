@@ -325,6 +325,8 @@
     <string name="paywall_lifetime">आजीवन</string>
     <string name="paywall_lifetime_detail">एक बार भुगतान करें। Plus हमेशा के लिए।</string>
     <string name="paywall_cta_trip">मेरा ट्रिप पास शुरू करें</string>
+    <string name="paywall_trial_line">%1$d दिन मुफ़्त, फिर %2$s</string>
+    <string name="paywall_cta_free_trial">%1$d दिन मुफ़्त आज़माएँ</string>
     <string name="paywall_cta">जारी रखें</string>
     <string name="paywall_free_note">मुफ़्त में हमेशा हर महीने तीन मेन्यू मिलते हैं, सामग्री, हर व्यंजन कैसे बनता है और एलर्जन के साथ पूरी जानकारी सहित।</string>
     <string name="paywall_restore">खरीदारी बहाल करें</string>

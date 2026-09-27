@@ -325,6 +325,8 @@
     <string name="paywall_lifetime">مدى الحياة</string>
     <string name="paywall_lifetime_detail">ادفع مرة واحدة. Plus إلى الأبد.</string>
     <string name="paywall_cta_trip">ابدأ تذكرة رحلتي</string>
+    <string name="paywall_trial_line">مجانًا لمدة %1$d أيام، ثم %2$s</string>
+    <string name="paywall_cta_free_trial">جرّبه مجانًا لمدة %1$d أيام</string>
     <string name="paywall_cta">متابعة</string>
     <string name="paywall_free_note">تتضمن النسخة المجانية دائمًا ثلاث قوائم شهريًا، مشروحة بالكامل مع المكونات وطريقة تحضير كل طبق ومسببات الحساسية.</string>
     <string name="paywall_restore">استعادة المشتريات</string>

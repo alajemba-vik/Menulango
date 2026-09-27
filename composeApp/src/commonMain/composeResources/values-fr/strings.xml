@@ -325,6 +325,8 @@
     <string name="paywall_lifetime">À vie</string>
     <string name="paywall_lifetime_detail">Payez une fois. Plus pour toujours.</string>
     <string name="paywall_cta_trip">Commencer mon Pass Voyage</string>
+    <string name="paywall_trial_line">Gratuit pendant %1$d jours, puis %2$s</string>
+    <string name="paywall_cta_free_trial">Essayer gratuitement %1$d jours</string>
     <string name="paywall_cta">Continuer</string>
     <string name="paywall_free_note">La version gratuite inclut toujours trois menus par mois, entièrement expliqués avec les ingrédients, la préparation de chaque plat et les allergènes.</string>
     <string name="paywall_restore">Restaurer les achats</string>

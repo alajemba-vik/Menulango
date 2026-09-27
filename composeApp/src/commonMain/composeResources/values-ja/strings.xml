@@ -326,6 +326,8 @@
     <string name="paywall_lifetime">買い切り</string>
     <string name="paywall_lifetime_detail">一度の支払いで、ずっと Plus。</string>
     <string name="paywall_cta_trip">トリップパスを始める</string>
+    <string name="paywall_trial_line">%1$d日間無料、その後 %2$s</string>
+    <string name="paywall_cta_free_trial">%1$d日間無料で試す</string>
     <string name="paywall_cta">続ける</string>
     <string name="paywall_free_note">無料版でも毎月 3 つのメニューを、材料、各料理の作り方、アレルゲンまですべて説明します。</string>
     <string name="paywall_restore">購入を復元</string>

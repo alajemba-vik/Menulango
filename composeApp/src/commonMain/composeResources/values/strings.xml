@@ -354,6 +354,8 @@
     <string name="paywall_lifetime">Lifetime</string>
     <string name="paywall_lifetime_detail">Pay once. Plus forever.</string>
     <string name="paywall_cta_trip">Start my Trip Pass</string>
+    <string name="paywall_trial_line">Free for %1$d days, then %2$s</string>
+    <string name="paywall_cta_free_trial">Try it free for %1$d days</string>
     <string name="paywall_cta">Continue</string>
     <string name="paywall_free_note">Free always includes three menus a month, fully explained with ingredients, how each dish is made, and allergens.</string>
     <string name="paywall_restore">Restore purchases</string>

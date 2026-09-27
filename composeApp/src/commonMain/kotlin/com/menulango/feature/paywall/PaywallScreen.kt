@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -71,6 +72,8 @@ import com.menulango.resources.paywall_benefit_modes
 import com.menulango.resources.paywall_benefit_scans
 import com.menulango.resources.paywall_cta
 import com.menulango.resources.paywall_cta_trip
+import com.menulango.resources.paywall_cta_free_trial
+import com.menulango.resources.paywall_trial_line
 import com.menulango.resources.paywall_free_note
 import com.menulango.resources.paywall_lifetime
 import com.menulango.resources.paywall_lifetime_detail
@@ -289,15 +292,13 @@ internal fun PaywallContent(
             } else if (ready != null) {
                 PrimaryButton(
                     text =
-                        stringResource(
-                            if (ready.selected?.kind ==
-                                PlanKind.TripPass
-                            ) {
-                                Res.string.paywall_cta_trip
-                            } else {
-                                Res.string.paywall_cta
-                            },
-                        ),
+                        ready.selected
+                            ?.freeTrialDays
+                            ?.takeIf { it > 0 }
+                            ?.let { stringResource(Res.string.paywall_cta_free_trial, it) }
+                            ?: stringResource(
+                                if (ready.selected?.kind == PlanKind.TripPass) Res.string.paywall_cta_trip else Res.string.paywall_cta,
+                            ),
                     onClick = actions.onPurchase,
                     busy = ready.busy == Busy.Purchasing,
                     modifier = Modifier.fillMaxWidth(),
@@ -395,6 +396,14 @@ private fun PlanOption(
                 color = if (isSelected) colors.sealInk else colors.ink,
             )
             Text(stringResource(detail), style = Paper.type.caption, color = colors.inkMuted)
+            // The trial's terms in full, as the stores require: how long it's free, then the price.
+            offer.freeTrialDays?.takeIf { it > 0 }?.let { days ->
+                Text(
+                    stringResource(Res.string.paywall_trial_line, days, offer.price),
+                    style = Paper.type.caption.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.sealInk,
+                )
+            }
         }
         Spacer(Modifier.width(Space.md))
         Text(offer.price, style = Paper.type.price.copy(fontSize = Paper.type.title.fontSize), color = colors.ink)

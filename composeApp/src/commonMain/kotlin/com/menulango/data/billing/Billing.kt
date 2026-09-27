@@ -17,6 +17,8 @@ internal data class PlanOffer(
     val id: String,
     val kind: PlanKind,
     val price: String,
+    /** Days free before the first charge, when the store offers a free trial; else null. */
+    val freeTrialDays: Int? = null,
 )
 
 /** What happened when the diner tried to buy or restore. */
