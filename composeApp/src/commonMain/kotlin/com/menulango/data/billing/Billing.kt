@@ -35,10 +35,14 @@ internal data class PlanCatalog(
     val highlight: PlanKind? = null,
     val headlines: Map<String, String> = emptyMap(),
 ) {
-    /** The headline for a language tag ("fr", "zh-Hans"), else English, else the one given for all. */
+    /**
+     * The headline for a language tag ("fr", "zh-Hans"), else the one given for every language.
+     * Null when the dashboard has nothing for this language, so the app's own translated title
+     * shows rather than an English one.
+     */
     fun headlineFor(languageTag: String): String? {
         val language = languageTag.substringBefore('-').lowercase()
-        return headlines[languageTag.lowercase()] ?: headlines[language] ?: headlines["en"] ?: headlines[ANY_LANGUAGE]
+        return headlines[languageTag.lowercase()] ?: headlines[language] ?: headlines[ANY_LANGUAGE]
     }
 
     companion object {
