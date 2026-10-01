@@ -181,9 +181,13 @@ Both files are git-ignored, so your values never end up in the repository.
 ### 4. Run it
 
 **Android:** open the `Menulango` folder in Android Studio, wait for Gradle sync to finish, choose
-**androidApp** and your emulator or phone at the top, and press ▶. Or, from the terminal:
+**androidApp** and your emulator or phone at the top, and press ▶.
+
+Or, from the terminal: first tell Gradle where the Android SDK is (Android Studio does this for you
+when it opens the project; on a Mac it is usually in `~/Library/Android/sdk`), then build and install:
 
 ```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
 ./gradlew :androidApp:installDebug
 ```
 
@@ -196,6 +200,7 @@ open iosApp.xcworkspace
 ```
 
 Open the `.xcworkspace`, not `iosApp.xcodeproj`. Choose your iPhone at the top and press Run.
+If `pod install` stops with a message about UTF-8, run `export LANG=en_US.UTF-8` first.
 
 **Scanning on the emulator:** drag a photo of a menu from your computer onto the emulator window,
 then in MenuLango tap the gallery button and choose it from **Downloads**. A handwritten demo menu
