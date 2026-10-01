@@ -38,6 +38,9 @@ Rules:
 Field guide:
 - menu.language: the printed menu's language, written in English (for example, "Greek").
 - menu.languageTag: its BCP-47 language tag (for example, "el", "fr", or "ja").
+- menu.currency and price.currency: the ISO 4217 code of the printed prices
+  ("EUR", "JPY", "XOF" for West African CFA francs), worked out from the
+  symbol and the country. Omit it if you cannot tell.
 - menu.restaurantName: the restaurant's name exactly as printed, only if it is
   visibly on the photo (a logo, header, footer, website, social handle or
   "Welcome to" line). Never guess or invent one; omit it if it isn't printed.
@@ -48,11 +51,31 @@ Field guide:
 - emoji: one food emoji that best pictures what arrives (🐙 for grilled
   octopus, 🥣 for a yoghurt dip). A single emoji, never text.
 - price.amount: a plain number (12,50 becomes 12.5). Omit price if none is printed.
+  Read separators the way the menu's country does: a dot or space between
+  groups of three digits is a thousands separator, so 6.000 F and 6 000 F
+  are both 6000. When a dish shows more than one price (sizes, half and
+  full, 6.000/7000 F), use the lowest for amount and keep them all in
+  price.asPrinted.
 - adventureLevel 1-5: 1 is familiar anywhere (grilled chicken, chips);
   5 is challenging for most visitors (offal, raw, unusual textures).
 - effortLevel 1-5: 1 is assembled in minutes; 5 takes hours or days of work.
 - flags.spicy 0-3. flags.localSpecialty: hard to find outside this region.
+- flags.pork, flags.alcohol, flags.shellfish, flags.meatWithDairy: diners
+  rely on these to keep halal or kosher, so when in doubt, say true.
+  pork includes lard, gelatine and pork stock. alcohol includes wine,
+  beer or spirits used in cooking, sauces or desserts. shellfish covers
+  prawns, crab, lobster, mussels, clams, oysters, squid and octopus.
+  meatWithDairy is true when meat or poultry is cooked or served with
+  milk, cream, butter, cheese or yoghurt.
 - confidence 0-1: how sure you are of the explanation, not of the reading.
+- wikiTitle: the exact title of the English Wikipedia article about this
+  dish ("Moussaka", "Phat kaphrao"), only when you are sure such an article
+  exists and is about this dish itself. Omit it for house specials, vague
+  items ("chef's salad") and anything you are unsure of. Never guess.
+- nutrition: a rough estimate for one plate as this dish is usually served
+  here (kcal, and grams of protein, carbs and fat), rounded to whole numbers.
+  Base it on a typical restaurant portion, not a recipe book. Omit it for
+  drinks, and whenever you cannot picture the portion.
 - Drinks, sides and sauces count as dishes only if they are substantial.
 - If the photo is not a menu or cannot be read, return an empty dishes list
   and menu.confidence 0.`;
@@ -75,9 +98,16 @@ const flags = {
   properties: {
     spicy: int, raw: bool, offal: bool, pork: bool, vegetarian: bool,
     vegan: bool, large: bool, shareable: bool, localSpecialty: bool,
+    alcohol: bool, shellfish: bool, meatWithDairy: bool,
   },
-  required: ["spicy", "raw", "offal", "pork", "vegetarian", "vegan", "large", "shareable", "localSpecialty"],
-  propertyOrdering: ["spicy", "raw", "offal", "pork", "vegetarian", "vegan", "large", "shareable", "localSpecialty"],
+  required: [
+    "spicy", "raw", "offal", "pork", "vegetarian", "vegan", "large", "shareable", "localSpecialty",
+    "alcohol", "shellfish", "meatWithDairy",
+  ],
+  propertyOrdering: [
+    "spicy", "raw", "offal", "pork", "vegetarian", "vegan", "large", "shareable", "localSpecialty",
+    "alcohol", "shellfish", "meatWithDairy",
+  ],
 };
 
 const dish = {
@@ -108,6 +138,13 @@ const dish = {
     adventureLevel: int,
     effortLevel: int,
     confidence: num,
+    wikiTitle: str,
+    nutrition: {
+      type: "OBJECT",
+      properties: { kcal: int, proteinG: int, carbsG: int, fatG: int },
+      required: ["kcal", "proteinG", "carbsG", "fatG"],
+      propertyOrdering: ["kcal", "proteinG", "carbsG", "fatG"],
+    },
   },
   required: [
     "id", "originalName", "readableName", "whatItIs", "ingredients", "howItIsMade", "pitch",
@@ -117,7 +154,7 @@ const dish = {
   // for speed, but it keeps partial output useful if the stream is cut.
   propertyOrdering: [
     "id", "originalName", "readableName", "emoji", "section", "whatItIs", "ingredients", "howItIsMade",
-    "pitch", "price", "flags", "allergens", "adventureLevel", "effortLevel", "confidence",
+    "pitch", "price", "flags", "allergens", "adventureLevel", "effortLevel", "confidence", "wikiTitle", "nutrition",
   ],
 };
 
@@ -137,5 +174,9 @@ export const RESPONSE_SCHEMA = {
   propertyOrdering: ["menu", "dishes"],
 };
 
-/** A runaway response on a huge menu is the only way to get a surprising bill. */
-export const MAX_OUTPUT_TOKENS = 8000;
+/**
+ * A dense page of 60 dishes takes about 8,000 tokens, so the old 8,000 cap cut real pages off
+ * mid-dish (finishReason MAX_TOKENS). 16,000 fits the densest page with room to spare, and still
+ * stops a runaway response from turning into a surprising bill.
+ */
+export const MAX_OUTPUT_TOKENS = 16000;

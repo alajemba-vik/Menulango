@@ -9,6 +9,10 @@ preview_urls = false
 [vars]
 GEMINI_MODEL = "gemini-3.5-flash-lite"
 SCANS_PER_HOUR = "30"
+# Firebase App Check (see README). "monitor" logs requests without a valid token; "enforce" refuses them.
+APP_CHECK = "monitor"
+# Firebase console → Project settings → General → Project number. Empty turns the check off.
+FIREBASE_PROJECT_NUMBER = "843981804416"
 
 # Burst protection: at most 4 scans a minute per device. Nobody photographs menus faster.
 [[ratelimits]]
@@ -18,3 +22,8 @@ simple = { limit = 4, period = 60 }
 
 [observability]
 enabled = true
+
+# Menus shared with a table: stored for 24 hours under a random id, then deleted by Cloudflare.
+[[kv_namespaces]]
+binding = "SHARES"
+id = "b27a5774764f43469adaaad27b245cd4"
