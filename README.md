@@ -6,9 +6,9 @@ MenuLango reads a restaurant menu from a single photo and explains every dish 鈥
 
 Kotlin Multiplatform 路 Compose Multiplatform 路 Android and iOS from one codebase 路 [MIT licensed](LICENSE)
 
-| Menu | Dish | Choose | Candlelight |
+| Menu | Dish | Your picks | Show the waiter |
 |---|---|---|---|
-| ![Menu](docs/screenshots/menu.png) | ![Dish](docs/screenshots/dish.png) | ![Choose](docs/screenshots/choose.png) | ![Dark](docs/screenshots/menu-dark.png) |
+| ![A French menu explained by MenuLango](docs/project-images/real-app-captures/01-menu-overview.png) | ![A dish with its photo, price in dollars and ingredients](docs/project-images/real-app-captures/05-dish-detail.png) | ![Picks for two people with notes, nutrition and the total in dollars](docs/project-images/real-app-captures/03-order-and-price-conversion.png) | ![The order ready to show the waiter](docs/project-images/real-app-captures/02-show-the-waiter.png) |
 
 ---
 
@@ -71,8 +71,14 @@ Kotlin Multiplatform 路 Compose Multiplatform 路 Android and iOS from one codeba
 
 ## For judges: try it with real scanning
 
-MenuLango isn't in the stores yet, so the quickest way to try it is to build the Android version.
-It takes about 20 minutes, most of it downloads, and needs no accounts.
+MenuLango has been submitted to the App Store and Google Play and is waiting for review.
+
+**On iPhone,** the quickest way is our TestFlight beta. The link is in our Devpost submission. Install
+the TestFlight app, open the link, and install MenuLango. Buying MenuLango Plus in TestFlight is a
+free test purchase, so every feature can be tried without being charged.
+
+**On Android,** build it from this repository. It takes about 20 minutes, most of it downloads, and
+needs no accounts:
 
 1. **Install [Android Studio](https://developer.android.com/studio)** and, when it asks, let it set
    up an emulator (a virtual phone). A real Android phone with USB debugging on works too.
