@@ -22,6 +22,15 @@ Kotlin Multiplatform · Compose Multiplatform · Android and iOS from one codeba
 - **A menu scanned again is free.** Menus are recognised by the dish names printed on them, not by the photo.
 - **A sample menu** (a Greek taverna) for trying the app without a camera.
 
+## See it in action
+
+*A full run through MenuLango, sped up 2.5×: scanning a handwritten menu, the dishes, filters, picks for two people, Show the waiter, the paywall and Help me choose.*
+
+
+https://github.com/user-attachments/assets/dbc61474-567c-4e29-b583-281725af8112
+
+
+
 ### Understanding a dish
 - **What it is**, in plain words, and **how it is made**: the method, the time, the heat.
 - **Ingredients** and **allergens**, split into "likely contains" and "may contain".
