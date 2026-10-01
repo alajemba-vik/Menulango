@@ -1,0 +1,132 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Bricolage;src:url("file:///Users/alajemba/Menulango/composeApp/src/commonMain/composeResources/font/bricolage_bold.ttf")}
+@font-face{font-family:Caveat;src:url("file:///Users/alajemba/Menulango/composeApp/src/commonMain/composeResources/font/caveat_semibold.ttf")}
+@font-face{font-family:Nunito;src:url("file:///Users/alajemba/Menulango/composeApp/src/commonMain/composeResources/font/nunito_semibold.ttf")}
+html,body{margin:0;width:1500px;height:1000px;overflow:hidden}
+svg{display:block}
+.cap{font-family:Bricolage;font-size:108px;paint-order:stroke;stroke:#2B1633;stroke-width:22px;stroke-linejoin:round;fill:#fff}
+.cap2{fill:#F0A93E}
+.hand{font-family:Caveat;fill:#1f2a44}
+.say{font-family:Nunito;font-size:31px;fill:#2B1633}
+</style></head><body>
+<svg width="1500" height="1000" viewBox="0 0 1500 1000">
+  <defs>
+    <pattern id="ging" width="80" height="80" patternUnits="userSpaceOnUse">
+      <rect width="80" height="80" fill="#fff"/>
+      <rect width="40" height="80" fill="#C9393E" opacity=".55"/>
+      <rect width="80" height="40" fill="#C9393E" opacity=".55"/>
+    </pattern>
+    <pattern id="brick" width="120" height="60" patternUnits="userSpaceOnUse">
+      <rect width="120" height="60" fill="#F6E2C4"/>
+      <path d="M0 30H120M60 0V30M0 30V60M120 30V60" stroke="#EBCFA6" stroke-width="4"/>
+    </pattern>
+  </defs>
+
+  <!-- wall -->
+  <rect width="1500" height="1000" fill="url(#brick)"/>
+  <!-- awning -->
+  <g>
+    <rect width="1500" height="110" fill="#6B2E83"/>
+    <g fill="#FBF3E4">
+      <rect x="0" width="75" height="110"/><rect x="150" width="75" height="110"/><rect x="300" width="75" height="110"/>
+      <rect x="450" width="75" height="110"/><rect x="600" width="75" height="110"/><rect x="750" width="75" height="110"/>
+      <rect x="900" width="75" height="110"/><rect x="1050" width="75" height="110"/><rect x="1200" width="75" height="110"/><rect x="1350" width="75" height="110"/>
+    </g>
+    <path d="M0 110 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0 q37.5 34 75 0" fill="#6B2E83" stroke="#4E1E61" stroke-width="4"/>
+  </g>
+  <!-- string lights -->
+  <path d="M0 175 Q375 245 750 175 T1500 175" fill="none" stroke="#5A3A2A" stroke-width="3"/>
+  <g fill="#FFD66B" stroke="#E0A23A" stroke-width="2">
+    <circle cx="120" cy="196" r="11"/><circle cx="300" cy="216" r="11"/><circle cx="480" cy="214" r="11"/><circle cx="640" cy="190" r="11"/>
+    <circle cx="860" cy="186" r="11"/><circle cx="1040" cy="210" r="11"/><circle cx="1220" cy="214" r="11"/><circle cx="1400" cy="194" r="11"/>
+  </g>
+
+  <!-- window with a view -->
+  <rect x="980" y="150" width="400" height="330" rx="18" fill="#BFE3F2" stroke="#7A4A2A" stroke-width="14"/>
+  <path d="M980 400 Q1080 330 1180 390 T1380 360 V480 H980Z" fill="#9CCB7A"/>
+  <circle cx="1300" cy="220" r="38" fill="#FFD66B"/>
+  <path d="M1180 150V480M980 315H1380" stroke="#7A4A2A" stroke-width="12"/>
+
+  <!-- table -->
+  <path d="M0 720 H1500 V1000 H0Z" fill="url(#ging)"/>
+  <path d="M0 720 H1500" stroke="#9E2B30" stroke-width="6"/>
+
+  <!-- saffron back bubble -->
+  <path d="M470 300 h150 a120 120 0 0 1 120 120 v200 h-220 v-60 a160 160 0 0 0 -160 -160 h-5 a120 120 0 0 1 115 -100z" fill="#F0A93E" stroke="#2B1633" stroke-width="9"/>
+  <!-- mascot body: aubergine bubble -->
+  <g>
+    <path d="M300 410 h170 a175 175 0 0 1 175 175 v20 a175 175 0 0 1 -175 175 h-270 v-195 a175 175 0 0 1 100 -175z" fill="#6B2E83" stroke="#2B1633" stroke-width="9"/>
+    <!-- eyes -->
+    <ellipse cx="350" cy="560" rx="30" ry="36" fill="#fff" stroke="#2B1633" stroke-width="5"/>
+    <ellipse cx="470" cy="560" rx="30" ry="36" fill="#fff" stroke="#2B1633" stroke-width="5"/>
+    <circle cx="358" cy="568" r="17" fill="#1a0f20"/><circle cx="478" cy="568" r="17" fill="#1a0f20"/>
+    <circle cx="364" cy="560" r="6" fill="#fff"/><circle cx="484" cy="560" r="6" fill="#fff"/>
+    <!-- blush -->
+    <ellipse cx="305" cy="620" rx="26" ry="14" fill="#F58FB0" opacity=".85"/>
+    <ellipse cx="515" cy="620" rx="26" ry="14" fill="#F58FB0" opacity=".85"/>
+    <!-- smile -->
+    <path d="M375 625 q35 45 70 0 z" fill="#E8476A" stroke="#2B1633" stroke-width="5" stroke-linejoin="round"/>
+    <!-- fork badge -->
+    <g transform="translate(240 470)" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none">
+      <path d="M0 0 v34 M18 0 v34 M36 0 v34 M-2 34 h40 q0 20 -20 22 q-20 -2 -20 -22 M18 56 v40"/>
+    </g>
+    <!-- arm holding the menu -->
+    <path d="M630 650 q40 30 42 80" fill="none" stroke="#2B1633" stroke-width="22" stroke-linecap="round"/>
+    <path d="M630 650 q40 30 42 80" fill="none" stroke="#6B2E83" stroke-width="12" stroke-linecap="round"/>
+    <!-- other arm -->
+    <path d="M205 690 q-55 10 -70 -40" fill="none" stroke="#2B1633" stroke-width="22" stroke-linecap="round"/>
+    <path d="M205 690 q-55 10 -70 -40" fill="none" stroke="#6B2E83" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- handwritten menu card -->
+  <g transform="translate(700 395) rotate(8)">
+    <rect width="300" height="380" rx="10" fill="#FBF6EA" stroke="#2B1633" stroke-width="6"/>
+    <g stroke="#E3D6BB" stroke-width="2"><path d="M20 120H280M20 175H280M20 230H280M20 285H280M20 340H280"/></g>
+    <text x="150" y="70" text-anchor="middle" class="hand" style="font-size:52px;fill:#A3262A">Chez Margot</text>
+    <text x="22" y="112" class="hand" style="font-size:30px">Andouillette</text><text x="278" y="112" text-anchor="end" class="hand" style="font-size:30px">17€</text>
+    <text x="22" y="167" class="hand" style="font-size:30px">Confit de canard</text><text x="278" y="167" text-anchor="end" class="hand" style="font-size:30px">21€</text>
+    <text x="22" y="222" class="hand" style="font-size:30px">Escargots (6)</text><text x="278" y="222" text-anchor="end" class="hand" style="font-size:30px">11€</text>
+    <text x="22" y="277" class="hand" style="font-size:30px">Île flottante</text><text x="278" y="277" text-anchor="end" class="hand" style="font-size:30px">8€</text>
+    <ellipse cx="95" cy="98" rx="88" ry="27" fill="none" stroke="#F0A93E" stroke-width="5" transform="rotate(-3 95 98)"/>
+  </g>
+  <!-- hand -->
+  <circle cx="674" cy="742" r="22" fill="#6B2E83" stroke="#2B1633" stroke-width="7"/>
+
+  <!-- speech bubble: hand-drawn, comic style, above the mascot -->
+  <g transform="rotate(-3 500 265)">
+    <path d="M236 250
+             C 228 200, 300 180, 400 182
+             C 520 176, 700 182, 742 228
+             C 776 266, 760 318, 704 336
+             C 640 354, 560 352, 500 350
+             L 452 412 L 440 350
+             C 360 350, 268 346, 244 312
+             C 230 292, 232 270, 236 250 Z"
+          fill="#FFFDF7" stroke="#2B1633" stroke-width="7" stroke-linejoin="round"/>
+    <text x="495" y="252" text-anchor="middle" class="hand" style="font-size:54px;fill:#A3262A">Andouillette?</text>
+    <path d="M372 266 q60 10 120 2 t118 4" fill="none" stroke="#F0A93E" stroke-width="5" stroke-linecap="round"/>
+    <text x="495" y="322" text-anchor="middle" class="hand" style="font-size:46px">It's pork tripe sausage!</text>
+  </g>
+  <!-- food on the table -->
+  <text x="40" y="815" style="font-size:95px">🥖</text>
+  <text x="1055" y="808" style="font-size:100px">🍷</text>
+  <text x="1230" y="815" style="font-size:95px">🧀</text>
+  <text x="490" y="812" style="font-size:80px">🥐</text>
+
+  <!-- app icon -->
+  <g transform="translate(1180 530) rotate(6 75 75)">
+    <rect width="150" height="150" rx="34" fill="#fff" stroke="#2B1633" stroke-width="6"/>
+    <image href="file:///Users/alajemba/Menulango/iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png" x="6" y="6" width="138" height="138" clip-path="inset(0 round 30px)"/>
+  </g>
+
+  <!-- caption on a plain card -->
+  <g>
+    <rect x="378" y="852" width="760" height="112" rx="24" fill="#2B1633"/>
+    <rect x="370" y="844" width="760" height="112" rx="24" fill="#FFFDF7" stroke="#2B1633" stroke-width="7"/>
+    <text x="750" y="922" text-anchor="middle" style="font-family:Bricolage;font-size:66px;fill:#2B1633">Every dish, <tspan style="fill:#6B2E83">explained.</tspan></text>
+    <path d="M770 936 q60 9 120 1 t118 3" fill="none" stroke="#F0A93E" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>
+</body></html>
