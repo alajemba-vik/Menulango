@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">照片只用于读取菜单，我们不会保存。</string>
     <string name="tab_menus">菜单</string>
     <string name="tab_scan">扫描</string>
-    <string name="tab_scan_shutter">拍摄菜单</string>
     <string name="tab_settings">设置</string>
     <string name="order_add">加入已选</string>
     <string name="order_add_another">再加一份（已选 %1$d）</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">试试“鸡肉 20以下”</string>
     <string name="search_hint_range">试试“10-25”</string>
     <string name="search_menus_hint">搜索你的菜单</string>
-    <string name="search_tags">搜索范围</string>
     <string name="search_cancel">取消</string>
     <string name="search_open">搜索</string>
     <string name="search_clear">清除搜索</string>
     <string name="search_tag_ingredients">食材</string>
     <string name="search_tag_description">描述</string>
-    <string name="search_tag_dishes">菜品</string>
     <string name="search_menus_in_dishes">同时搜索菜品</string>
     <string name="search_menus_none">没有符合搜索的菜单。</string>
     <string name="filter_vegetarian">素食</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">关闭一个筛选条件，看看更多菜。</string>
     <string name="menu_empty_title">没有找到任何菜品</string>
     <string name="menu_empty_body">这张照片里似乎没有菜单。请把手机正对菜单上方，让菜单填满画面，如果环境太暗请找点光。</string>
-    <string name="menu_section_other">菜单上</string>
     <string name="error_offline_title">没有网络连接</string>
     <string name="error_offline_body">读取菜单需要联网几秒钟。有信号或 wifi 时再试一次吧。</string>
     <string name="error_rate_title">请稍等</string>
@@ -356,7 +352,6 @@
     <string name="paywall_reason_scans">你已用完本月的三份免费菜单</string>
     <string name="paywall_reason_choose">帮你选是 Plus 的功能</string>
     <string name="paywall_reason_pages">更长的菜单是 Plus 的功能</string>
-    <string name="paywall_selected">已选方案</string>
     <string name="scan_failed_nothing_found">该菜单中未找到菜品，因此未保存任何内容。</string>
     <string name="scan_failed_background">无法读取该菜单，因此未保存任何内容。请重试。</string>
     <string name="dish_open_menu">打开这份菜单</string>

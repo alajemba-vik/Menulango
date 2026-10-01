@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.history.EatenHistory
 import com.menulango.data.menu.model.Dish
-import com.menulango.feature.order.OrderBook
-import com.menulango.feature.order.TableOrder
+import com.menulango.data.order.OrderBook
+import com.menulango.data.order.TableOrder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -6,10 +6,10 @@ import com.menulango.data.marks.MenuMark
 import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.local.BackupSavedMenu
 import com.menulango.data.menu.local.MenuCache
+import com.menulango.data.order.OrderBook
 import com.menulango.data.preferences.PreferenceBackup
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tips
-import com.menulango.feature.order.OrderBook
 import dev.whyoleg.cryptography.BinarySize.Companion.bytes
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
@@ -103,7 +103,7 @@ private data class BackupPayload(
     val preferences: PreferenceBackup,
     val menus: List<BackupSavedMenu>,
     val eatenDishes: List<EatenDishRecord>,
-    val orders: Map<String, com.menulango.feature.order.TableOrder>,
+    val orders: Map<String, com.menulango.data.order.TableOrder>,
     /** Added later; older backups simply have none. */
     val marks: Map<String, MenuMark> = emptyMap(),
     /** Which how-to notes have been read. Also added later. */

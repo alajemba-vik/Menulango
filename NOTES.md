@@ -12,7 +12,7 @@
   saved menus, eating history and per-menu diners, quantities and notes.
 - Android uses the native share sheet and document picker. iOS uses `UIActivityViewController` and
   `UIDocumentPickerViewController`, so the user can choose their own installed storage provider.
-- Firebase was removed. There is no MenuLango account or server copy of the diner's data.
+- There is no MenuLango account or server copy of the diner's data. (Firebase is used only for App Check, which proves scans come from the real app; it holds no user data.)
 - **Restore purchases** is always available in Settings. Purchases remain tied to Apple or Google
   through RevenueCat, with clear restored, nothing-to-restore and failure messages.
 - **Something wrong?** opens a prefilled email to `menulango@gmail.com` containing only app and OS

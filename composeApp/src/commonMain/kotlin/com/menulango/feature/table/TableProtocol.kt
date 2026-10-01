@@ -1,10 +1,10 @@
 package com.menulango.feature.table
 
 import com.menulango.data.menu.model.Dish
+import com.menulango.data.order.Diner
+import com.menulango.data.order.OrderLine
+import com.menulango.data.order.TableOrder
 import com.menulango.feature.menu.foldedName
-import com.menulango.feature.order.Diner
-import com.menulango.feature.order.OrderLine
-import com.menulango.feature.order.TableOrder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">MenuLango architecture</title>
+  <desc id="desc">MenuLango app connects to a Cloudflare Worker, which connects to Gemini, Wikimedia and ExchangeRate-API. RevenueCat connects to App Store and Google Play.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fbf7ed"/><stop offset="1" stop-color="#f1eadb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#343c2d" flood-opacity=".13"/></filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L10,5.5 L0,11 Z" fill="#69805f"/></marker>
+    <style>
+      .h { font: 700 48px Georgia, serif; fill: #22251f; }
+      .label { font: 700 28px Arial, sans-serif; fill: #283021; }
+      .small { font: 400 21px Arial, sans-serif; fill: #66705d; }
+      .caps { font: 700 17px Arial, sans-serif; letter-spacing: 2px; fill: #a45b1b; }
+      .card { fill: #fffdf8; stroke: #e4dccd; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="129" cy="91" r="250" fill="#e9e1ce" opacity=".55"/><circle cx="1500" cy="794" r="330" fill="#eadfc9" opacity=".52"/>
+  <text x="800" y="94" text-anchor="middle" class="h">How MenuLango works</text>
+  <text x="800" y="134" text-anchor="middle" class="small">A small private-by-design app stack for explaining restaurant menus.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="95" y="281" width="312" height="350" rx="34" class="card"/>
+    <rect x="117" y="303" width="268" height="306" rx="25" fill="#f6f1e5" stroke="#ded5c4" stroke-width="3"/>
+    <rect x="141" y="347" width="220" height="172" rx="18" fill="#fffdf8"/>
+    <rect x="162" y="375" width="93" height="13" rx="6" fill="#dcc9ae"/><rect x="162" y="405" width="156" height="10" rx="5" fill="#dedfd5"/><rect x="162" y="429" width="132" height="10" rx="5" fill="#dedfd5"/><rect x="162" y="465" width="98" height="26" rx="8" fill="#dce7d7"/>
+    <rect x="198" y="543" width="106" height="9" rx="4" fill="#33382e"/>
+  </g>
+  <text x="251" y="681" text-anchor="middle" class="label">MenuLango app</text>
+  <text x="251" y="714" text-anchor="middle" class="small">iPhone + Android</text>
+  <text x="251" y="742" text-anchor="middle" class="small">Kotlin Multiplatform</text>
+
+  <path d="M429 456 H600" stroke="#69805f" stroke-width="7" fill="none" marker-end="url(#arrow)"/>
+  <text x="514" y="429" text-anchor="middle" class="caps">secure requests</text>
+
+  <g filter="url(#shadow)">
+    <rect x="623" y="258" width="355" height="395" rx="36" fill="#e9f0e4" stroke="#b7c6ac" stroke-width="3"/>
+    <path d="M801 294c-74 0-133 43-133 96 0 35 26 65 63 80v55h143v-55c37-15 63-45 63-80 0-53-59-96-136-96z" fill="#f57933" opacity=".18"/>
+    <text x="801" y="371" text-anchor="middle" class="caps">THE SERVER</text>
+    <text x="801" y="414" text-anchor="middle" class="label">Cloudflare Worker</text>
+    <text x="801" y="451" text-anchor="middle" class="small">reads menus • finds dish photos</text>
+    <text x="801" y="480" text-anchor="middle" class="small">fetches exchange rates • rate limits</text>
+    <rect x="681" y="529" width="240" height="67" rx="17" fill="#fffdf8"/>
+    <text x="801" y="571" text-anchor="middle" class="small">Firebase App Check</text>
+  </g>
+
+  <path d="M999 328 H1128" stroke="#69805f" stroke-width="6" fill="none" marker-end="url(#arrow)"/>
+  <path d="M999 456 H1128" stroke="#69805f" stroke-width="6" fill="none" marker-end="url(#arrow)"/>
+  <path d="M999 584 H1128" stroke="#69805f" stroke-width="6" fill="none" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1153" y="228" width="350" height="200" rx="30" class="card"/>
+    <circle cx="1215" cy="292" r="28" fill="#e9f0e4"/><path d="M1200 293h30M1215 278v30" stroke="#58704e" stroke-width="6" stroke-linecap="round"/>
+    <text x="1265" y="296" class="label">Gemini</text><text x="1265" y="331" class="small">reads and explains menus</text>
+    <rect x="1153" y="456" width="350" height="200" rx="30" class="card"/>
+    <circle cx="1215" cy="520" r="28" fill="#f7dfca"/><path d="M1199 531l15-22 12 16 8-9 13 15z" fill="#b96c2f"/>
+    <text x="1265" y="524" class="label">Wikimedia</text><text x="1265" y="559" class="small">dish photos</text>
+    <rect x="1153" y="684" width="350" height="130" rx="30" class="card"/>
+    <circle cx="1215" cy="747" r="28" fill="#e9f0e4"/><text x="1215" y="756" text-anchor="middle" class="label">€</text>
+    <text x="1265" y="752" class="label">Exchange rates</text><text x="1265" y="782" class="small">daily currency conversion</text>
+  </g>
+
+  <path d="M398 781 H631" stroke="#c57233" stroke-width="6" fill="none" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)"><rect x="104" y="756" width="272" height="105" rx="25" fill="#fff7ec" stroke="#e8c69f" stroke-width="2"/><text x="240" y="801" text-anchor="middle" class="label">RevenueCat</text><text x="240" y="833" text-anchor="middle" class="small">MenuLango Plus</text></g>
+  <g filter="url(#shadow)"><rect x="653" y="734" width="323" height="128" rx="25" fill="#fffdf8" stroke="#e4dccd" stroke-width="2"/><text x="814" y="781" text-anchor="middle" class="label">App Store + Google Play</text><text x="814" y="816" text-anchor="middle" class="small">subscriptions and restores</text></g>
+</svg>

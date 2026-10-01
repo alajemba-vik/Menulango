@@ -80,11 +80,11 @@ import com.menulango.resources.tip_stop
 import com.menulango.resources.tip_tester_plus
 import com.menulango.resources.tip_tester_plus_here
 import kotlinx.coroutines.delay
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /** Where each tip's target sits on screen, reported by [tipTarget]. */
 @Stable
@@ -354,13 +354,33 @@ internal fun TipNote(
 
 private fun Tip.text(): StringResource =
     when (this) {
-        Tip.TesterSettings -> Res.string.tip_tester_plus
-        Tip.TesterPlus -> Res.string.tip_tester_plus_here
-        Tip.Picks -> Res.string.tip_picks
-        Tip.StartOnCamera -> Res.string.tip_start_on_camera
-        Tip.StartOnCameraHere -> Res.string.tip_start_on_camera_here
-        Tip.HideDish -> Res.string.tip_hide_dish
-        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard, Tip.GuestAdded, Tip.RestoreInfo -> Res.string.tip_picks
+        Tip.TesterSettings -> {
+            Res.string.tip_tester_plus
+        }
+
+        Tip.TesterPlus -> {
+            Res.string.tip_tester_plus_here
+        }
+
+        Tip.Picks -> {
+            Res.string.tip_picks
+        }
+
+        Tip.StartOnCamera -> {
+            Res.string.tip_start_on_camera
+        }
+
+        Tip.StartOnCameraHere -> {
+            Res.string.tip_start_on_camera_here
+        }
+
+        Tip.HideDish -> {
+            Res.string.tip_hide_dish
+        }
+
+        Tip.SwipeToDelete, Tip.Welcome, Tip.NoteHint, Tip.AddPageCard, Tip.GuestAdded, Tip.RestoreInfo -> {
+            Res.string.tip_picks
+        }
     }
 
 private const val TIP_DELAY_MS = 700L

@@ -13,6 +13,7 @@ import com.menulango.data.menu.local.MenuCache
 import com.menulango.data.menu.remote.MenuApi
 import com.menulango.data.menu.remote.MenuResponseParser
 import com.menulango.data.menu.remote.ProxyMenuApi
+import com.menulango.data.order.OrderBook
 import com.menulango.data.photo.DishPhotos
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.QuotaStorage
@@ -25,7 +26,6 @@ import com.menulango.feature.menu.MenuViewModel
 import com.menulango.feature.menu.PageInbox
 import com.menulango.feature.menus.MenusViewModel
 import com.menulango.feature.order.NoteTranslator
-import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.onDeviceNoteTranslator
 import com.menulango.feature.paywall.PaywallViewModel
 import com.menulango.feature.settings.SettingsViewModel
@@ -92,7 +92,20 @@ internal fun sharedModule(config: AppConfig): Module =
         single { MenuMarks(get()) }
         single<NoteTranslator> { onDeviceNoteTranslator() }
         viewModel { params ->
-            MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope), get(), get())
+            MenuViewModel(
+                params.get(),
+                get(),
+                get(),
+                get(),
+                get(),
+                get(),
+                get(),
+                get(),
+                get(AppScope),
+                get(),
+                get(),
+                get(),
+            )
         }
         viewModel { MenusViewModel(get(), ::nowMillis, get()) }
         viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }

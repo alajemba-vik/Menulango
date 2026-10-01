@@ -1,6 +1,8 @@
 package com.menulango.core.ui
 
 import com.menulango.core.design.FoodGroup
+import com.menulango.data.menu.model.emoji
+import com.menulango.data.menu.model.emojiFor
 import com.menulango.testDish
 import kotlin.test.Test
 import kotlin.test.assertEquals

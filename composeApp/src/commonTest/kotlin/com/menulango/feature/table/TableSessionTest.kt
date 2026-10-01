@@ -1,7 +1,7 @@
 package com.menulango.feature.table
 
-import com.menulango.feature.order.OrderBook
-import com.menulango.feature.order.TableOrder
+import com.menulango.data.order.OrderBook
+import com.menulango.data.order.TableOrder
 import com.menulango.testDish
 import com.russhwolf.settings.MapSettings
 import kotlinx.coroutines.CoroutineScope

@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">Las fotos solo se usan para leer la carta. No las guardamos.</string>
     <string name="tab_menus">Cartas</string>
     <string name="tab_scan">Escanear</string>
-    <string name="tab_scan_shutter">Hacer una foto de la carta</string>
     <string name="tab_settings">Ajustes</string>
     <string name="order_add">Añadir a tu selección</string>
     <string name="order_add_another">Añadir otro (%1$d elegido)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">Prueba «pollo menos de 20»</string>
     <string name="search_hint_range">Prueba «10-25»</string>
     <string name="search_menus_hint">Buscar en tus cartas</string>
-    <string name="search_tags">Filtros de búsqueda</string>
     <string name="search_cancel">Cancelar</string>
     <string name="search_open">Buscar</string>
     <string name="search_clear">Borrar búsqueda</string>
     <string name="search_tag_ingredients">Ingredientes</string>
     <string name="search_tag_description">Descripción</string>
-    <string name="search_tag_dishes">Platos</string>
     <string name="search_menus_in_dishes">Buscar también platos</string>
     <string name="search_menus_none">Ninguna carta coincide con esa búsqueda.</string>
     <string name="filter_vegetarian">Vegetariano</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">Desactiva un filtro para ver más de la carta.</string>
     <string name="menu_empty_title">No hemos encontrado platos</string>
     <string name="menu_empty_body">No parece haber una carta en esa foto. Sujeta el teléfono recto encima de la carta, llena el encuadre y busca algo de luz si el local está oscuro.</string>
-    <string name="menu_section_other">En la carta</string>
     <string name="error_offline_title">Sin conexión</string>
     <string name="error_offline_body">Necesitamos internet unos segundos para leer una carta. Inténtalo de nuevo cuando tengas cobertura o wifi.</string>
     <string name="error_rate_title">Un momento</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">Has usado las tres cartas gratis de este mes</string>
     <string name="paywall_reason_choose">Elegir forma parte de Plus</string>
     <string name="paywall_reason_pages">Las cartas más largas forman parte de Plus</string>
-    <string name="paywall_selected">Plan seleccionado</string>
     <string name="scan_failed_nothing_found">No se encontraron platos en ese menú, así que no se guardó nada.</string>
     <string name="scan_failed_background">No se pudo leer ese menú, así que no se guardó nada. Inténtalo de nuevo.</string>
     <string name="dish_open_menu">Abrir este menú</string>

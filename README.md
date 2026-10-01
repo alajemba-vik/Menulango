@@ -269,7 +269,7 @@ composeApp/src/commonMain/kotlin/com/menulango/
   core/design/                every colour, type style, space and motion token
   core/ui/                    paper components (chips, buttons, shimmer, states)
   core/result/                AppResult, AppError
-  data/menu/model/            Menu, Dish — imports nothing
+  data/menu/model/            Menu, Dish and the dish emoji: plain Kotlin, no UI or network
   data/menu/remote/           proxy client, DTOs, stream scanner, validator
   data/menu/local/            SQLDelight cache
   data/backup/                AES-GCM encrypted, user-held backup files
@@ -279,6 +279,7 @@ composeApp/src/commonMain/kotlin/com/menulango/
   data/currency/              exchange rates and currency codes
   data/photo/                 dish photos, with look-ahead
   data/marks/, data/history/  names, hidden dishes, picks journal, eaten history
+  data/order/                 each table's order (who picked what, notes, totals) and its storage
   feature/                    home · capture · menu · menus · dish · choose · order · paywall · settings · share · table
   platform/                   the expect/actual layer: camera, photo picker, backup files, currency, sharing, feedback mail
 proxy/                        Cloudflare Worker (TypeScript)
@@ -286,7 +287,7 @@ iosApp/                       thin SwiftUI shell
 androidApp/                   thin Android shell
 ```
 
-Every screen state is a sealed `Loading / Ready / Empty / Failed`; ViewModels expose exactly one `StateFlow<UiState>`; no composable touches a repository.
+The layers only depend downwards: `feature/` (screens and ViewModels) uses `data/` and `core/`, and `data/` never imports a screen or a UI component. Screens get their state from their ViewModel as one `StateFlow<UiState>`. A few small shared components read a service themselves, rather than through every screen that shows them: dish photos, price conversion and note translation.
 
 ## Accessibility
 

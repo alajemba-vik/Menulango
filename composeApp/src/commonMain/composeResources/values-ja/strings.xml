@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">写真はメニューを読むためだけに使い、保存しません。</string>
     <string name="tab_menus">メニュー</string>
     <string name="tab_scan">スキャン</string>
-    <string name="tab_scan_shutter">メニューを撮影</string>
     <string name="tab_settings">設定</string>
     <string name="order_add">注文リストに追加</string>
     <string name="order_add_another">もう一つ追加（%1$d 品選択中）</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">「チキン 2000以下」と入力してみて</string>
     <string name="search_hint_range">「1000-2500」と入力してみて</string>
     <string name="search_menus_hint">メニューを検索</string>
-    <string name="search_tags">検索対象</string>
     <string name="search_cancel">キャンセル</string>
     <string name="search_open">検索</string>
     <string name="search_clear">検索をクリア</string>
     <string name="search_tag_ingredients">材料</string>
     <string name="search_tag_description">説明</string>
-    <string name="search_tag_dishes">料理</string>
     <string name="search_menus_in_dishes">料理名も検索</string>
     <string name="search_menus_none">検索に一致するメニューはありません。</string>
     <string name="filter_vegetarian">ベジタリアン</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">フィルターを一つオフにすると、もっと表示されます。</string>
     <string name="menu_empty_title">料理が見つかりませんでした</string>
     <string name="menu_empty_body">写真にメニューが写っていないようです。メニューの真上でスマートフォンを構え、枠いっぱいに収めてください。店内が暗い場合は明るい場所で撮影してください。</string>
-    <string name="menu_section_other">メニュー</string>
     <string name="error_offline_title">接続がありません</string>
     <string name="error_offline_body">メニューを読むには数秒間インターネットが必要です。電波か wifi があるときにもう一度お試しください。</string>
     <string name="error_rate_title">少々お待ちください</string>
@@ -356,7 +352,6 @@
     <string name="paywall_reason_scans">今月の無料メニュー 3 つを使い切りました</string>
     <string name="paywall_reason_choose">料理選びは Plus の機能です</string>
     <string name="paywall_reason_pages">長いメニューは Plus の機能です</string>
-    <string name="paywall_selected">選択中のプラン</string>
     <string name="scan_failed_nothing_found">このメニューに料理が見つからなかったため、何も保存されていません。</string>
     <string name="scan_failed_background">このメニューを読み取れなかったため、何も保存されていません。もう一度お試しください。</string>
     <string name="dish_open_menu">このメニューを開く</string>

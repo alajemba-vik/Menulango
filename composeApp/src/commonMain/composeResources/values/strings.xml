@@ -36,7 +36,6 @@
     <string name="welcome_camera_note">Photos are only used to read the menu. We don't keep them.</string>
     <string name="tab_menus">Menus</string>
     <string name="tab_scan">Scan</string>
-    <string name="tab_scan_shutter">Take a photo of the menu</string>
     <string name="tab_settings">Settings</string>
 
     <!-- Table order -->
@@ -216,13 +215,11 @@
     <string name="search_hint_combo">Try "chicken under 20"</string>
     <string name="search_hint_range">Try "10-25"</string>
     <string name="search_menus_hint">Search your menus</string>
-    <string name="search_tags">Search tags</string>
     <string name="search_cancel">Cancel</string>
     <string name="search_open">Search</string>
     <string name="search_clear">Clear search</string>
     <string name="search_tag_ingredients">Ingredients</string>
     <string name="search_tag_description">Description</string>
-    <string name="search_tag_dishes">Dishes</string>
     <string name="search_menus_in_dishes">Search dishes too</string>
     <string name="search_menus_none">No menus match that search.</string>
     <string name="filter_vegetarian">Vegetarian</string>
@@ -244,7 +241,6 @@
     <string name="filter_none_body">Turn off a filter to see more of the menu.</string>
     <string name="menu_empty_title">We couldn't find any dishes</string>
     <string name="menu_empty_body">There doesn't seem to be a menu in that photo. Hold the phone straight above the menu, fill the frame, and find some light if the room is dark.</string>
-    <string name="menu_section_other">On the menu</string>
 
     <!-- Errors -->
     <string name="error_offline_title">No connection</string>
@@ -384,7 +380,6 @@
     <string name="paywall_reason_scans">You've used this month's three free menus</string>
     <string name="paywall_reason_choose">Choosing is part of Plus</string>
     <string name="paywall_reason_pages">Longer menus are part of Plus</string>
-    <string name="paywall_selected">Selected plan</string>
     <string name="scan_failed_nothing_found">No dishes found in that menu, so nothing was saved.</string>
     <string name="scan_failed_background">Couldn't read that menu, so nothing was saved. Try again.</string>
     <string name="dish_open_menu">Open this menu</string>

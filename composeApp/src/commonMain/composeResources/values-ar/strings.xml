@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">تُستخدم الصور لقراءة القائمة فقط. لا نحتفظ بها.</string>
     <string name="tab_menus">القوائم</string>
     <string name="tab_scan">مسح</string>
-    <string name="tab_scan_shutter">تصوير قائمة الطعام</string>
     <string name="tab_settings">الإعدادات</string>
     <string name="order_add">أضِف إلى اختياراتك</string>
     <string name="order_add_another">أضِف واحدًا آخر (تم اختيار %1$d)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">جرّب «دجاج أقل من 20»</string>
     <string name="search_hint_range">جرّب «10-25»</string>
     <string name="search_menus_hint">ابحث في قوائمك</string>
-    <string name="search_tags">خيارات البحث</string>
     <string name="search_cancel">إلغاء</string>
     <string name="search_open">بحث</string>
     <string name="search_clear">مسح البحث</string>
     <string name="search_tag_ingredients">المكونات</string>
     <string name="search_tag_description">الوصف</string>
-    <string name="search_tag_dishes">الأطباق</string>
     <string name="search_menus_in_dishes">ابحث في الأطباق أيضاً</string>
     <string name="search_menus_none">لا توجد قوائم تطابق هذا البحث.</string>
     <string name="filter_vegetarian">نباتي</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">أوقف أحد الفلاتر لرؤية المزيد من القائمة.</string>
     <string name="menu_empty_title">لم نجد أي أطباق</string>
     <string name="menu_empty_body">لا يبدو أن في الصورة قائمة طعام. أمسك الهاتف مستقيمًا فوق القائمة، واملأ الإطار، وابحث عن بعض الضوء إن كان المكان مظلمًا.</string>
-    <string name="menu_section_other">في القائمة</string>
     <string name="error_offline_title">لا يوجد اتصال</string>
     <string name="error_offline_body">نحتاج إلى الإنترنت لبضع ثوانٍ لقراءة القائمة. حاول مجددًا عندما تتوفر إشارة أو شبكة wifi.</string>
     <string name="error_rate_title">لحظة واحدة</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">لقد استخدمت القوائم المجانية الثلاث لهذا الشهر</string>
     <string name="paywall_reason_choose">الاختيار جزء من Plus</string>
     <string name="paywall_reason_pages">القوائم الأطول جزء من Plus</string>
-    <string name="paywall_selected">الخطة المختارة</string>
     <string name="scan_failed_nothing_found">لم يُعثر على أطباق في تلك القائمة، لذلك لم يُحفظ شيء.</string>
     <string name="scan_failed_background">تعذّرت قراءة تلك القائمة، لذلك لم يُحفظ شيء. حاول مرة أخرى.</string>
     <string name="dish_open_menu">افتح هذه القائمة</string>

@@ -75,6 +75,10 @@ import com.menulango.core.ui.paperShimmer
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.suede
 import com.menulango.data.menu.model.Dish
+import com.menulango.data.order.Diner
+import com.menulango.data.order.NutritionSummary
+import com.menulango.data.order.OrderLine
+import com.menulango.data.order.TableOrder
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips

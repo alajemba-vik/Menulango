@@ -10,3 +10,5 @@ internal actual fun deviceCurrencyCode(): String? =
         // A locale with no region ("en") has no currency.
         null
     }
+
+internal actual fun deviceLanguageTag(): String = Locale.getDefault().toLanguageTag()

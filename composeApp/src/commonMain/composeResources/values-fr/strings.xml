@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">Les photos servent uniquement à lire le menu. Nous ne les gardons pas.</string>
     <string name="tab_menus">Menus</string>
     <string name="tab_scan">Scanner</string>
-    <string name="tab_scan_shutter">Prendre le menu en photo</string>
     <string name="tab_settings">Réglages</string>
     <string name="order_add">Ajouter à vos choix</string>
     <string name="order_add_another">En ajouter un autre (%1$d choisi)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">Essayez « poulet moins de 20 »</string>
     <string name="search_hint_range">Essayez « 10-25 »</string>
     <string name="search_menus_hint">Rechercher dans vos menus</string>
-    <string name="search_tags">Filtres de recherche</string>
     <string name="search_cancel">Annuler</string>
     <string name="search_open">Rechercher</string>
     <string name="search_clear">Effacer la recherche</string>
     <string name="search_tag_ingredients">Ingrédients</string>
     <string name="search_tag_description">Description</string>
-    <string name="search_tag_dishes">Plats</string>
     <string name="search_menus_in_dishes">Chercher aussi les plats</string>
     <string name="search_menus_none">Aucun menu ne correspond à cette recherche.</string>
     <string name="filter_vegetarian">Végétarien</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">Désactivez un filtre pour voir plus du menu.</string>
     <string name="menu_empty_title">Aucun plat trouvé</string>
     <string name="menu_empty_body">Il ne semble pas y avoir de menu sur cette photo. Tenez le téléphone bien au-dessus du menu, remplissez le cadre et trouvez un peu de lumière si la salle est sombre.</string>
-    <string name="menu_section_other">Au menu</string>
     <string name="error_offline_title">Pas de connexion</string>
     <string name="error_offline_body">Nous avons besoin d'internet quelques secondes pour lire un menu. Réessayez quand vous aurez du réseau ou du wifi.</string>
     <string name="error_rate_title">Un instant</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">Vous avez utilisé les trois menus gratuits de ce mois</string>
     <string name="paywall_reason_choose">L'aide au choix fait partie de Plus</string>
     <string name="paywall_reason_pages">Les menus plus longs font partie de Plus</string>
-    <string name="paywall_selected">Offre sélectionnée</string>
     <string name="scan_failed_nothing_found">Aucun plat trouvé dans ce menu, rien n'a été enregistré.</string>
     <string name="scan_failed_background">Impossible de lire ce menu, rien n'a été enregistré. Réessayez.</string>
     <string name="dish_open_menu">Ouvrir ce menu</string>

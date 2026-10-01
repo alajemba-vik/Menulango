@@ -1,4 +1,4 @@
-package com.menulango.feature.order
+package com.menulango.data.order
 
 import com.menulango.data.menu.model.Dish
 import com.russhwolf.settings.Settings

@@ -1,11 +1,7 @@
 package com.menulango.feature.settings
 
-import com.menulango.core.design.Motion
-import com.menulango.feature.menu.FILTER_PILL_HEIGHT
-import com.menulango.core.ui.FIELD_HEIGHT
-import com.menulango.core.ui.flyInFrom
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -51,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -86,13 +83,14 @@ import com.menulango.MenuSource
 import com.menulango.PaywallReason
 import com.menulango.Route
 import com.menulango.core.design.Elevation
+import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
-import androidx.compose.runtime.key
-import com.menulango.core.ui.PillField
+import com.menulango.core.ui.FIELD_HEIGHT
 import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.PillField
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.RestoreButton
@@ -101,6 +99,7 @@ import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.SegmentedControl
 import com.menulango.core.ui.bigTitleFade
 import com.menulango.core.ui.felt
+import com.menulango.core.ui.flyInFrom
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
@@ -113,13 +112,14 @@ import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.di.AppConfig
 import com.menulango.feature.menu.DietaryFilters
+import com.menulango.feature.menu.FILTER_PILL_HEIGHT
 import com.menulango.feature.menu.FilterPill
+import com.menulango.feature.menu.currencyPrefix
 import com.menulango.feature.menu.label
 import com.menulango.feature.paywall.TERMS_URL
 import com.menulango.platform.feedbackMailUri
 import com.menulango.platform.rememberBackupFileTransfer
 import com.menulango.platform.subscriptionSettingsUrl
-import com.menulango.feature.menu.currencyPrefix
 import com.menulango.resources.Res
 import com.menulango.resources.filter_avoid
 import com.menulango.resources.paywall_privacy
@@ -147,12 +147,10 @@ import com.menulango.resources.settings_backup_title
 import com.menulango.resources.settings_backup_unsupported
 import com.menulango.resources.settings_backup_wrong_passphrase
 import com.menulango.resources.settings_calm_motion
-import com.menulango.resources.settings_convert_prices
-import com.menulango.resources.settings_convert_prices_body
-import com.menulango.resources.settings_home_currency
-import com.menulango.resources.settings_rates_credit
 import com.menulango.resources.settings_calm_motion_body
 import com.menulango.resources.settings_cancel
+import com.menulango.resources.settings_convert_prices
+import com.menulango.resources.settings_convert_prices_body
 import com.menulango.resources.settings_data
 import com.menulango.resources.settings_delete_menus
 import com.menulango.resources.settings_delete_menus_confirm_body
@@ -162,11 +160,12 @@ import com.menulango.resources.settings_dietary
 import com.menulango.resources.settings_dietary_body
 import com.menulango.resources.settings_featured
 import com.menulango.resources.settings_featured_body
+import com.menulango.resources.settings_home_currency
 import com.menulango.resources.settings_language
 import com.menulango.resources.settings_language_body
-import com.menulango.resources.settings_menu_languages
 import com.menulango.resources.settings_language_row
 import com.menulango.resources.settings_language_system
+import com.menulango.resources.settings_menu_languages
 import com.menulango.resources.settings_menus
 import com.menulango.resources.settings_nothing_to_restore
 import com.menulango.resources.settings_plus_active_title
@@ -178,15 +177,13 @@ import com.menulango.resources.settings_plus_label
 import com.menulango.resources.settings_plus_label_member
 import com.menulango.resources.settings_plus_manage
 import com.menulango.resources.settings_plus_title
+import com.menulango.resources.settings_rates_credit
 import com.menulango.resources.settings_restore
 import com.menulango.resources.settings_restore_backup
 import com.menulango.resources.settings_restore_backup_title
 import com.menulango.resources.settings_restore_confirm
 import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
-import com.menulango.resources.settings_tips
-import com.menulango.resources.settings_tips_body
-import com.menulango.resources.settings_tips_off_body
 import com.menulango.resources.settings_something_wrong
 import com.menulango.resources.settings_start_camera
 import com.menulango.resources.settings_start_menus
@@ -196,6 +193,9 @@ import com.menulango.resources.settings_tester_plus
 import com.menulango.resources.settings_tester_plus_body
 import com.menulango.resources.settings_tester_plus_paid
 import com.menulango.resources.settings_tester_sample
+import com.menulango.resources.settings_tips
+import com.menulango.resources.settings_tips_body
+import com.menulango.resources.settings_tips_off_body
 import com.menulango.resources.settings_tips_reset
 import com.menulango.resources.settings_title
 import kotlinx.coroutines.launch
@@ -289,7 +289,11 @@ internal fun SettingsScreen(
                         title = stringResource(Res.string.settings_tester_plus),
                         body =
                             stringResource(
-                                if (paid) Res.string.settings_tester_plus_paid else Res.string.settings_tester_plus_body,
+                                if (paid) {
+                                    Res.string.settings_tester_plus_paid
+                                } else {
+                                    Res.string.settings_tester_plus_body
+                                },
                             ),
                         checked = state.isPlus,
                         onChange = viewModel::setTestPlus,
@@ -397,7 +401,10 @@ internal fun SettingsScreen(
                     onChange = viewModel::setConvertPrices,
                 )
                 if (convert) {
-                    SettingsRow(stringResource(Res.string.settings_home_currency), value = home) { choosingCurrency = true }
+                    SettingsRow(stringResource(Res.string.settings_home_currency), value = home) {
+                        choosingCurrency =
+                            true
+                    }
                     Text(
                         stringResource(Res.string.settings_rates_credit),
                         style = Paper.type.caption,
@@ -455,7 +462,10 @@ internal fun SettingsScreen(
                 val tipsComing = tipsOn && tips.notesLeft(seenTips, viewModel.showsTestTools)
                 SwitchRow(
                     title = stringResource(Res.string.settings_tips),
-                    body = stringResource(if (tipsComing) Res.string.settings_tips_body else Res.string.settings_tips_off_body),
+                    body =
+                        stringResource(
+                            if (tipsComing) Res.string.settings_tips_body else Res.string.settings_tips_off_body,
+                        ),
                     checked = tipsComing,
                     onChange = { on ->
                         if (on) {
@@ -788,7 +798,12 @@ private fun CurrencyDialog(
                         Text(code, style = Paper.type.body, color = colors.ink, modifier = Modifier.weight(1f))
                         val symbol = currencyPrefix(code).trim()
                         if (symbol != code) {
-                            Text(symbol, style = Paper.type.body, color = colors.inkMuted, modifier = Modifier.padding(end = Space.sm))
+                            Text(
+                                symbol,
+                                style = Paper.type.body,
+                                color = colors.inkMuted,
+                                modifier = Modifier.padding(end = Space.sm),
+                            )
                         }
                         if (code == selected) {
                             Icon(

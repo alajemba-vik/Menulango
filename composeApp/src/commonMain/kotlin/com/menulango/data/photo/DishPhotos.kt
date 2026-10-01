@@ -1,6 +1,5 @@
 package com.menulango.data.photo
 
-import androidx.compose.runtime.mutableStateMapOf
 import com.menulango.data.AppAttestation
 import com.menulango.data.DeviceIdentity
 import com.menulango.di.AppConfig
@@ -13,6 +12,10 @@ import io.ktor.client.statement.readRawBytes
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -61,10 +64,13 @@ internal class DishPhotos(
     private val known = LinkedHashMap<String, LoadedPhoto?>()
 
     /** Whether each title has a photo, "no" included: asked ahead so a sheet never promises one it lacks. */
-    private val answers = mutableStateMapOf<String, Boolean>()
+    private val photoAnswers = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+
+    /** Each looked-up title (lowercased) mapped to whether it has a photo. Titles not yet asked about are absent. */
+    val answers: StateFlow<Map<String, Boolean>> = photoAnswers.asStateFlow()
 
     /** True or false once the proxy has said whether [wikiTitle] has a photo; null until then. */
-    fun hasPhoto(wikiTitle: String): Boolean? = answers[wikiTitle.lowercase()]
+    fun hasPhoto(wikiTitle: String): Boolean? = photoAnswers.value[wikiTitle.lowercase()]
 
     /**
      * Asks, a few at a time, which of a menu's dishes have a photo: a small answer each, no image
@@ -75,7 +81,7 @@ internal class DishPhotos(
         if (!config.hasProxy) return
         val gate = Semaphore(LOOK_AHEAD_AT_ONCE)
         coroutineScope {
-            val unasked = wikiTitles.map { it.lowercase() }.distinct().filter { it !in answers }
+            val unasked = wikiTitles.map { it.lowercase() }.distinct().filter { it !in photoAnswers.value }
             unasked.take(MAX_LOOK_AHEAD).forEach { title ->
                 launch {
                     gate.withPermit {
@@ -87,7 +93,7 @@ internal class DishPhotos(
                             } catch (e: Exception) {
                                 return@withPermit
                             }
-                        answers[title] = photo != null
+                        photoAnswers.update { it + (title to (photo != null)) }
                     }
                 }
             }
@@ -108,7 +114,7 @@ internal class DishPhotos(
                 // Not remembered: the next opening can try again.
                 return null
             }
-        answers[key] = loaded != null
+        photoAnswers.update { it + (key to (loaded != null)) }
         lock.withLock {
             known[key] = loaded
             while (known.size > MAX_REMEMBERED) known.remove(known.keys.first())

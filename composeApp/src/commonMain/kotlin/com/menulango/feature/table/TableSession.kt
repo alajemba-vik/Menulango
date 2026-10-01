@@ -1,8 +1,8 @@
 package com.menulango.feature.table
 
-import com.menulango.core.ui.emoji
 import com.menulango.data.menu.model.Dish
-import com.menulango.feature.order.OrderBook
+import com.menulango.data.menu.model.emoji
+import com.menulango.data.order.OrderBook
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -215,7 +215,9 @@ internal class TableSession(
         val hosting = state.value as? TableState.Hosting ?: return
         state.value = hosting.copy(requests = hosting.requests - request)
         transport.answer(request.peer, accept)
-        if (accept) state.update<TableState.Hosting> { it.copy(guests = it.guests + TableGuest(request.peer, request.name)) }
+        if (accept) {
+            state.update<TableState.Hosting> { it.copy(guests = it.guests + TableGuest(request.peer, request.name)) }
+        }
     }
 
     fun stop() {
@@ -232,7 +234,8 @@ internal class TableSession(
         when (event) {
             is NearbyEvent.JoinAsked -> {
                 state.update<TableState.Hosting> {
-                    it.copy(requests = it.requests.filterNot { r -> r.peer == event.peer } + JoinRequest(event.peer, event.name))
+                    val others = it.requests.filterNot { r -> r.peer == event.peer }
+                    it.copy(requests = others + JoinRequest(event.peer, event.name))
                 }
             }
 
@@ -302,7 +305,8 @@ internal class TableSession(
         when (event) {
             is NearbyEvent.TableFound -> {
                 state.update<TableState.Looking> {
-                    it.copy(tables = it.tables.filterNot { t -> t.peer == event.peer } + NearbyTable(event.peer, event.name))
+                    val others = it.tables.filterNot { t -> t.peer == event.peer }
+                    it.copy(tables = others + NearbyTable(event.peer, event.name))
                 }
             }
 
@@ -348,22 +352,24 @@ internal class TableSession(
         orderKey: String,
         host: NearbyTable,
     ) {
-        scope.launch {
-            orders
-                .order(orderKey)
-                .map { it.toSyncedLines { dish -> dish.emoji() } }
-                .distinctUntilChanged()
-                .debounce(SEND_SETTLE_MS)
-                .collect { lines ->
-                    val joined = state.value as? TableState.Joined ?: return@collect
-                    if (joined.peer != host.peer) return@collect
-                    transport.send(host.peer, TableMessage.encode(TableMessage.Picks(guestKey, name, lines)))
-                    newlyAdded(lastSent, lines).forEach {
-                        activity.tryEmit(TableActivity.Sent(it.emoji ?: DEFAULT_PLATE, it.readable, joined.hostName))
+        scope
+            .launch {
+                orders
+                    .order(orderKey)
+                    .map { it.toSyncedLines { dish -> dish.emoji() } }
+                    .distinctUntilChanged()
+                    .debounce(SEND_SETTLE_MS)
+                    .collect { lines ->
+                        val joined = state.value as? TableState.Joined ?: return@collect
+                        if (joined.peer != host.peer) return@collect
+                        transport.send(host.peer, TableMessage.encode(TableMessage.Picks(guestKey, name, lines)))
+                        newlyAdded(lastSent, lines).forEach {
+                            val sent = TableActivity.Sent(it.emoji ?: DEFAULT_PLATE, it.readable, joined.hostName)
+                            activity.tryEmit(sent)
+                        }
+                        lastSent = lines
                     }
-                    lastSent = lines
-                }
-        }.also { sending -> job?.invokeOnCompletion { sending.cancel() } }
+            }.also { sending -> job?.invokeOnCompletion { sending.cancel() } }
     }
 
     private inline fun <reified T : TableState> MutableStateFlow<TableState>.update(change: (T) -> T) {

@@ -1,11 +1,11 @@
 package com.menulango.data.share
 
-import com.menulango.core.ui.emoji
 import com.menulango.data.AppAttestation
 import com.menulango.data.DeviceIdentity
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.model.MenuMeta
+import com.menulango.data.menu.model.emoji
 import com.menulango.data.menu.remote.toDocument
 import com.menulango.di.AppConfig
 import io.ktor.client.HttpClient

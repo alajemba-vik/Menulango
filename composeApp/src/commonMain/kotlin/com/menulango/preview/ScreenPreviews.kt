@@ -6,6 +6,7 @@ import com.menulango.PaywallReason
 import com.menulango.core.result.AppError
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
+import com.menulango.data.order.TableOrder
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.ChooseActions
 import com.menulango.feature.choose.ChooseContent
@@ -14,7 +15,6 @@ import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.menu.MenuActions
 import com.menulango.feature.menu.MenuContent
 import com.menulango.feature.menu.MenuUiState
-import com.menulango.feature.order.TableOrder
 import com.menulango.feature.paywall.PaywallActions
 import com.menulango.feature.paywall.PaywallContent
 import com.menulango.feature.paywall.PaywallUiState

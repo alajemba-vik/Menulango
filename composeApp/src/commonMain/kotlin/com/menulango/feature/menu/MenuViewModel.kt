@@ -20,6 +20,9 @@ import com.menulango.data.menu.ScanProgress
 import com.menulango.data.menu.model.Dish
 import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.model.MenuMeta
+import com.menulango.data.order.OrderBook
+import com.menulango.data.order.TableOrder
+import com.menulango.data.photo.DishPhotos
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.ScanQuota
 import com.menulango.data.search.DishSearch
@@ -28,8 +31,6 @@ import com.menulango.data.search.PriceQuery
 import com.menulango.data.search.TextSearch
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.choose.dishHistoryKey
-import com.menulango.feature.order.OrderBook
-import com.menulango.feature.order.TableOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -39,8 +40,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -193,6 +197,7 @@ internal class MenuViewModel(
     private val appScope: CoroutineScope,
     private val activeScans: ActiveScans,
     private val marks: MenuMarks,
+    private val photos: DishPhotos,
 ) : ViewModel() {
     private val reading = MutableStateFlow<Reading>(Reading.Loading)
 
@@ -343,6 +348,16 @@ internal class MenuViewModel(
         }
         viewModelScope.launch {
             inbox.incoming.collect { delivery -> if (delivery.sessionId == sessionId) addPages(delivery.pages) }
+        }
+        // Once the menu is read, find out which dishes have a photo, so a dish's sheet only holds
+        // room for one it will really show.
+        viewModelScope.launch {
+            reading
+                .map { (it as? Reading.Dishes)?.takeIf { dishes -> !dishes.inProgress } }
+                .filterNotNull()
+                .map { finished -> finished.dishes.mapNotNull { it.wikiTitle } }
+                .distinctUntilChanged()
+                .collect { titles -> if (titles.isNotEmpty()) photos.lookAhead(titles) }
         }
     }
 
@@ -788,10 +803,10 @@ private class PageSession {
         finished++
     }
 
-    /** Back in the queue: its old result is forgotten and it counts as unread again. */
     /** Pages read only in part: named on screen and offered for another read, like failed ones. */
     val incomplete: List<Int> get() = partial.indices.filter { partial[it] && it !in unreadable }
 
+    /** Back in the queue: its old result is forgotten and it counts as unread again. */
     fun retry(index: Int) {
         val wasUnreadable = unreadable.remove(index)
         val wasPartial = partial.getOrNull(index) == true
@@ -821,7 +836,9 @@ private class PageSession {
         when {
             // A page read only in part is named, with a retry, beside the failed ones instead.
             skippedDuplicate -> MenuNotice.DuplicatePage
+
             metas.any { it.truncated } -> MenuNotice.Truncated
+
             else -> baseNotice
         }
 }

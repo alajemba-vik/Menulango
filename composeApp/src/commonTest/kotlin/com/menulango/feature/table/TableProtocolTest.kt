@@ -1,6 +1,6 @@
 package com.menulango.feature.table
 
-import com.menulango.feature.order.TableOrder
+import com.menulango.data.order.TableOrder
 import com.menulango.testDish
 import kotlin.test.Test
 import kotlin.test.assertEquals

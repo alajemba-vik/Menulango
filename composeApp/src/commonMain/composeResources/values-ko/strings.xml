@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">사진은 메뉴를 읽는 데만 쓰고, 보관하지 않아요.</string>
     <string name="tab_menus">메뉴</string>
     <string name="tab_scan">스캔</string>
-    <string name="tab_scan_shutter">메뉴 사진 찍기</string>
     <string name="tab_settings">설정</string>
     <string name="order_add">내 선택에 추가</string>
     <string name="order_add_another">하나 더 추가 (%1$d개 선택됨)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">"닭고기 20 이하"를 입력해 보세요</string>
     <string name="search_hint_range">"10-25"를 입력해 보세요</string>
     <string name="search_menus_hint">메뉴 검색</string>
-    <string name="search_tags">검색 범위</string>
     <string name="search_cancel">취소</string>
     <string name="search_open">검색</string>
     <string name="search_clear">검색 지우기</string>
     <string name="search_tag_ingredients">재료</string>
     <string name="search_tag_description">설명</string>
-    <string name="search_tag_dishes">요리</string>
     <string name="search_menus_in_dishes">요리 이름도 검색</string>
     <string name="search_menus_none">검색과 일치하는 메뉴가 없어요.</string>
     <string name="filter_vegetarian">채식</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">필터를 하나 끄면 더 많은 메뉴를 볼 수 있어요.</string>
     <string name="menu_empty_title">요리를 찾지 못했어요</string>
     <string name="menu_empty_body">사진에 메뉴가 없는 것 같아요. 휴대폰을 메뉴 바로 위에서 들고, 화면을 꽉 채우고, 어두우면 밝은 곳을 찾아 주세요.</string>
-    <string name="menu_section_other">메뉴</string>
     <string name="error_offline_title">연결 없음</string>
     <string name="error_offline_body">메뉴를 읽으려면 몇 초간 인터넷이 필요해요. 신호나 wifi가 잡히면 다시 시도해 주세요.</string>
     <string name="error_rate_title">잠시만요</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">이번 달 무료 메뉴 세 개를 모두 사용했어요</string>
     <string name="paywall_reason_choose">메뉴 고르기는 Plus 기능이에요</string>
     <string name="paywall_reason_pages">긴 메뉴는 Plus 기능이에요</string>
-    <string name="paywall_selected">선택한 요금제</string>
     <string name="scan_failed_nothing_found">이 메뉴에서 요리를 찾지 못해 아무것도 저장되지 않았어요.</string>
     <string name="scan_failed_background">이 메뉴를 읽지 못해 아무것도 저장되지 않았어요. 다시 시도해 주세요.</string>
     <string name="dish_open_menu">이 메뉴 열기</string>

@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">Фото нужны только чтобы прочитать меню. Мы их не храним.</string>
     <string name="tab_menus">Меню</string>
     <string name="tab_scan">Скан</string>
-    <string name="tab_scan_shutter">Сфотографировать меню</string>
     <string name="tab_settings">Настройки</string>
     <string name="order_add">Добавить в выбор</string>
     <string name="order_add_another">Добавить ещё (выбрано: %1$d)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">Попробуйте «курица до 20»</string>
     <string name="search_hint_range">Попробуйте «10-25»</string>
     <string name="search_menus_hint">Поиск по вашим меню</string>
-    <string name="search_tags">Где искать</string>
     <string name="search_cancel">Отмена</string>
     <string name="search_open">Поиск</string>
     <string name="search_clear">Очистить поиск</string>
     <string name="search_tag_ingredients">Ингредиенты</string>
     <string name="search_tag_description">Описание</string>
-    <string name="search_tag_dishes">Блюда</string>
     <string name="search_menus_in_dishes">Искать и по блюдам</string>
     <string name="search_menus_none">Нет меню, подходящих под этот запрос.</string>
     <string name="filter_vegetarian">Вегетарианское</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">Отключите фильтр, чтобы увидеть больше.</string>
     <string name="menu_empty_title">Блюда не найдены</string>
     <string name="menu_empty_body">Похоже, на фото нет меню. Держите телефон прямо над меню, заполните кадр и найдите свет, если в зале темно.</string>
-    <string name="menu_section_other">В меню</string>
     <string name="error_offline_title">Нет подключения</string>
     <string name="error_offline_body">Чтобы прочитать меню, нужен интернет на несколько секунд. Попробуйте снова, когда появится связь или wifi.</string>
     <string name="error_rate_title">Минутку</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">Вы использовали три бесплатных меню в этом месяце</string>
     <string name="paywall_reason_choose">Помощь с выбором входит в Plus</string>
     <string name="paywall_reason_pages">Длинные меню входят в Plus</string>
-    <string name="paywall_selected">Выбранный тариф</string>
     <string name="scan_failed_nothing_found">В этом меню не найдено блюд, поэтому ничего не сохранено.</string>
     <string name="scan_failed_background">Не удалось прочитать это меню, поэтому ничего не сохранено. Попробуйте ещё раз.</string>
     <string name="dish_open_menu">Открыть это меню</string>

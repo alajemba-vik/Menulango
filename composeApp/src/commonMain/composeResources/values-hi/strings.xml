@@ -29,7 +29,6 @@
     <string name="welcome_camera_note">फोटो सिर्फ मेन्यू पढ़ने के लिए हैं। हम उन्हें रखते नहीं।</string>
     <string name="tab_menus">मेन्यू</string>
     <string name="tab_scan">स्कैन</string>
-    <string name="tab_scan_shutter">मेन्यू की फ़ोटो लें</string>
     <string name="tab_settings">सेटिंग्स</string>
     <string name="order_add">अपनी पसंद में जोड़ें</string>
     <string name="order_add_another">एक और जोड़ें (%1$d चुने गए)</string>
@@ -198,13 +197,11 @@
     <string name="search_hint_combo">आज़माएँ "चिकन 20 से कम"</string>
     <string name="search_hint_range">आज़माएँ "10-25"</string>
     <string name="search_menus_hint">अपने मेन्यू खोजें</string>
-    <string name="search_tags">कहाँ खोजें</string>
     <string name="search_cancel">रद्द करें</string>
     <string name="search_open">खोजें</string>
     <string name="search_clear">खोज साफ़ करें</string>
     <string name="search_tag_ingredients">सामग्री</string>
     <string name="search_tag_description">विवरण</string>
-    <string name="search_tag_dishes">व्यंजन</string>
     <string name="search_menus_in_dishes">व्यंजनों में भी खोजें</string>
     <string name="search_menus_none">उस खोज से कोई मेन्यू मेल नहीं खाता।</string>
     <string name="filter_vegetarian">शाकाहारी</string>
@@ -226,7 +223,6 @@
     <string name="filter_none_body">मेन्यू का और हिस्सा देखने के लिए कोई फ़िल्टर बंद करें।</string>
     <string name="menu_empty_title">कोई व्यंजन नहीं मिला</string>
     <string name="menu_empty_body">उस फ़ोटो में कोई मेन्यू नहीं लगता। फ़ोन को मेन्यू के ठीक ऊपर सीधा पकड़ें, फ़्रेम भरें, और अगर कमरे में अँधेरा हो तो थोड़ी रोशनी ढूँढें।</string>
-    <string name="menu_section_other">मेन्यू में</string>
     <string name="error_offline_title">कनेक्शन नहीं है</string>
     <string name="error_offline_body">मेन्यू पढ़ने के लिए कुछ सेकंड इंटरनेट चाहिए। सिग्नल या wifi मिलने पर फिर कोशिश करें।</string>
     <string name="error_rate_title">एक पल</string>
@@ -355,7 +351,6 @@
     <string name="paywall_reason_scans">आपने इस महीने के तीनों मुफ़्त मेन्यू इस्तेमाल कर लिए</string>
     <string name="paywall_reason_choose">चुनना Plus का हिस्सा है</string>
     <string name="paywall_reason_pages">लंबे मेन्यू Plus का हिस्सा हैं</string>
-    <string name="paywall_selected">चुना गया प्लान</string>
     <string name="scan_failed_nothing_found">उस मेन्यू में कोई व्यंजन नहीं मिला, इसलिए कुछ सहेजा नहीं गया।</string>
     <string name="scan_failed_background">वह मेन्यू पढ़ा नहीं जा सका, इसलिए कुछ सहेजा नहीं गया। फिर से कोशिश करें।</string>
     <string name="dish_open_menu">यह मेन्यू खोलें</string>

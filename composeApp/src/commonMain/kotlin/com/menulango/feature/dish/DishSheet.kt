@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.menulango.core.design.Elevation
 import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
@@ -444,6 +445,7 @@ private fun Section(
 private fun DishPhotoPanel(wikiTitle: String) {
     val colors = Paper.colors
     val photos = koinInject<DishPhotos>()
+    val answers by photos.answers.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     var loaded by remember(wikiTitle) { mutableStateOf<PhotoState?>(null) }
     LaunchedEffect(wikiTitle) {
@@ -454,7 +456,7 @@ private fun DishPhotoPanel(wikiTitle: String) {
     // Room is held, shimmering, only once the proxy has said this dish has a photo. Otherwise the
     // sheet promises nothing: no photo means no gap, and one that turns up late slides open.
     val phase =
-        loaded ?: if (photos.hasPhoto(wikiTitle) == true) PhotoState.Loading else PhotoState.None
+        loaded ?: if (answers[wikiTitle.lowercase()] == true) PhotoState.Loading else PhotoState.None
     AnimatedContent(
         targetState = phase,
         contentKey = { it::class },

@@ -141,7 +141,6 @@ import com.menulango.core.ui.SectionLabel
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.chips
 import com.menulango.core.ui.dealtIn
-import com.menulango.core.ui.emoji
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.foodGroup
 import com.menulango.core.ui.paper
@@ -150,7 +149,8 @@ import com.menulango.core.ui.rememberLastNonNull
 import com.menulango.core.ui.tipTarget
 import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
-import com.menulango.data.photo.DishPhotos
+import com.menulango.data.menu.model.emoji
+import com.menulango.data.order.TableOrder
 import com.menulango.data.quota.ScanQuota
 import com.menulango.data.search.DishSearchTag
 import com.menulango.data.search.TextSearch
@@ -168,7 +168,6 @@ import com.menulango.feature.order.NoteEditor
 import com.menulango.feature.order.NoteTranslator
 import com.menulango.feature.order.OrderBar
 import com.menulango.feature.order.OrderSheet
-import com.menulango.feature.order.TableOrder
 import com.menulango.feature.order.WaiterView
 import com.menulango.feature.share.ShareMenuSheet
 import com.menulango.feature.table.PICK_TOGETHER_ENABLED
@@ -390,11 +389,6 @@ internal fun MenuContent(
     }
     val ready = state as? MenuUiState.Ready
     val selected = ready?.selectedDish
-    // Once the menu is read, find out which dishes have a photo, so a dish's sheet only holds room
-    // for one it will really show.
-    val photos = koinInject<DishPhotos>()
-    val photoTitles = if (ready != null && !ready.isReading) ready.dishes.mapNotNull { it.wikiTitle } else emptyList()
-    LaunchedEffect(photoTitles) { if (photoTitles.isNotEmpty()) photos.lookAhead(photoTitles) }
     val reduceMotion = Paper.reduceMotion
     val density = LocalDensity.current
     val collapsedPx = WindowInsets.statusBars.getTop(density) + with(density) { COLLAPSED_HEADER.toPx() }

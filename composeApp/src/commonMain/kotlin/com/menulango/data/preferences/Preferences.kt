@@ -1,6 +1,7 @@
 package com.menulango.data.preferences
 
 import com.menulango.platform.deviceCurrencyCode
+import com.menulango.platform.deviceLanguageTag
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -102,8 +103,7 @@ internal class Preferences(
     /** The language new menus are explained in: the app's chosen language, else the phone's. */
     val contentLanguageTag: String
         get() =
-            language.value.languageTag ?: androidx.compose.ui.text.intl.Locale.current
-                .toLanguageTag()
+            language.value.languageTag ?: deviceLanguageTag()
 
     fun setLanguage(value: AppLanguage) {
         settings.putString(KEY_LANGUAGE, value.name)
