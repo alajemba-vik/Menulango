@@ -10,6 +10,7 @@ import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.ActiveScans
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.menu.local.MenuCache
+import com.menulango.data.menu.local.PendingMenuDeletes
 import com.menulango.data.menu.remote.MenuApi
 import com.menulango.data.menu.remote.MenuResponseParser
 import com.menulango.data.menu.remote.ProxyMenuApi
@@ -90,6 +91,7 @@ internal fun sharedModule(config: AppConfig): Module =
         single { OrderBook(get()) }
         single { TableSession(get(), get(), get(), get(AppScope)) }
         single { MenuMarks(get()) }
+        single { PendingMenuDeletes(get()) }
         single<NoteTranslator> { onDeviceNoteTranslator() }
         viewModel { params ->
             MenuViewModel(
@@ -107,7 +109,7 @@ internal fun sharedModule(config: AppConfig): Module =
                 get(),
             )
         }
-        viewModel { MenusViewModel(get(), ::nowMillis, get()) }
+        viewModel { MenusViewModel(get(), ::nowMillis, get(), get(), get(AppScope)) }
         viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }
         viewModel { params -> ChooseViewModel(params.get(), params.get(), params.get(), get(), get(), get()) }
         viewModel { params -> PaywallViewModel(params.get(), get()) }

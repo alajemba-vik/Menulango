@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.menulango.data.marks.MenuMark
 import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.MenuRepository
+import com.menulango.data.menu.local.PendingMenuDeletes
 import com.menulango.data.menu.local.SavedMenuItem
 import com.menulango.data.menu.model.Dish
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,12 +28,17 @@ internal sealed interface MenusUiState {
 
 /**
  * Every menu the diner has read. Deleting hides a menu at once and only removes it for good when
- * the undo window closes, so a slipped swipe costs nothing.
+ * the undo window closes, so a slipped swipe costs nothing. The pending delete is written down
+ * straight away and finished in the app's scope, so closing the app or leaving the screen during
+ * the undo window can never bring a deleted menu back.
  */
 internal class MenusViewModel(
     private val repository: MenuRepository,
     private val nowMillis: () -> Long,
     private val menuMarks: MenuMarks,
+    private val pendingStore: PendingMenuDeletes,
+    /** Outlives this screen, so a delete that has started always finishes. */
+    private val appScope: CoroutineScope,
 ) : ViewModel() {
     private val pendingDeletes = MutableStateFlow<Set<String>>(emptySet())
 
@@ -50,6 +57,8 @@ internal class MenusViewModel(
     val marks: StateFlow<Map<String, MenuMark>> = menuMarks.all
 
     init {
+        // Swiped away last time, but the app closed before the undo message ran out: finish them.
+        pendingStore.all().forEach(::commit)
         viewModelScope.launch {
             repository.saved().collect { menus ->
                 val missing = menus.map { it.cacheKey }.filterNot { it in dishes.value }
@@ -75,16 +84,19 @@ internal class MenusViewModel(
 
     fun hide(cacheKey: String) {
         pendingDeletes.value += cacheKey
+        pendingStore.add(cacheKey)
     }
 
     fun undo(cacheKey: String) {
         pendingDeletes.value -= cacheKey
+        pendingStore.remove(cacheKey)
     }
 
     fun commit(cacheKey: String) {
-        viewModelScope.launch {
+        appScope.launch {
             repository.forget(cacheKey)
             menuMarks.forget(cacheKey)
+            pendingStore.remove(cacheKey)
             pendingDeletes.value -= cacheKey
         }
     }

@@ -115,6 +115,7 @@ import com.menulango.resources.search_menus_in_dishes
 import com.menulango.resources.search_menus_none
 import com.menulango.resources.search_open
 import com.menulango.resources.separator_dot
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
@@ -146,11 +147,17 @@ internal fun MenusScreen(
         viewModel.hide(key)
         scope.launch {
             val result =
-                snackbar.showSnackbar(
-                    message = getString(Res.string.menus_deleted),
-                    actionLabel = getString(Res.string.menus_undo),
-                    duration = SnackbarDuration.Short,
-                )
+                try {
+                    snackbar.showSnackbar(
+                        message = getString(Res.string.menus_deleted),
+                        actionLabel = getString(Res.string.menus_undo),
+                        duration = SnackbarDuration.Short,
+                    )
+                } catch (e: CancellationException) {
+                    // Left the screen before the message ran out: the menu was not undone, so it goes.
+                    viewModel.commit(key)
+                    throw e
+                }
             if (result == SnackbarResult.ActionPerformed) viewModel.undo(key) else viewModel.commit(key)
         }
     }
