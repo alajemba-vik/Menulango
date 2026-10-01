@@ -69,106 +69,150 @@ Kotlin Multiplatform · Compose Multiplatform · Android and iOS from one codeba
 
 ---
 
-## For judges: try it with real scanning
+## Build and run it
 
-MenuLango has been submitted to the App Store and Google Play and is waiting for review.
+These steps take you from an empty folder to MenuLango running on your own phone, reading real
+menus through your own server and your own Gemini key.
 
-**On iPhone,** the quickest way is our TestFlight beta. The link is in our Devpost submission. Install
-the TestFlight app, open the link, and install MenuLango. Buying MenuLango Plus in TestFlight is a
-free test purchase, so every feature can be tried without being charged.
+### What you need
 
-**On Android,** build it from this repository. It takes about 20 minutes, most of it downloads, and
-needs no accounts:
+- **For Android:** [Android Studio](https://developer.android.com/studio) (it includes JDK 17 and
+  the Android SDK; install SDK platform 37 when it asks), and an emulator or an Android phone with
+  USB debugging on.
+- **For iPhone:** a Mac with Xcode 26 and [CocoaPods](https://cocoapods.org), a **physical iPhone**
+  (the on-device translation library does not run on Apple-silicon simulators), and an Apple
+  developer account to sign the app.
+- **To read real menus:** a free [Cloudflare](https://dash.cloudflare.com/sign-up) account,
+  [Node.js](https://nodejs.org) 20 or newer, and a Gemini API key from
+  [Google AI Studio](https://aistudio.google.com/apikey). If people in the EEA, Switzerland or the
+  UK will use your build, Google's terms require a key with billing turned on.
+- **For payments (optional):** a [RevenueCat](https://www.revenuecat.com) account. Without it, the
+  paywall cannot load plans, but everything else works.
 
-1. **Install [Android Studio](https://developer.android.com/studio)** and, when it asks, let it set
-   up an emulator (a virtual phone). A real Android phone with USB debugging on works too.
-2. **Get the code:** `git clone https://github.com/alajemba-vik/Menulango.git`, then in Android
-   Studio choose **File → Open** and pick the `Menulango` folder. Wait for "Gradle sync" to finish.
-3. **Connect it to the server.** Create a file called `secrets.properties` in the `Menulango`
-   folder (next to `README.md`) with these two lines. The server address comes to you privately
-   from the team:
-
-   ```properties
-   PROXY_URL=<the address we sent you>
-   MENULANGO_BETA_TOOLS=true
-   ```
-
-   The second line switches on the tester tools: a **Free Plus** switch in Settings, so every paid
-   feature can be tried without buying anything.
-4. **Run it:** pick **androidApp** and your emulator or phone at the top, and press ▶.
-5. **Scan a menu.** On a phone, point the camera at any menu. On the emulator, drag a photo of a
-   menu from your computer onto the emulator window, then in the app tap the gallery button and
-   choose it from **Downloads**. Menu photos found online work well.
-
-Things worth trying: a menu in a language you can't read (a handwritten demo menu is in
-[`docs/demo/handwritten-menu.html`](docs/demo/handwritten-menu.html)), the halal-friendly and
-vegetarian filters, **Help me choose** on a long menu, adding a second page, price conversion in
-Settings, picking dishes for a friend with a note, then **Show the waiter**, and dark mode.
-
-**iPhone:** building for iOS needs a Mac with Xcode, a physical iPhone (the on-device translation
-library doesn't run on Apple-silicon simulators) and a paid Apple developer account, so Android is
-the practical way to try it from source. The app is the same on both.
-
----
-
-## Build it
-
-> **New to Android or Kotlin Multiplatform?** Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md): installing the tools, running the app, testing and sending changes, step by step.
-
-You need JDK 17+, the Android SDK (platform 37), and — for iOS — Xcode 26 and CocoaPods on a Mac. Nothing else: without any keys the app builds and runs on a bundled sample menu.
+### 1. Get the code
 
 ```bash
-git clone <this repo> && cd Menulango
-./gradlew :androidApp:installDebug      # Android, on a connected device or emulator
-cd iosApp && pod install && open iosApp.xcworkspace
-# iOS: pick a connected iPhone and press Run
+git clone https://github.com/alajemba-vik/Menulango.git
+cd Menulango
 ```
 
-Open the generated `.xcworkspace`, not `iosApp.xcodeproj`. Waiter-note translation uses Google's on-device ML Kit models. Its iOS library supports physical iPhones but excludes Apple-silicon simulators, so test that flow on a device. The rest of the shared app remains covered by the iOS test target.
+With no keys at all, the app already builds and runs: the camera screen offers a **Sample menu**
+(a Greek taverna) that streams in exactly like a real scan. To read your own menus, set up the
+server in step 2.
 
-New users see a **Sample menu** button beside the shutter (a Greek taverna, streamed exactly like a real scan). With `MENULANGO_BETA_TOOLS=true` (or `BETA_TOOLS=YES` on iOS), Settings also gets a **Free Plus** switch that unlocks the paid screens without a purchase.
+### 2. Set up your own server
 
-### Connect it to the real thing
-
-Three values, all optional:
-
-| Value | What it is | Android | iOS |
-|---|---|---|---|
-| `PROXY_URL` | Your deployed Worker, e.g. `https://menulango-proxy.you.workers.dev` | `secrets.properties` | `iosApp/Configuration/Secrets.xcconfig` |
-| `REVENUECAT_ANDROID_KEY` | RevenueCat public SDK key (`goog_…`) | `secrets.properties` | — |
-| `REVENUECAT_IOS_KEY` | RevenueCat public SDK key (`appl_…`) | — | `Secrets.xcconfig` |
-| `REVENUECAT_TEST_KEY` | Optional RevenueCat Test Store key (`test_…`), used only by debug builds | `secrets.properties` | `Secrets.xcconfig` |
-
-```properties
-# secrets.properties (repository root, git-ignored)
-PROXY_URL=https://menulango-proxy.you.workers.dev
-REVENUECAT_ANDROID_KEY=goog_xxxxxxxx
-```
-
-For iOS copy `iosApp/Configuration/Secrets.xcconfig.example` to `Secrets.xcconfig`. xcconfig files treat `//` as a comment, so URLs are written `https:/$()/host` — the example shows how. Environment variables with the same names also work for Android (useful in CI).
-
-### RevenueCat setup
-
-MenuLango has no account or app sign-in. Create the `menulango_pro` entitlement in RevenueCat and
-attach the same store products to it on Android and iOS. Create a current `default` offering with
-the **Weekly**, **Monthly** and **Annual** packages. The app reads only that entitlement and offers
-“Restore purchases” in Settings, so a store purchase can be recovered on a new device without
-creating a MenuLango account.
-
-**No local proxy?** `node proxy/scripts/mock-proxy.mjs` serves the sample menu over the same streaming contract, and can simulate failures (`MOCK_ERROR=RATE_LIMITED`, `MOCK_EMPTY=1`, `MOCK_CUT=1`). On the Android emulator run `adb reverse tcp:8787 tcp:8787` and set `PROXY_URL=http://localhost:8787` (cleartext to localhost is allowed in debug builds only).
-
-### Deploy the proxy
+The app never talks to Gemini directly, so your Gemini key stays on a small Cloudflare Worker that
+you own.
 
 ```bash
 cd proxy
 npm install
 npx wrangler login
+```
+
+Then make two changes to `proxy/wrangler.toml`, because the values in it belong to our Cloudflare
+account:
+
+1. **Create your own storage for shared menus** and copy the `id` it prints into the
+   `[[kv_namespaces]]` section, replacing the existing `id`:
+
+   ```bash
+   npx wrangler kv namespace create SHARES
+   ```
+
+2. **Turn App Check off**, since you will not have our Firebase project. Change
+   `APP_CHECK = "monitor"` to `APP_CHECK = "off"`.
+
+Now add your Gemini key (it is stored as a secret on Cloudflare, never in the code) and deploy:
+
+```bash
 npx wrangler secret put GEMINI_API_KEY
 npx wrangler deploy
+```
+
+`deploy` prints your server's address, such as `https://menulango-proxy.<you>.workers.dev`. Check
+it can read a menu photo:
+
+```bash
 scripts/scan.sh https://menulango-proxy.<you>.workers.dev path/to/menu.jpg en-US
 ```
 
-The Workers free plan (100,000 requests a day) covers this comfortably.
+Cloudflare's free Workers plan (100,000 requests a day) is plenty for testing.
+
+### 3. Point the app at your server
+
+**Android:** create a file called `secrets.properties` in the `Menulango` folder (next to this
+README):
+
+```properties
+PROXY_URL=https://menulango-proxy.<you>.workers.dev
+MENULANGO_BETA_TOOLS=true
+```
+
+`MENULANGO_BETA_TOOLS=true` adds a **Tester** section to Settings with a **Free Plus** switch, so
+every paid feature can be tried without RevenueCat. Leave it out for a normal build.
+
+**iPhone:** copy `iosApp/Configuration/Secrets.xcconfig.example` to
+`iosApp/Configuration/Secrets.xcconfig`, then:
+
+- set `TEAM_ID` to your Apple developer team ID,
+- set `PROXY_URL`, writing `$()` between the two slashes, because xcconfig files treat `//` as the
+  start of a comment: `PROXY_URL=https:/$()/menulango-proxy.<you>.workers.dev`,
+- add `BETA_TOOLS=YES` if you want the Free Plus switch,
+- **delete the lines you are not using** (the RevenueCat and Firebase ones), rather than leaving
+  the example values in.
+
+Both files are git-ignored, so your values never end up in the repository.
+
+### 4. Run it
+
+**Android:** open the `Menulango` folder in Android Studio, wait for Gradle sync to finish, choose
+**androidApp** and your emulator or phone at the top, and press ▶. Or, from the terminal:
+
+```bash
+./gradlew :androidApp:installDebug
+```
+
+**iPhone:**
+
+```bash
+cd iosApp
+pod install
+open iosApp.xcworkspace
+```
+
+Open the `.xcworkspace`, not `iosApp.xcodeproj`. Choose your iPhone at the top and press Run.
+
+**Scanning on the emulator:** drag a photo of a menu from your computer onto the emulator window,
+then in MenuLango tap the gallery button and choose it from **Downloads**. A handwritten demo menu
+is in [`docs/demo/handwritten-menu.html`](docs/demo/handwritten-menu.html): open it in a browser,
+take a screenshot, and use that.
+
+Things worth trying: a menu in a language you cannot read, the halal-friendly and vegetarian
+filters, adding a second page, price conversion (Settings → Show prices in my currency), picking
+dishes for two people with a note, then **Show the waiter**, and **Help me choose**.
+
+### Optional: payments with RevenueCat
+
+MenuLango has no account or sign-in. In RevenueCat, create the `menulango_pro` entitlement and
+attach the same store products to it on Android and iOS. Create a current `default` offering with
+the **Weekly**, **Monthly** and **Annual** packages. Then add your public SDK keys:
+
+| Value | Where | What it is |
+|---|---|---|
+| `REVENUECAT_ANDROID_KEY` | `secrets.properties` | RevenueCat public SDK key (`goog_…`) |
+| `REVENUECAT_IOS_KEY` | `Secrets.xcconfig` | RevenueCat public SDK key (`appl_…`) |
+| `REVENUECAT_TEST_KEY` | either file | Optional RevenueCat Test Store key (`test_…`), used only by debug builds |
+
+Store products and listings are written up step by step in [`docs/SHIPPING.md`](docs/SHIPPING.md).
+
+### Optional: no server at all
+
+`node proxy/scripts/mock-proxy.mjs` serves the sample menu over the same streaming contract, and can
+simulate failures (`MOCK_ERROR=RATE_LIMITED`, `MOCK_EMPTY=1`, `MOCK_CUT=1`). On the Android
+emulator, run `adb reverse tcp:8787 tcp:8787` and set `PROXY_URL=http://localhost:8787` (cleartext
+to localhost is allowed in debug builds only).
 
 ### Checks
 
@@ -179,7 +223,8 @@ The Workers free plan (100,000 requests a day) covers this comfortably.
 cd proxy && npm test && npm run typecheck        # the Worker
 ```
 
-Shipping to the stores — keys, products, signing, listings — is written up step by step in [`docs/SHIPPING.md`](docs/SHIPPING.md).
+New to Android or Kotlin Multiplatform? [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) walks
+through installing the tools, running the app, testing and sending changes, step by step.
 
 ---
 
