@@ -146,6 +146,22 @@ internal object PaperIcons {
             lineTo(12f, 7.7f)
         }
 
+    /** Share, as on every Apple and Android share button: an arrow rising out of a tray. */
+    val Share: ImageVector =
+        lineIcon("share") {
+            moveTo(12f, 3.5f)
+            lineTo(12f, 14.5f)
+            moveTo(8.5f, 7f)
+            lineTo(12f, 3.5f)
+            lineTo(15.5f, 7f)
+            moveTo(9f, 10f)
+            lineTo(6.5f, 10f)
+            lineTo(6.5f, 20.5f)
+            lineTo(17.5f, 20.5f)
+            lineTo(17.5f, 10f)
+            lineTo(15f, 10f)
+        }
+
     val Pencil: ImageVector =
         lineIcon("pencil") {
             moveTo(4f, 20f)

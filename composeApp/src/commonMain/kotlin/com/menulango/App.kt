@@ -111,8 +111,9 @@ private fun AppContent(
 
     val tips = koinInject<Tips>()
     val seenTips by tips.seen.collectAsState()
+    val tipsOn by tips.enabled.collectAsState()
     FeltSurface {
-        TipHost(seen = seenTips, onSeen = tips::markSeen) {
+        TipHost(seen = seenTips, enabled = tipsOn, onSeen = tips::markSeen, onStopTips = { tips.setEnabled(false) }) {
             Box(Modifier.fillMaxSize().background(Paper.colors.paper)) {
                 AnimatedContent(
                     targetState = navigator.current,
@@ -163,7 +164,7 @@ private fun Screen(
             MenuScreen(
                 source = route.source,
                 onBack = navigator::pop,
-                onRetake = navigator::pop,
+                onRetake = navigator::retake,
                 navigate = navigator::push,
             )
         }

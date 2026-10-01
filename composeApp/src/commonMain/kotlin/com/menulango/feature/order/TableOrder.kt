@@ -17,7 +17,24 @@ internal data class Diner(
     val id: Int,
     /** Null for the phone's owner, shown as "You". */
     val name: String?,
+    /**
+     * Set for someone picking on their own phone at a hosted table: that phone's key, so each
+     * update from it replaces their picks rather than adding to them.
+     */
+    val remote: String? = null,
 )
+
+/** One person's estimated totals, and how many of their plates the estimate covers. */
+internal data class NutritionSummary(
+    val kcal: Int,
+    val proteinG: Int,
+    val carbsG: Int,
+    val fatG: Int,
+    val platesCounted: Int,
+    val plates: Int,
+) {
+    val isPartial: Boolean get() = platesCounted < plates
+}
 
 /** @param note how this person wants it — "no cucumber, dressing on the side" — to tell the waiter. */
 @Serializable
@@ -53,6 +70,28 @@ internal data class TableOrder(
     fun quantityOf(dishId: String): Int = lines.filter { it.dish.id == dishId }.sumOf { it.quantity }
 
     fun linesFor(dinerId: Int): List<OrderLine> = lines.filter { it.dinerId == dinerId }
+
+    /**
+     * Roughly what one person's plates add up to, from the dishes that carry an estimate; null
+     * when none of theirs does. Drinks and dishes the model couldn't picture have none, so the
+     * summary says how many plates it counted rather than passing off a partial sum as the whole.
+     */
+    fun nutritionFor(dinerId: Int): NutritionSummary? {
+        val theirs = linesFor(dinerId)
+        val estimated = theirs.filter { it.dish.nutrition != null }
+        if (estimated.isEmpty()) return null
+
+        fun sum(part: (com.menulango.data.menu.model.Nutrition) -> Int) =
+            estimated.sumOf { part(it.dish.nutrition!!) * it.quantity }
+        return NutritionSummary(
+            kcal = sum { it.kcal },
+            proteinG = sum { it.proteinG },
+            carbsG = sum { it.carbsG },
+            fatG = sum { it.fatG },
+            platesCounted = estimated.sumOf { it.quantity },
+            plates = theirs.sumOf { it.quantity },
+        )
+    }
 
     fun add(dish: Dish): TableOrder = change(dish, activeDinerId, +1)
 

@@ -7,6 +7,7 @@ import com.menulango.data.menu.model.Dish
 import com.menulango.data.menu.model.DishFlags
 import com.menulango.data.menu.model.Menu
 import com.menulango.data.menu.model.MenuMeta
+import com.menulango.data.menu.model.Nutrition
 import com.menulango.data.menu.model.Price
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -173,8 +174,27 @@ private fun DishDto.toDomain(): Dish {
         effortLevel = effort,
         confidence = confidence,
         emoji = emoji.asLoneEmoji(),
+        nutrition = nutrition?.toDomain(),
+        wikiTitle = wikiTitle.cleaned()?.take(MAX_WIKI_TITLE),
     )
 }
+
+/** Wikipedia titles are short; a long one is the model rambling, and is dropped by the proxy anyway. */
+private const val MAX_WIKI_TITLE = 120
+
+/** An extra, so an implausible estimate is dropped quietly rather than costing the dish. */
+private fun NutritionDto.toDomain(): Nutrition? {
+    val kcal = kcal ?: return null
+    val protein = proteinG ?: return null
+    val carbs = carbsG ?: return null
+    val fat = fatG ?: return null
+    val plausible =
+        kcal in 1..MAX_KCAL && listOf(protein, carbs, fat).all { it in 0..MAX_GRAMS }
+    return if (plausible) Nutrition(kcal, protein, carbs, fat) else null
+}
+
+private const val MAX_KCAL = 5_000
+private const val MAX_GRAMS = 500
 
 /**
  * The emoji is decoration, so a bad one is dropped quietly rather than costing the dish: it must be
@@ -210,6 +230,9 @@ private fun FlagsDto.toDomain(): DishFlags {
         large = large == true,
         shareable = shareable == true,
         localSpecialty = localSpecialty == true,
+        alcohol = alcohol,
+        shellfish = shellfish,
+        meatWithDairy = meatWithDairy,
     )
 }
 

@@ -5,8 +5,8 @@ TEAM_ID=
 PRODUCT_NAME=MenuLango
 PRODUCT_BUNDLE_IDENTIFIER=com.menulango.app
 
-CURRENT_PROJECT_VERSION=3
-MARKETING_VERSION=1.0.0
+CURRENT_PROJECT_VERSION=7
+MARKETING_VERSION=1.0.2
 
 // The Kotlin framework is static, so the system SQLite that SQLDelight uses is linked here.
 OTHER_LDFLAGS=$(inherited) -lsqlite3
@@ -15,6 +15,13 @@ PROXY_URL=
 // Optional: RevenueCat Test Store key, used only by Debug builds run from Xcode.
 REVENUECAT_TEST_KEY=
 REVENUECAT_IOS_KEY=
+
+// Firebase App Check (App Attest): proves scans come from this app. Empty turns it off.
+// Firebase console → Project settings → Your apps → the iOS app.
+FIREBASE_IOS_APP_ID=
+FIREBASE_API_KEY=
+FIREBASE_PROJECT_ID=
+CODE_SIGN_ENTITLEMENTS=iosApp/iosApp.entitlements
 
 // Test builds for friends only: YES shows the sample menu and the Plus toggle. Keep NO for the App Store.
 BETA_TOOLS=NO

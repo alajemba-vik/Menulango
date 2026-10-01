@@ -76,7 +76,7 @@ internal data class SearchTag(
  * A local search, opened from a search icon, iOS style: the field takes focus at once, Cancel
  * closes and clears it. Names are searched by default; "Search tags" underneath lets the diner
  * reach further (ingredients, descriptions, dishes inside menus). Tags are quiet grey tokens,
- * not the coral filter chips: they change where the search looks, not what the menu shows.
+ * not the aubergine filter chips: they change where the search looks, not what the menu shows.
  */
 @Composable
 internal fun SearchField(
@@ -102,7 +102,7 @@ internal fun SearchField(
                     .heightIn(min = FIELD_HEIGHT)
                     .clip(Shapes.pill)
                     .background(colors.raised)
-                    .border(Space.hairline, colors.rule, Shapes.pill)
+                    .border(Space.hairline, colors.outline, Shapes.pill)
                     .padding(start = Space.md, end = Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -190,7 +190,7 @@ internal fun SearchField(
  * still under reduce motion, and never read aloud in turns: screen readers get the field's label.
  */
 @Composable
-private fun RotatingHint(lines: List<String>) {
+internal fun RotatingHint(lines: List<String>) {
     val colors = Paper.colors
     var index by remember(lines) { mutableStateOf(0) }
     val reduceMotion = Paper.reduceMotion
@@ -223,7 +223,7 @@ private const val HINT_TURN_MS = 3_000L
 
 /** A grey token: "+ Ingredients" to add, "✓ Ingredients" once it is part of the search. */
 @Composable
-private fun SearchTagToken(tag: SearchTag) {
+internal fun SearchTagToken(tag: SearchTag) {
     val colors = Paper.colors
     Text(
         (if (tag.selected) "✓ " else "+ ") + tag.label,
@@ -244,7 +244,7 @@ internal val FIELD_HEIGHT = 44.dp
 
 /**
  * Text entry fields keep Material's rounded rectangle (search stays a capsule, as on iOS and
- * Android), but share the search field's paper fill, hairline border and coral focus, so every
+ * Android), but share the search field's paper fill, hairline border and aubergine focus, so every
  * field in the app reads as one family.
  */
 @Composable
@@ -254,7 +254,7 @@ internal fun paperFieldColors(): TextFieldColors {
         focusedContainerColor = colors.raised,
         unfocusedContainerColor = colors.raised,
         focusedBorderColor = colors.seal,
-        unfocusedBorderColor = colors.rule,
+        unfocusedBorderColor = colors.outline,
         cursorColor = colors.seal,
         focusedTextColor = colors.ink,
         unfocusedTextColor = colors.ink,

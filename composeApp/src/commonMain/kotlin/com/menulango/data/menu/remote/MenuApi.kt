@@ -1,6 +1,7 @@
 package com.menulango.data.menu.remote
 
 import com.menulango.core.result.AppError
+import com.menulango.data.AppAttestation
 import com.menulango.data.DeviceIdentity
 import com.menulango.di.AppConfig
 import io.ktor.client.HttpClient
@@ -17,6 +18,7 @@ import io.ktor.http.isSuccess
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
 import kotlinx.serialization.Serializable
 import kotlin.io.encoding.Base64
@@ -56,6 +58,7 @@ internal class ProxyMenuApi(
     private val config: AppConfig,
     private val device: DeviceIdentity,
     private val parser: MenuResponseParser,
+    private val attestation: AppAttestation,
 ) : MenuApi {
     override fun scan(
         jpeg: ByteArray,
@@ -63,10 +66,13 @@ internal class ProxyMenuApi(
     ): Flow<ByteArray> =
         channelFlow {
             if (!config.hasProxy) throw ScanFailure(AppError.NotConfigured)
+            // Cached by Firebase between scans; a slow first attestation must not hold the scan up.
+            val appCheck = withTimeoutOrNull(APP_CHECK_TIMEOUT_MS) { attestation.token() }
             try {
                 client
                     .preparePost("${config.proxyUrl.trimEnd('/')}/scan") {
                         header(DEVICE_HEADER, device.id)
+                        if (appCheck != null) header(APP_CHECK_HEADER, appCheck)
                         contentType(ContentType.Application.Json)
                         setBody(ScanRequestDto(image = Base64.encode(jpeg), locale = locale))
                     }.execute { response ->
@@ -104,6 +110,8 @@ internal class ProxyMenuApi(
 
     private companion object {
         const val DEVICE_HEADER = "X-Device-Id"
+        const val APP_CHECK_HEADER = "X-Firebase-AppCheck"
+        const val APP_CHECK_TIMEOUT_MS = 5_000L
         const val CHUNK_BYTES = 4 * 1024
     }
 }

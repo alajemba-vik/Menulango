@@ -14,7 +14,6 @@ import android.util.Log
 import android.util.Size
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -27,16 +26,17 @@ import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -56,37 +56,63 @@ internal actual fun CameraViewfinder(
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val camera = remember { menuCamera(context) }
-    val permanentlyDenied = remember { booleanArrayOf(false) }
 
     val permission =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 camera.start(context, lifecycleOwner, controller)
             } else {
-                // After a second refusal Android stops showing the dialog; send them to settings instead.
-                permanentlyDenied[0] =
-                    activity != null &&
-                    !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
                 controller.state = CameraState.PermissionDenied
             }
         }
 
     DisposableEffect(camera) {
         controller.takePhoto = { camera.takeUploadReadyPhoto(context) }
+        // Only on the diner's own tap on Allow. Once Android has stopped showing its dialog (a
+        // second refusal), the only way left is the app's page in system settings.
         controller.requestAccess = {
-            if (permanentlyDenied[0]) context.openAppSettings() else permission.launch(Manifest.permission.CAMERA)
+            val androidWillAsk =
+                activity == null ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+            if (context.hasCameraPermission()) {
+                // Already granted (in Settings, say): nothing to ask, just open the camera.
+                camera.start(context, lifecycleOwner, controller)
+            } else if (context.cameraAsked() && !androidWillAsk) {
+                context.openAppSettings()
+            } else {
+                context.markCameraAsked()
+                permission.launch(Manifest.permission.CAMERA)
+            }
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            camera.start(context, lifecycleOwner, controller)
-        } else {
-            permission.launch(Manifest.permission.CAMERA)
+        when {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED -> {
+                camera.start(context, lifecycleOwner, controller)
+            }
+
+            // Asked before and refused: show the page that explains and offers Allow, rather than
+            // the system prompt again every time the camera screen comes back.
+            context.cameraAsked() -> {
+                controller.state = CameraState.PermissionDenied
+            }
+
+            else -> {
+                context.markCameraAsked()
+                permission.launch(Manifest.permission.CAMERA)
+            }
         }
         onDispose {
             controller.takePhoto = null
             camera.unbind()
         }
+    }
+
+    // Back from Settings with the camera now allowed: start it straight away, no second tap.
+    LifecycleResumeEffect(camera) {
+        if (controller.state == CameraState.PermissionDenied && context.hasCameraPermission()) {
+            camera.start(context, lifecycleOwner, controller)
+        }
+        onPauseOrDispose { }
     }
 
     AndroidView(
@@ -156,30 +182,33 @@ private suspend fun LifecycleCameraController.takeUploadReadyPhoto(context: Cont
 @Composable
 internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     // Android fixes a multi-picker's maximum when it is registered, so the limit is applied here.
     val limit = remember { arrayOfNulls<Int>(1) }
     val deliver: (List<Uri>) -> Unit = { uris ->
         if (uris.isEmpty()) {
             onPicked(PickedPhoto.Cancelled)
         } else {
-            scope.launch {
-                val pages =
+            // Its own scope: the photos keep loading after the camera screen gives way to the menu.
+            val pages =
+                CoroutineScope(Dispatchers.Default).async {
                     uris.take(limit[0] ?: uris.size).mapNotNull { uri ->
                         readPicked(context, uri)?.let { compressForUpload(it) }
                     }
-                onPicked(if (pages.isEmpty()) PickedPhoto.Unreadable else PickedPhoto.Chosen(pages))
-            }
+                }
+            onPicked(PickedPhoto.Chosen(pages))
         }
     }
+    // The system file picker rather than the photo picker: the photo picker shows only the photo
+    // library, so a menu saved to Downloads (or sent in a chat) couldn't be chosen. The file
+    // picker opens on recent images and reaches Downloads, the gallery, Google Photos and Drive.
+    // Neither needs a storage permission.
     val single =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { deliver(listOfNotNull(it)) }
-    val multiple = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { deliver(it) }
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { deliver(listOfNotNull(it)) }
+    val multiple = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { deliver(it) }
     return remember(single, multiple) {
         { maxPhotos ->
             limit[0] = maxPhotos
-            val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            if (maxPhotos == 1) single.launch(request) else multiple.launch(request)
+            if (maxPhotos == 1) single.launch(IMAGE_TYPES) else multiple.launch(IMAGE_TYPES)
         }
     }
 }
@@ -275,3 +304,19 @@ private fun Context.openAppSettings() {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     startActivity(intent)
 }
+
+private fun Context.hasCameraPermission(): Boolean =
+    ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+/** Whether the camera permission has ever been asked for, kept across launches. */
+private fun Context.cameraAsked(): Boolean =
+    getSharedPreferences(CAMERA_PREFS, Context.MODE_PRIVATE).getBoolean(CAMERA_ASKED, false)
+
+private fun Context.markCameraAsked() {
+    getSharedPreferences(CAMERA_PREFS, Context.MODE_PRIVATE).edit().putBoolean(CAMERA_ASKED, true).apply()
+}
+
+private const val CAMERA_PREFS = "menulango.camera"
+private const val CAMERA_ASKED = "permission.asked"
+
+private val IMAGE_TYPES = arrayOf("image/*")

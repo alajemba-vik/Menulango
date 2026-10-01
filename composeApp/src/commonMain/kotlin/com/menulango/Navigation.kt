@@ -10,17 +10,18 @@ import androidx.lifecycle.ViewModelStoreOwner
 import com.menulango.data.menu.model.Dish
 import com.menulango.feature.choose.ChoiceMode
 import com.menulango.feature.home.HomeTab
+import kotlinx.coroutines.Deferred
 
 /** Where a menu screen gets its menu from. */
 internal sealed interface MenuSource {
-    /** Fresh photographs of a menu's pages, upload-ready, in reading order. More can follow. */
+    /**
+     * Fresh photographs of a menu's pages, upload-ready, in reading order. More can follow.
+     * Still loading when the menu opens, so the screen appears the moment they are picked; empty
+     * when none could be read.
+     */
     class Photos(
-        val pages: List<ByteArray>,
-    ) : MenuSource {
-        init {
-            require(pages.isNotEmpty()) { "a menu needs at least one page" }
-        }
-    }
+        val pages: Deferred<List<ByteArray>>,
+    ) : MenuSource
 
     /** A menu already on the device. Free to reopen, offline. */
     data class Saved(
@@ -32,7 +33,7 @@ internal sealed interface MenuSource {
 }
 
 /** Why the paywall opened, so its first line can say so honestly. */
-internal enum class PaywallReason { OutOfScans, Choosing, MorePages, Upgrade }
+internal enum class PaywallReason { OutOfScans, Choosing, MorePages, Share, Upgrade }
 
 /** The screens; adding a page reuses the capture screen. The dish detail is a sheet inside [Menu] and [Choose], not a sixth screen. */
 internal sealed interface Route {
@@ -113,5 +114,12 @@ internal class Navigator {
     fun pop() {
         if (!canGoBack) return
         entries.removeAt(entries.lastIndex).viewModelStore.clear()
+    }
+
+    /** Back to the camera for another photo: nothing was saved, so Menus has nothing new to show. */
+    fun retake() {
+        showMenusOnReturn = false
+        homeTab?.value = HomeTab.Scan
+        pop()
     }
 }

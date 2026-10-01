@@ -17,7 +17,7 @@ import kotlin.math.min
 /**
  * The restaurant's own colour, read from the photo of its menu — usually the ink of its name or
  * headings — made dark enough to carry white text. Null when the menu has no colour worth taking
- * (black print on white card), so the app keeps its own coral.
+ * (black print on white card), so the app keeps its own aubergine.
  */
 internal suspend fun menuColourOf(photo: ByteArray): Color? {
     val key = photo.contentHashCode()

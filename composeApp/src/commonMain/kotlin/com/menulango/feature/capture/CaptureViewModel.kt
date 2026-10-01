@@ -11,6 +11,8 @@ import com.menulango.data.menu.local.CachedMenuSummary
 import com.menulango.data.quota.QuotaState
 import com.menulango.data.quota.ScanQuota
 import com.menulango.di.AppConfig
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -76,7 +78,13 @@ internal class CaptureViewModel(
     fun onPhotosReady(pages: List<ByteArray>?): Route? {
         val readable = pages.orEmpty()
         photoStatus.value = if (readable.isEmpty()) PhotoStatus.Unreadable else PhotoStatus.Idle
-        return if (readable.isEmpty()) null else Route.Menu(MenuSource.Photos(readable))
+        return if (readable.isEmpty()) null else Route.Menu(MenuSource.Photos(CompletableDeferred(readable)))
+    }
+
+    /** Picked photos still loading: the menu opens now and waits for them itself. */
+    fun onPhotosPicked(pages: Deferred<List<ByteArray>>): Route {
+        photoStatus.value = PhotoStatus.Idle
+        return Route.Menu(MenuSource.Photos(pages))
     }
 
     /** How many pages a diner may pick from the gallery for one menu; null for no limit. */

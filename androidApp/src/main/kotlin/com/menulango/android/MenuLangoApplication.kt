@@ -18,6 +18,7 @@ class MenuLangoApplication : Application() {
                     isDebug = BuildConfig.DEBUG,
                     betaTools = BuildConfig.BETA_TOOLS,
                 ),
+            attestation = startAppCheck(this),
         )
     }
 }

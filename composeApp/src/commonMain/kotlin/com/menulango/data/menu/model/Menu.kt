@@ -67,6 +67,10 @@ public data class Dish(
     val confidence: Double,
     /** One emoji picturing the dish, when the model chose one. The app guesses one otherwise. */
     val emoji: String? = null,
+    /** A rough estimate for one plate as usually served; null when the model couldn't picture it. */
+    val nutrition: Nutrition? = null,
+    /** The dish's English Wikipedia article, when the model was sure of one: the key to its photo. */
+    val wikiTitle: String? = null,
 ) {
     /** Below this, the explanation is shown as a best guess rather than a statement. */
     public val isBestGuess: Boolean get() = confidence < CONFIDENT_THRESHOLD
@@ -77,6 +81,15 @@ public data class Dish(
         public val SPICE_RANGE: IntRange = 0..3
     }
 }
+
+/** Per plate, estimated from a typical portion. Never precise: real plates vary. */
+@Serializable
+public data class Nutrition(
+    val kcal: Int,
+    val proteinG: Int,
+    val carbsG: Int,
+    val fatG: Int,
+)
 
 /** A price as the restaurant printed it, plus the number we parsed out of it. */
 @Serializable
@@ -103,6 +116,13 @@ public data class DishFlags(
     val large: Boolean,
     val shareable: Boolean,
     val localSpecialty: Boolean,
+    /**
+     * The three facts behind the halal- and kosher-friendly filters. Null on menus read before
+     * the model was asked, and treated as "can't tell": such dishes are left out of those filters.
+     */
+    val alcohol: Boolean? = null,
+    val shellfish: Boolean? = null,
+    val meatWithDairy: Boolean? = null,
 ) {
     public companion object {
         public val None: DishFlags =

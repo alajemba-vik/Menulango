@@ -12,18 +12,18 @@ import com.revenuecat.purchases.kmp.ktx.awaitOfferings
 import com.revenuecat.purchases.kmp.ktx.awaitPurchase
 import com.revenuecat.purchases.kmp.ktx.awaitRestore
 import com.revenuecat.purchases.kmp.models.CustomerInfo
+import com.revenuecat.purchases.kmp.models.DiscountPaymentMode
 import com.revenuecat.purchases.kmp.models.Package
 import com.revenuecat.purchases.kmp.models.PackageType
-import com.revenuecat.purchases.kmp.models.DiscountPaymentMode
 import com.revenuecat.purchases.kmp.models.Period
 import com.revenuecat.purchases.kmp.models.PeriodUnit
-import com.revenuecat.purchases.kmp.models.freePhase
 import com.revenuecat.purchases.kmp.models.PurchasesError
 import com.revenuecat.purchases.kmp.models.PurchasesErrorCode
 import com.revenuecat.purchases.kmp.models.PurchasesException
 import com.revenuecat.purchases.kmp.models.PurchasesTransactionException
 import com.revenuecat.purchases.kmp.models.StoreProduct
 import com.revenuecat.purchases.kmp.models.StoreTransaction
+import com.revenuecat.purchases.kmp.models.freePhase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -53,6 +53,9 @@ internal class BillingRepository(
     val isPlus: StateFlow<Boolean> =
         combine(entitled, debugUnlock) { real, debug -> real || debug }
             .stateIn(appScope, SharingStarted.Eagerly, false)
+
+    /** True only for a real purchase: the test switch can never turn this off. */
+    val hasPurchase: StateFlow<Boolean> = entitled.asStateFlow()
 
     /** Configures the SDK once, at app start, and learns the current entitlement from its cache. */
     suspend fun start() {
@@ -106,16 +109,23 @@ internal class BillingRepository(
             AppResult.Ok(
                 PlanCatalog(
                     offers = offers,
-                    highlight = offering?.metadata?.get("highlight")?.toString()?.toPlanKind(),
+                    highlight =
+                        offering
+                            ?.metadata
+                            ?.get("highlight")
+                            ?.toString()
+                            ?.toPlanKind(),
                     headlines = offering?.metadata?.get("headline").toHeadlines(),
                 ),
             )
         } catch (e: PurchasesException) {
             when {
                 e.error.code.isOffline() -> AppResult.Err(AppError.Offline)
+
                 // No store on this device (or purchases blocked): retrying can't help, so the
                 // paywall says purchases aren't available here instead of "try again".
                 e.error.code == PurchasesErrorCode.PurchaseNotAllowedError -> AppResult.Ok(PlanCatalog(emptyList()))
+
                 else -> AppResult.Err(AppError.Upstream)
             }
         }
@@ -179,14 +189,21 @@ private fun String.toPlanKind(): PlanKind? =
 /** One headline for everyone, or a map of language tag to headline. Anything else is ignored. */
 private fun Any?.toHeadlines(): Map<String, String> =
     when (this) {
-        is String -> if (isBlank()) emptyMap() else mapOf(PlanCatalog.ANY_LANGUAGE to trim())
-        is Map<*, *> ->
+        is String -> {
+            if (isBlank()) emptyMap() else mapOf(PlanCatalog.ANY_LANGUAGE to trim())
+        }
+
+        is Map<*, *> -> {
             entries
                 .mapNotNull { (key, value) ->
                     val text = (value as? String)?.trim()
                     if (key is String && !text.isNullOrEmpty()) key.lowercase() to text else null
                 }.toMap()
-        else -> emptyMap()
+        }
+
+        else -> {
+            emptyMap()
+        }
     }
 
 private fun PackageType.toPlanKind(): PlanKind? =

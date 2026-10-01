@@ -6,8 +6,8 @@ import com.menulango.PaywallReason
 import com.menulango.core.result.AppError
 import com.menulango.core.result.AppResult
 import com.menulango.data.billing.BillingFailure
-import com.menulango.data.billing.PlanCatalog
 import com.menulango.data.billing.BillingRepository
+import com.menulango.data.billing.PlanCatalog
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
 import com.menulango.data.billing.PurchaseOutcome

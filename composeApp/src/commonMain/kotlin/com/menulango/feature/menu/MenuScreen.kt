@@ -4,26 +4,34 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,6 +112,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.menulango.MenuSource
+import com.menulango.PaywallReason
 import com.menulango.Route
 import com.menulango.core.design.Elevation
 import com.menulango.core.design.Motion
@@ -120,11 +129,11 @@ import com.menulango.core.ui.ErrorMessage
 import com.menulango.core.ui.FlagChip
 import com.menulango.core.ui.FlagChips
 import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.InlineSearchRow
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PaperSnackbar
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
-import com.menulango.core.ui.SearchField
 import com.menulango.core.ui.SearchTag
 import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.SectionHeading
@@ -141,6 +150,7 @@ import com.menulango.core.ui.rememberLastNonNull
 import com.menulango.core.ui.tipTarget
 import com.menulango.core.ui.weave
 import com.menulango.data.menu.model.Dish
+import com.menulango.data.photo.DishPhotos
 import com.menulango.data.quota.ScanQuota
 import com.menulango.data.search.DishSearchTag
 import com.menulango.data.search.TextSearch
@@ -160,6 +170,9 @@ import com.menulango.feature.order.OrderBar
 import com.menulango.feature.order.OrderSheet
 import com.menulango.feature.order.TableOrder
 import com.menulango.feature.order.WaiterView
+import com.menulango.feature.share.ShareMenuSheet
+import com.menulango.feature.table.PICK_TOGETHER_ENABLED
+import com.menulango.feature.table.TableActivityOverlay
 import com.menulango.resources.Res
 import com.menulango.resources.action_back
 import com.menulango.resources.action_retake
@@ -169,6 +182,9 @@ import com.menulango.resources.filter_avoid
 import com.menulango.resources.filter_budget
 import com.menulango.resources.filter_clear
 import com.menulango.resources.filter_count
+import com.menulango.resources.filter_faith_note
+import com.menulango.resources.filter_halal_friendly
+import com.menulango.resources.filter_kosher_friendly
 import com.menulango.resources.filter_local
 import com.menulango.resources.filter_no_offal
 import com.menulango.resources.filter_no_pork
@@ -188,6 +204,7 @@ import com.menulango.resources.menu_context_dishes
 import com.menulango.resources.menu_context_one_dish
 import com.menulango.resources.menu_context_pages
 import com.menulango.resources.menu_dish_hidden
+import com.menulango.resources.menu_duplicate_page
 import com.menulango.resources.menu_empty_body
 import com.menulango.resources.menu_empty_title
 import com.menulango.resources.menu_featured_see_why
@@ -200,6 +217,8 @@ import com.menulango.resources.menu_more_pages_action
 import com.menulango.resources.menu_more_pages_body
 import com.menulango.resources.menu_more_pages_plus
 import com.menulango.resources.menu_more_pages_title
+import com.menulango.resources.menu_page_dishes
+import com.menulango.resources.menu_page_incomplete
 import com.menulango.resources.menu_page_jump
 import com.menulango.resources.menu_page_marker
 import com.menulango.resources.menu_page_position
@@ -233,9 +252,11 @@ import com.menulango.resources.search_open
 import com.menulango.resources.search_tag_description
 import com.menulango.resources.search_tag_ingredients
 import com.menulango.resources.separator_dot
+import com.menulango.resources.share_title
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -258,42 +279,64 @@ internal fun MenuScreen(
     val order by viewModel.order.collectAsStateWithLifecycle()
     val tone by viewModel.headerTone.collectAsStateWithLifecycle()
     val ready = state as? MenuUiState.Ready
+    var sharing by remember { mutableStateOf(false) }
 
     BackGesture(enabled = ready?.selectedDishId != null) { viewModel.dismissDish() }
 
-    MenuContent(
-        state = state,
-        tone = tone,
-        order = order,
-        onOrderChange = viewModel::updateOrder,
-        prefetchRestaurantLanguage = translator::prefetchTargetLanguage,
-        actions =
-            MenuActions(
-                onBack = onBack,
-                onRetake = onRetake,
-                onRetry = viewModel::retry,
-                onSelectDish = viewModel::selectDish,
-                onDismissDish = viewModel::dismissDish,
-                onEaten = viewModel::setEaten,
-                onChoose = { mode -> viewModel.routeForMode(mode)?.let(navigate) },
-                onToggleFilter = viewModel::toggleFilter,
-                onSearch = viewModel::setSearchQuery,
-                onOpenSearch = viewModel::openSearch,
-                onCloseSearch = viewModel::closeSearch,
-                onToggleSearchTag = viewModel::toggleSearchTag,
-                onClearFilters = viewModel::clearFilters,
-                onDropAvoid = viewModel::dropAvoid,
-                onAddPage = {
-                    // Once the diner has added a page either way, the end-of-menu card has done its job.
-                    tips.markSeen(Tip.AddPageCard)
-                    navigate(viewModel.routeForAddPage())
-                },
-                onHideDish = viewModel::hideDish,
-                onUnhideDish = viewModel::unhideDish,
-                onRename = viewModel::rename,
-                onPicked = viewModel::recordPick,
-            ),
-    )
+    Box(Modifier.fillMaxSize()) {
+        MenuContent(
+            state = state,
+            tone = tone,
+            order = order,
+            onOrderChange = viewModel::updateOrder,
+            prefetchRestaurantLanguage = translator::prefetchTargetLanguage,
+            actions =
+                MenuActions(
+                    onBack = onBack,
+                    onRetake = onRetake,
+                    onRetry = viewModel::retry,
+                    onRetryPages = viewModel::retryUnreadablePages,
+                    onShare = { sharing = true },
+                    onSelectDish = viewModel::selectDish,
+                    onDismissDish = viewModel::dismissDish,
+                    onEaten = viewModel::setEaten,
+                    onChoose = { mode -> viewModel.routeForMode(mode)?.let(navigate) },
+                    onToggleFilter = viewModel::toggleFilter,
+                    onSearch = viewModel::setSearchQuery,
+                    onOpenSearch = viewModel::openSearch,
+                    onCloseSearch = viewModel::closeSearch,
+                    onToggleSearchTag = viewModel::toggleSearchTag,
+                    onClearFilters = viewModel::clearFilters,
+                    onDropAvoid = viewModel::dropAvoid,
+                    onAddPage = {
+                        // Once the diner has added a page either way, the end-of-menu card has done its job.
+                        tips.markSeen(Tip.AddPageCard)
+                        navigate(viewModel.routeForAddPage())
+                    },
+                    onHideDish = viewModel::hideDish,
+                    onUnhideDish = viewModel::unhideDish,
+                    onRename = viewModel::rename,
+                    onPicked = viewModel::recordPick,
+                ),
+        )
+        // Picks arriving from, or leaving for, other phones at the table.
+        if (PICK_TOGETHER_ENABLED) TableActivityOverlay()
+    }
+    if (sharing && ready != null) {
+        ShareMenuSheet(
+            title = menuTitle(ready),
+            meta = ready.meta,
+            dishes = ready.dishes,
+            orderKey = viewModel.tableKey,
+            currentDishes = viewModel::currentDishes,
+            isPlus = ready.isPlus,
+            onPlus = {
+                sharing = false
+                navigate(Route.Paywall(PaywallReason.Share))
+            },
+            onDismiss = { sharing = false },
+        )
+    }
 }
 
 internal data class MenuActions(
@@ -308,6 +351,9 @@ internal data class MenuActions(
     val onClearFilters: () -> Unit,
     val onDropAvoid: (String) -> Unit,
     val onAddPage: () -> Unit,
+    val onRetryPages: () -> Unit = {},
+    /** The explained menu as a link and QR code, or picking together with phones nearby. */
+    val onShare: () -> Unit = {},
     val onSearch: (String) -> Unit = {},
     val onToggleSearchTag: (DishSearchTag) -> Unit = {},
     val onOpenSearch: () -> Unit = {},
@@ -323,7 +369,7 @@ internal data class MenuActions(
 }
 
 /**
- * The workhorse screen: a coral felt header with what the menu is, and a cream felt sheet carrying
+ * The workhorse screen: an aubergine felt header with what the menu is, and a cream felt sheet carrying
  * the dishes as cards. The table's order gathers at the bottom, like a basket.
  */
 @Composable
@@ -344,6 +390,11 @@ internal fun MenuContent(
     }
     val ready = state as? MenuUiState.Ready
     val selected = ready?.selectedDish
+    // Once the menu is read, find out which dishes have a photo, so a dish's sheet only holds room
+    // for one it will really show.
+    val photos = koinInject<DishPhotos>()
+    val photoTitles = if (ready != null && !ready.isReading) ready.dishes.mapNotNull { it.wikiTitle } else emptyList()
+    LaunchedEffect(photoTitles) { if (photoTitles.isNotEmpty()) photos.lookAhead(photoTitles) }
     val reduceMotion = Paper.reduceMotion
     val density = LocalDensity.current
     val collapsedPx = WindowInsets.statusBars.getTop(density) + with(density) { COLLAPSED_HEADER.toPx() }
@@ -391,7 +442,7 @@ internal fun MenuContent(
         val sharedScope = if (reduceMotion) null else this
         Box(Modifier.fillMaxSize()) {
             // The screen sits on felt in the restaurant's own colour, read from the photo of its menu
-            // before the menu is shown, or MenuLango coral for menus printed without colour. The
+            // before the menu is shown, or MenuLango aubergine for menus printed without colour. The
             // menu's sheet of cream felt rises over it.
             val colors = Paper.colors
             val (headerFelt, onHeader) =
@@ -423,7 +474,9 @@ internal fun MenuContent(
                     Modifier
                         .fillMaxSize()
                         .nestedScroll(header.connection)
-                        .felt(Paper.colors.paper, Shapes.sheet),
+                        // Smooth, not felt: the menu is all words and colour, so its page stays quiet.
+                        .clip(Shapes.sheet)
+                        .background(Paper.colors.paper),
                 ) {
                     when (state) {
                         is MenuUiState.Loading -> {
@@ -507,6 +560,10 @@ internal fun MenuContent(
                 OrderSheet(
                     order = order,
                     currencyPrefix = currency,
+                    currencyCode =
+                        ready?.meta?.currency ?: order.lines.firstNotNullOfOrNull {
+                            it.dish.price?.currency
+                        },
                     onChange = onOrderChange,
                     onShowWaiter = {
                         showingOrder = false
@@ -566,6 +623,7 @@ internal fun MenuContent(
                         onDismiss = actions.onDismissDish,
                         nameModifier = Modifier.sharedDishName(sharedScope, this, dish.id),
                         order = DishOrderControl(order.quantityOf(dish.id)) { addPick(dish) },
+                        menuCurrency = ready?.meta?.currency,
                         history =
                             if (ready?.isPlus == true) {
                                 DishHistoryControl(
@@ -686,6 +744,11 @@ private fun DishList(
     LaunchedEffect(state.filters) { listState.scrollToItem(0) }
     val pageOf = state.pages?.pageOfDish.orEmpty()
     val pageCount = state.pages?.total ?: 1
+    val dishCountByPage = remember(dishes, pageOf) { dishes.groupingBy { pageOf[it.id] ?: 1 }.eachCount() }
+    // "Page 2 of 3" only once there are two pages of dishes to move between, and only after the
+    // top of the list has scrolled away, so it never sits over the notes and messages up there.
+    val pagesWithDishes = remember(pageOf) { pageOf.values.toSet().size }
+    val scrolledIn by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     // Items before the first dish, so a dish's place in the list can be found without scrolling to it.
     val notice = state.notice?.takeIf { dishes.isNotEmpty() }
     val leadingItems = listOf(hasFilters, dishes.isEmpty() && state.isFiltering, notice != null).count { it }
@@ -738,7 +801,11 @@ private fun DishList(
                 Column(gutter.dealtIn(dish.id, dealt)) {
                     val page = pageOf[dish.id]
                     if (pageCount > 1 && page != null && page != dishes.getOrNull(index - 1)?.let { pageOf[it.id] }) {
-                        PageDivider(page, Modifier.padding(top = if (index == 0) Space.xs else Space.section))
+                        PageDivider(
+                            page,
+                            dishesOnPage = dishCountByPage[page] ?: 0,
+                            modifier = Modifier.padding(top = if (index == 0) Space.xs else Space.section),
+                        )
                     }
                     if (section != null && section != sections.getOrNull(index - 1)) {
                         SectionHeading(section, Modifier.padding(top = Space.section - Space.sm, bottom = Space.sm))
@@ -754,7 +821,6 @@ private fun DishList(
                             },
                     ) {
                         DishRow(
-                            isFirst = index == 0,
                             dish = dish,
                             tint = Paper.colors.food(dish.foodGroup()),
                             selectedDishId = state.selectedDishId,
@@ -816,17 +882,37 @@ private fun DishList(
                     )
                 }
             }
-            state.pages?.unreadable?.takeIf { it.isNotEmpty() }?.let { unreadable ->
+            // Pages that failed, or were read only in part, named by number, with one way to read
+            // them all again.
+            val failedPages = state.pages?.unreadable.orEmpty()
+            val partPages = state.pages?.incomplete.orEmpty()
+            if (failedPages.isNotEmpty() || partPages.isNotEmpty()) {
                 item(key = "unreadable") {
-                    Text(
-                        stringResource(
-                            Res.string.menu_page_unreadable,
-                            unreadable.joinToString(stringResource(Res.string.list_joiner)),
-                        ),
-                        style = Paper.type.caption,
-                        color = Paper.colors.inkMuted,
-                        modifier = gutter.padding(top = Space.gutter),
-                    )
+                    val joiner = stringResource(Res.string.list_joiner)
+                    Column(gutter.padding(top = Space.gutter)) {
+                        if (failedPages.isNotEmpty()) {
+                            Text(
+                                stringResource(Res.string.menu_page_unreadable, failedPages.joinToString(joiner)),
+                                style = Paper.type.caption,
+                                color = Paper.colors.inkMuted,
+                            )
+                        }
+                        if (partPages.isNotEmpty()) {
+                            Text(
+                                stringResource(Res.string.menu_page_incomplete, partPages.joinToString(joiner)),
+                                style = Paper.type.caption,
+                                color = Paper.colors.inkMuted,
+                            )
+                        }
+                        // The same photos read again: often enough when the network or the reader
+                        // stumbled. A blurred page still needs a new photo, through Add page.
+                        QuietButton(
+                            stringResource(Res.string.action_try_again),
+                            actions.onRetryPages,
+                            color = Paper.colors.sealInk,
+                            singleLine = true,
+                        )
+                    }
                 }
             }
             // A one-time pointer to adding pages; after that the header's "Add page" is enough.
@@ -848,7 +934,7 @@ private fun DishList(
                 onDismiss = { showHidden = false },
             )
         }
-        if (pageCount > 1) {
+        if (pageCount > 1 && pagesWithDishes > 1 && scrolledIn) {
             PageChip(
                 listState = listState,
                 pageOf = pageOf,
@@ -871,56 +957,35 @@ private fun FilterBar(
     actions: MenuActions,
 ) {
     val colors = Paper.colors
-    Column(Modifier.fillMaxWidth().felt(colors.paper).padding(top = Space.gutter, bottom = Space.sm)) {
-        // The field grows out from where the Search chip sat, and the filters settle in beneath it.
-        AnimatedVisibility(
-            visible = state.search.open,
-            enter =
-                fadeIn(tween(Motion.QUICK_MS)) +
-                    expandHorizontally(
-                        tween(Motion.SCREEN_MS, easing = Motion.standard),
-                        expandFrom = Alignment.Start,
-                    ) +
-                    expandVertically(tween(Motion.SCREEN_MS, easing = Motion.standard), expandFrom = Alignment.Top),
-            exit =
-                fadeOut(tween(Motion.QUICK_MS)) +
-                    shrinkHorizontally(tween(Motion.QUICK_MS), shrinkTowards = Alignment.Start) +
-                    shrinkVertically(tween(Motion.QUICK_MS), shrinkTowards = Alignment.Top),
+    Column(Modifier.fillMaxWidth().background(colors.paper).padding(top = Space.gutter, bottom = Space.sm)) {
+        // The same search bar as the Menus page: the chip grows into the field, filters move below.
+        InlineSearchRow(
+            open = state.search.open,
+            onOpen = actions.onOpenSearch,
+            onClose = actions.onCloseSearch,
+            query = state.search.query,
+            onQuery = actions.onSearch,
+            label = stringResource(Res.string.search_open),
+            placeholder = stringResource(Res.string.search_menu_hint),
+            hints =
+                listOf(
+                    stringResource(Res.string.search_hint_price),
+                    stringResource(Res.string.search_hint_combo),
+                    stringResource(Res.string.search_hint_range),
+                ),
+            tags =
+                listOf(
+                    SearchTag(
+                        stringResource(Res.string.search_tag_ingredients),
+                        DishSearchTag.Ingredients in state.search.tags,
+                    ) { actions.onToggleSearchTag(DishSearchTag.Ingredients) },
+                    SearchTag(
+                        stringResource(Res.string.search_tag_description),
+                        DishSearchTag.Description in state.search.tags,
+                    ) { actions.onToggleSearchTag(DishSearchTag.Description) },
+                ),
+            gutter = Space.gutter,
         ) {
-            SearchField(
-                hints =
-                    listOf(
-                        stringResource(Res.string.search_hint_price),
-                        stringResource(Res.string.search_hint_combo),
-                        stringResource(Res.string.search_hint_range),
-                    ),
-                query = state.search.query,
-                onQuery = actions.onSearch,
-                placeholder = stringResource(Res.string.search_menu_hint),
-                tags =
-                    listOf(
-                        SearchTag(
-                            stringResource(Res.string.search_tag_ingredients),
-                            DishSearchTag.Ingredients in state.search.tags,
-                        ) { actions.onToggleSearchTag(DishSearchTag.Ingredients) },
-                        SearchTag(
-                            stringResource(Res.string.search_tag_description),
-                            DishSearchTag.Description in state.search.tags,
-                        ) { actions.onToggleSearchTag(DishSearchTag.Description) },
-                    ),
-                onCancel = actions.onCloseSearch,
-                modifier = Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.sm),
-            )
-        }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = Space.gutter),
-            horizontalArrangement = Arrangement.spacedBy(Space.related),
-        ) {
-            // Search leads the row, a chip like the rest, until it is opened into a field above.
-            if (!state.search.open) SearchChip(actions.onOpenSearch)
             // The diner's own words come first: they chose them, so they should see them working.
             state.avoid.sorted().forEach { word ->
                 FilterPill(
@@ -951,30 +1016,22 @@ private fun FilterBar(
                 QuietButton(stringResource(Res.string.filter_clear), actions.onClearFilters, color = colors.sealInk)
             }
         }
+        // Read from ingredients, not a kitchen's certification: say so wherever these filters are on.
+        if (DishFilter.HalalFriendly in state.filters || DishFilter.KosherFriendly in state.filters) {
+            Text(
+                stringResource(Res.string.filter_faith_note),
+                style = Paper.type.caption,
+                color = colors.inkMuted,
+                modifier = Modifier.padding(horizontal = Space.gutter),
+            )
+        }
     }
 }
 
-/** The first chip of the filter row: a magnifier and "Search", opening the search field. */
-@Composable
-private fun SearchChip(onClick: () -> Unit) {
-    val colors = Paper.colors
-    val label = stringResource(Res.string.search_open)
-    Row(
-        Modifier
-            .heightIn(min = 40.dp)
-            .clip(Shapes.chip)
-            .background(colors.raised)
-            .border(Space.hairline, colors.rule, Shapes.chip)
-            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
-            .padding(horizontal = Space.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Icon(PaperIcons.Search, contentDescription = null, tint = colors.inkMuted, modifier = Modifier.size(15.dp))
-        Text(label, style = Paper.type.chip, color = colors.ink)
-    }
-}
-
+/**
+ * A filter chip. Selecting it eases the fill to aubergine while the tick grows in from nothing,
+ * so the change reads as one motion rather than a colour swap; with reduced motion it just fades.
+ */
 @Composable
 internal fun FilterPill(
     text: String,
@@ -983,27 +1040,72 @@ internal fun FilterPill(
     unselected: Color = Paper.colors.raised,
 ) {
     val colors = Paper.colors
+    val calm = Paper.reduceMotion
+    val spec = tween<Color>(Motion.QUICK_MS, easing = Motion.standard)
+    val fill by animateColorAsState(if (selected) colors.seal else unselected, spec, label = "pill-fill")
+    val ink by animateColorAsState(if (selected) colors.onSeal else colors.ink, spec, label = "pill-ink")
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        if (pressed && !calm) PRESSED_SCALE else 1f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "pill-press",
+    )
     Row(
         Modifier
-            .heightIn(min = 40.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }.heightIn(min = FILTER_PILL_HEIGHT)
             .clip(Shapes.chip)
-            .weave(if (selected) colors.seal else unselected)
-            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onClick() })
-            .padding(horizontal = Space.md),
+            .weave(fill)
+            .toggleable(
+                value = selected,
+                interactionSource = interaction,
+                indication = LocalIndication.current,
+                role = Role.Checkbox,
+                onValueChange = { onClick() },
+            ).padding(horizontal = Space.md)
+            .animateContentSize(tween(Motion.QUICK_MS, easing = Motion.standard)),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (selected) {
-            Icon(PaperIcons.Check, contentDescription = null, tint = colors.onSeal, modifier = Modifier.size(16.dp))
+        AnimatedVisibility(
+            visible = selected,
+            enter =
+                if (calm) {
+                    fadeIn(tween(Motion.QUICK_MS))
+                } else {
+                    fadeIn(tween(Motion.QUICK_MS)) + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) +
+                        expandHorizontally(tween(Motion.QUICK_MS, easing = Motion.standard))
+                },
+            exit =
+                if (calm) {
+                    fadeOut(tween(Motion.QUICK_MS))
+                } else {
+                    fadeOut(tween(Motion.QUICK_MS)) + scaleOut(tween(Motion.QUICK_MS)) +
+                        shrinkHorizontally(tween(Motion.QUICK_MS, easing = Motion.standard))
+                },
+        ) {
+            Icon(
+                PaperIcons.Check,
+                contentDescription = null,
+                tint = ink,
+                modifier = Modifier.padding(end = 6.dp).size(16.dp),
+            )
         }
         Text(
             text,
             style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
-            color = if (selected) colors.onSeal else colors.ink,
+            color = ink,
             maxLines = 1,
         )
     }
 }
+
+private const val PRESSED_SCALE = 0.94f
+
+/** Every filter chip's height, which other controls line up with. */
+internal val FILTER_PILL_HEIGHT = 40.dp
 
 @Composable
 private fun DishFilter.label(state: MenuUiState.Ready): String =
@@ -1032,6 +1134,14 @@ internal fun DishFilter.label(): String =
 
         DishFilter.NoPork -> {
             stringResource(Res.string.filter_no_pork)
+        }
+
+        DishFilter.HalalFriendly -> {
+            stringResource(Res.string.filter_halal_friendly)
+        }
+
+        DishFilter.KosherFriendly -> {
+            stringResource(Res.string.filter_kosher_friendly)
         }
 
         DishFilter.NotSpicy -> {
@@ -1065,10 +1175,11 @@ private fun MenuNotice.text(): StringResource =
         MenuNotice.Truncated -> Res.string.menu_truncated
         MenuNotice.KnownMenu -> Res.string.menu_known
         MenuNotice.LastFreeScan -> Res.string.menu_last_free_scan
+        MenuNotice.DuplicatePage -> Res.string.menu_duplicate_page
     }
 
 /**
- * The top of the menu, on coral felt: what the menu is — "Greek taverna" — set large, the plain
+ * The top of the menu, on aubergine felt: what the menu is — "Greek taverna" — set large, the plain
  * facts, a few plates from it, and the diner's own photo pinned beside them as a snapshot.
  */
 @Composable
@@ -1123,6 +1234,17 @@ private fun MenuHeader(
                             .graphicsLayer { alpha = ((header.progress - 0.6f) / 0.4f).coerceIn(0f, 1f) }
                             .clearAndSetSemantics { },
                 )
+                // Once the menu is fully read: sharing half a menu would only confuse the table.
+                if (ready != null && !ready.isReading && ready.dishes.isNotEmpty()) {
+                    IconAction(
+                        icon = PaperIcons.Share,
+                        label = stringResource(Res.string.share_title),
+                        onClick = actions.onShare,
+                        tint = colors.ink,
+                        background = colors.raised.copy(alpha = 0.92f),
+                    )
+                    Spacer(Modifier.width(Space.xs))
+                }
                 if (ready?.pages != null) AddPageButton(actions.onAddPage)
             }
             Spacer(Modifier.height(Space.md))
@@ -1163,15 +1285,6 @@ private fun MenuHeader(
                                 renameLabel,
                                 { renaming = true },
                                 tint = onHeader.copy(alpha = 0.8f),
-                                // The tip only when there was no name to find on the menu.
-                                modifier =
-                                    if (ready?.customName ==
-                                        null
-                                    ) {
-                                        Modifier.tipTarget(Tip.RenameMenu)
-                                    } else {
-                                        Modifier
-                                    },
                             )
                         }
                     }
@@ -1233,6 +1346,7 @@ private fun AddPageButton(onClick: () -> Unit) {
 @Composable
 private fun PageDivider(
     page: Int,
+    dishesOnPage: Int,
     modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
@@ -1255,6 +1369,13 @@ private fun PageDivider(
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx())),
                 )
             },
+        )
+        Spacer(Modifier.width(Space.sm))
+        // How much each page gave, so a page that came back thin stands out.
+        Text(
+            pluralStringResource(Res.plurals.menu_page_dishes, dishesOnPage, dishesOnPage).uppercase(),
+            style = Paper.type.label,
+            color = colors.inkMuted,
         )
     }
 }
@@ -1475,7 +1596,6 @@ private fun MenuFacts(
  */
 @Composable
 private fun DishRow(
-    isFirst: Boolean,
     dish: Dish,
     tint: Color,
     selectedDishId: String?,
@@ -1497,7 +1617,6 @@ private fun DishRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .then(if (isFirst) Modifier.tipTarget(Tip.TapDish) else Modifier)
             .graphicsLayer { this.alpha = alpha }
             .pressable(onClick)
             .clip(Shapes.card)
@@ -1548,8 +1667,7 @@ private fun DishRow(
                 onAdd,
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x = 6.dp, y = 6.dp)
-                    .then(if (isFirst) Modifier.tipTarget(Tip.AddDish) else Modifier),
+                    .offset(x = 6.dp, y = 6.dp),
             )
         }
     }
@@ -1756,7 +1874,6 @@ private fun ChooseButton(
         Modifier
             .navigationBarsPadding()
             .padding(bottom = Space.md)
-            .tipTarget(Tip.HelpChoose)
             .pressable(onClick)
             .shadow(Elevation.floating, Shapes.pill, clip = false)
             .clip(Shapes.pill)
@@ -1766,14 +1883,19 @@ private fun ChooseButton(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.related),
     ) {
-        Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.seal, modifier = Modifier.size(24.dp))
+        Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.sealOnInk, modifier = Modifier.size(24.dp))
         Text(stringResource(Res.string.menu_choose_title), style = Paper.type.button, color = colors.paper)
         if (!isPlus) {
             Text(
                 stringResource(Res.string.menu_plus_badge),
                 style = Paper.type.chip.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.onSeal,
-                modifier = Modifier.background(colors.seal, Shapes.chip).padding(horizontal = 10.dp, vertical = 5.dp),
+                color = colors.onSealOnInk,
+                modifier =
+                    Modifier
+                        .background(
+                            colors.sealOnInk,
+                            Shapes.chip,
+                        ).padding(horizontal = 10.dp, vertical = 5.dp),
             )
         }
     }

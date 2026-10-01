@@ -147,19 +147,21 @@ internal data class PageStatus(
     val waiting: Boolean,
     val unreadable: List<Int>,
     val freePagesLeft: Int?,
+    /** Pages, counting from 1, whose reading stopped part way: some of their dishes are missing. */
+    val incomplete: List<Int> = emptyList(),
     /** The page each dish was first printed on, counting from 1, by dish id. */
     val pageOfDish: Map<String, Int> = emptyMap(),
 )
 
 /**
  * What colour the menu's header is. Worked out before the menu is shown, so the header never
- * flashes coral and then turns the restaurant's colour.
+ * flashes aubergine and then turns the restaurant's colour.
  */
 internal sealed interface HeaderTone {
     /** The photo is still being read for its colour: a neutral header, briefly. */
     data object Pending : HeaderTone
 
-    /** No photo, or a menu printed without colour: MenuLango coral. */
+    /** No photo, or a menu printed without colour: MenuLango aubergine. */
     data object Brand : HeaderTone
 
     data class Menu(
@@ -168,7 +170,7 @@ internal sealed interface HeaderTone {
 }
 
 /** One quiet line of context under the dish list, when something is worth saying. */
-internal enum class MenuNotice { Partial, Truncated, KnownMenu, LastFreeScan }
+internal enum class MenuNotice { Partial, Truncated, KnownMenu, LastFreeScan, DuplicatePage }
 
 /**
  * Reads one menu — from photos of its pages, the device cache or the bundled sample — and records
@@ -193,6 +195,9 @@ internal class MenuViewModel(
     private val marks: MenuMarks,
 ) : ViewModel() {
     private val reading = MutableStateFlow<Reading>(Reading.Loading)
+
+    /** Set when the diner leaves while a photographed menu is still being read. */
+    private var screenGone = false
     private val selectedDishId = MutableStateFlow<String?>(null)
 
     /** Starts from the diner's standing dietary profile; they can still change it for this menu. */
@@ -259,6 +264,12 @@ internal class MenuViewModel(
             MenuSource.Sample -> "sample"
         }
 
+    /** The key of this menu's table order, for picking together with phones nearby. */
+    val tableKey: String get() = orderKey
+
+    /** The menu's dishes as they stand now, for matching picks that arrive from other phones. */
+    fun currentDishes(): List<Dish> = (uiState.value as? MenuUiState.Ready)?.dishes.orEmpty()
+
     val order: StateFlow<TableOrder> =
         orders.order(orderKey).stateIn(viewModelScope, SharingStarted.Eagerly, orders.current(orderKey))
 
@@ -274,7 +285,7 @@ internal class MenuViewModel(
         ) { reading, selected, isPlus, eaten, (filters, avoid, search, mark) ->
             val photo = pages.cover ?: reading.cachedPhoto
             when (reading) {
-                Reading.Loading -> {
+                Reading.Loading, Reading.Preparing -> {
                     MenuUiState.Loading(photo)
                 }
 
@@ -318,7 +329,7 @@ internal class MenuViewModel(
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            MenuUiState.Loading((source as? MenuSource.Photos)?.pages?.first()),
+            MenuUiState.Loading(null),
         )
 
     init {
@@ -337,6 +348,18 @@ internal class MenuViewModel(
 
     fun retry() {
         load()
+    }
+
+    /**
+     * Reads the pages that failed or came back empty once more, from the same photos. Whatever
+     * they yield joins the menu and is saved with it, as if it had worked the first time.
+     */
+    fun retryUnreadablePages() {
+        val again = (pages.unreadable + pages.incomplete).distinct()
+        if (source !is MenuSource.Photos || again.isEmpty()) return
+        again.forEach(pages::retry)
+        reportScan()
+        publishPages()
     }
 
     fun selectDish(dishId: String) {
@@ -421,8 +444,16 @@ internal class MenuViewModel(
                     }
 
                     is MenuSource.Photos -> {
-                        pages.restart(source.pages)
-                        readTone(source.pages.first())
+                        reading.value = Reading.Preparing
+                        val photos = source.pages.await()
+                        if (photos.isEmpty()) {
+                            reading.value = Reading.Failed(AppError.CaptureFailed)
+                            return@launch
+                        }
+                        pages.restart(photos)
+                        // Left while the photos were still loading: read what there is, and stop.
+                        if (screenGone) pages.closeQueue()
+                        readTone(photos.first())
                         try {
                             reportScan()
                             for (index in pages.queue) {
@@ -431,6 +462,17 @@ internal class MenuViewModel(
                             }
                         } finally {
                             activeScans.finish(sessionId)
+                            // The screen explains a failure itself; once it is gone, Home must.
+                            if (screenGone && pages.cacheKey == null) {
+                                val error = pages.firstError
+                                activeScans.fail(
+                                    ActiveScans.Failure(
+                                        sessionId,
+                                        nothingFound =
+                                            error == null || error == AppError.Unreadable,
+                                    ),
+                                )
+                            }
                         }
                     }
 
@@ -446,7 +488,10 @@ internal class MenuViewModel(
      * no new ones can arrive, so the reading ends instead of waiting forever.
      */
     override fun onCleared() {
-        if (source is MenuSource.Photos) pages.closeQueue()
+        if (source is MenuSource.Photos) {
+            screenGone = true
+            pages.closeQueue()
+        }
     }
 
     /** Tells Menus how far this scan has got, so it can show it while the diner is elsewhere. */
@@ -518,6 +563,11 @@ internal class MenuViewModel(
         val menu = Menu(pages.meta(), dishes)
         val firstSave = pages.cacheKey == null
         val saved = repository.remember(menu, pages.cover, replacing = pages.cacheKey)
+        // A menu already on the phone, scanned again: a new visit, before this one's picks are recorded.
+        if (firstSave && saved.isKnownMenu) {
+            marks.newVisit(saved.cacheKey)
+            orders.update("saved:${saved.cacheKey}") { TableOrder() }
+        }
         pages.cacheKey = saved.cacheKey
         menuKey.value = saved.cacheKey
         // Kept with the diner's marks so Menus shows it too; never over a name they chose.
@@ -562,6 +612,7 @@ internal class MenuViewModel(
                                 reading = pages.readingIndex?.plus(1),
                                 waiting = pages.waiting,
                                 unreadable = pages.unreadable.map { it + 1 },
+                                incomplete = pages.incomplete.map { it + 1 },
                                 freePagesLeft = (ScanQuota.FREE_PAGES_PER_MENU - pages.count).coerceAtLeast(0),
                                 pageOfDish = PageMerger.pageOfDish(pages.dishes),
                             ),
@@ -617,6 +668,9 @@ internal class MenuViewModel(
 
         data object Loading : Reading
 
+        /** Picked photos still loading from the library, before any reading starts. */
+        data object Preparing : Reading
+
         data class Failed(
             val error: AppError,
         ) : Reading
@@ -662,6 +716,10 @@ private class PageSession {
     var cacheKey: String? = null
     var baseNotice: MenuNotice? = null
 
+    /** The latest photo offered was one already here, so it was left out. Cleared by a new page. */
+    var skippedDuplicate = false
+        private set
+
     val count: Int get() = photos.size
 
     /** The first page, shown behind the header and kept with the saved menu. */
@@ -688,10 +746,20 @@ private class PageSession {
         firstError = null
         cacheKey = null
         baseNotice = null
+        skippedDuplicate = false
         first.forEach(::add)
     }
 
+    /**
+     * Queues [photo] as the next page, unless the very same image is already a page: reading it
+     * again would cost a scan and add nothing, since every dish on it is already merged in.
+     */
     fun add(photo: ByteArray) {
+        if (photos.any { it.contentEquals(photo) }) {
+            skippedDuplicate = true
+            return
+        }
+        skippedDuplicate = false
         photos += photo
         metas += MenuMeta.Unknown
         partial += false
@@ -720,6 +788,20 @@ private class PageSession {
         finished++
     }
 
+    /** Back in the queue: its old result is forgotten and it counts as unread again. */
+    /** Pages read only in part: named on screen and offered for another read, like failed ones. */
+    val incomplete: List<Int> get() = partial.indices.filter { partial[it] && it !in unreadable }
+
+    fun retry(index: Int) {
+        val wasUnreadable = unreadable.remove(index)
+        val wasPartial = partial.getOrNull(index) == true
+        if (!wasUnreadable && !wasPartial) return
+        partial[index] = false
+        dishes[index] = emptyList()
+        finished--
+        queue.trySend(index)
+    }
+
     fun fail(
         index: Int,
         error: AppError,
@@ -737,7 +819,8 @@ private class PageSession {
 
     fun notice(): MenuNotice? =
         when {
-            partial.any { it } -> MenuNotice.Partial
+            // A page read only in part is named, with a retry, beside the failed ones instead.
+            skippedDuplicate -> MenuNotice.DuplicatePage
             metas.any { it.truncated } -> MenuNotice.Truncated
             else -> baseNotice
         }

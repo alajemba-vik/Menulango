@@ -10,7 +10,9 @@
       "price": { "amount": 5.0, "currency": "EUR", "asPrinted": "5,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
-      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97,
+      "wikiTitle": "Tzatziki",
+      "nutrition": { "kcal": 180, "proteinG": 6, "carbsG": 8, "fatG": 14 }
     },
     {
       "id": "melitzanosalata", "originalName": "Μελιτζανοσαλάτα", "readableName": "Smoky aubergine dip", "section": "Cold starters",
@@ -21,7 +23,9 @@
       "price": { "amount": 5.5, "currency": "EUR", "asPrinted": "5,50€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": [], "mayContain": ["sesame"], "note": "Some tavernas stir in tahini or yoghurt." },
-      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.94
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.94,
+      "wikiTitle": "Melitzanosalata",
+      "nutrition": { "kcal": 220, "proteinG": 3, "carbsG": 14, "fatG": 17 }
     },
     {
       "id": "horiatiki", "originalName": "Χωριάτικη σαλάτα", "readableName": "Greek village salad", "section": "Salads",
@@ -32,7 +36,9 @@
       "price": { "amount": 8.5, "currency": "EUR", "asPrinted": "8,50€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": true, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
-      "adventureLevel": 1, "effortLevel": 1, "confidence": 0.98
+      "adventureLevel": 1, "effortLevel": 1, "confidence": 0.98,
+      "wikiTitle": "Greek salad",
+      "nutrition": { "kcal": 350, "proteinG": 9, "carbsG": 14, "fatG": 29 }
     },
     {
       "id": "saganaki", "originalName": "Σαγανάκι", "readableName": "Fried cheese", "section": "Hot starters",
@@ -43,7 +49,9 @@
       "price": { "amount": 7.0, "currency": "EUR", "asPrinted": "7,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": ["milk", "gluten"], "mayContain": [], "note": null },
-      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.95
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.95,
+      "wikiTitle": "Saganaki",
+      "nutrition": { "kcal": 420, "proteinG": 22, "carbsG": 10, "fatG": 33 }
     },
     {
       "id": "gavros-tiganitos", "originalName": "Γαύρος τηγανητός", "readableName": "Fried anchovies", "section": "Hot starters",
@@ -54,7 +62,8 @@
       "price": { "amount": 9.0, "currency": "EUR", "asPrinted": "9,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": false, "shareable": true, "localSpecialty": true },
       "allergens": { "likelyContains": ["fish", "gluten"], "mayContain": [], "note": "Fried in shared oil." },
-      "adventureLevel": 3, "effortLevel": 2, "confidence": 0.93
+      "adventureLevel": 3, "effortLevel": 2, "confidence": 0.93,
+      "nutrition": { "kcal": 450, "proteinG": 28, "carbsG": 18, "fatG": 29 }
     },
     {
       "id": "htapodi-sti-shara", "originalName": "Χταπόδι στη σχάρα", "readableName": "Grilled octopus", "section": "From the grill",
@@ -65,7 +74,9 @@
       "price": { "amount": 16.0, "currency": "EUR", "asPrinted": "16,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": false, "shareable": true, "localSpecialty": true },
       "allergens": { "likelyContains": ["molluscs"], "mayContain": ["sulphites"], "note": null },
-      "adventureLevel": 3, "effortLevel": 4, "confidence": 0.95
+      "adventureLevel": 3, "effortLevel": 4, "confidence": 0.95,
+      "wikiTitle": "Octopus as food",
+      "nutrition": { "kcal": 380, "proteinG": 45, "carbsG": 6, "fatG": 19 }
     },
     {
       "id": "souvlaki-hoirino", "originalName": "Σουβλάκι χοιρινό", "readableName": "Pork souvlaki", "section": "From the grill",
@@ -76,7 +87,9 @@
       "price": { "amount": 11.5, "currency": "EUR", "asPrinted": "11,50€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": true, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": false },
       "allergens": { "likelyContains": ["gluten", "milk"], "mayContain": [], "note": "Milk and gluten come from the pitta and tzatziki on the side." },
-      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.97,
+      "wikiTitle": "Souvlaki",
+      "nutrition": { "kcal": 560, "proteinG": 38, "carbsG": 42, "fatG": 26 }
     },
     {
       "id": "kokoretsi", "originalName": "Κοκορέτσι", "readableName": "Kokoretsi", "section": "From the grill",
@@ -87,7 +100,9 @@
       "price": { "amount": 12.5, "currency": "EUR", "asPrinted": "12,50€" },
       "flags": { "spicy": 0, "raw": false, "offal": true, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": true, "localSpecialty": true },
       "allergens": { "likelyContains": [], "mayContain": ["sulphites"], "note": "Usually grilled beside other meats." },
-      "adventureLevel": 5, "effortLevel": 5, "confidence": 0.9
+      "adventureLevel": 5, "effortLevel": 5, "confidence": 0.9,
+      "wikiTitle": "Kokoretsi",
+      "nutrition": { "kcal": 620, "proteinG": 40, "carbsG": 4, "fatG": 49 }
     },
     {
       "id": "paidakia", "originalName": "Παϊδάκια", "readableName": "Lamb chops", "section": "From the grill",
@@ -98,7 +113,8 @@
       "price": { "amount": 17.0, "currency": "EUR", "asPrinted": "17,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": [], "mayContain": [], "note": null },
-      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.96
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.96,
+      "nutrition": { "kcal": 720, "proteinG": 48, "carbsG": 2, "fatG": 57 }
     },
     {
       "id": "moussakas", "originalName": "Μουσακάς", "readableName": "Moussaka", "section": "From the oven",
@@ -109,7 +125,9 @@
       "price": { "amount": 13.0, "currency": "EUR", "asPrinted": "13,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": false },
       "allergens": { "likelyContains": ["milk", "gluten", "eggs"], "mayContain": ["sulphites"], "note": null },
-      "adventureLevel": 1, "effortLevel": 5, "confidence": 0.97
+      "adventureLevel": 1, "effortLevel": 5, "confidence": 0.97,
+      "wikiTitle": "Moussaka",
+      "nutrition": { "kcal": 650, "proteinG": 28, "carbsG": 34, "fatG": 44 }
     },
     {
       "id": "kleftiko", "originalName": "Κλέφτικο", "readableName": "Kleftiko", "section": "From the oven",
@@ -120,7 +138,9 @@
       "price": { "amount": 18.0, "currency": "EUR", "asPrinted": "18,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": true },
       "allergens": { "likelyContains": ["milk"], "mayContain": [], "note": null },
-      "adventureLevel": 2, "effortLevel": 5, "confidence": 0.92
+      "adventureLevel": 2, "effortLevel": 5, "confidence": 0.92,
+      "wikiTitle": "Kleftiko",
+      "nutrition": { "kcal": 780, "proteinG": 52, "carbsG": 30, "fatG": 49 }
     },
     {
       "id": "gemista", "originalName": "Γεμιστά", "readableName": "Stuffed tomatoes and peppers", "section": "From the oven",
@@ -131,7 +151,9 @@
       "price": { "amount": 10.0, "currency": "EUR", "asPrinted": "10,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": false, "localSpecialty": false },
       "allergens": { "likelyContains": [], "mayContain": [], "note": null },
-      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95
+      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95,
+      "wikiTitle": "Gemista",
+      "nutrition": { "kcal": 420, "proteinG": 8, "carbsG": 62, "fatG": 15 }
     },
     {
       "id": "gida-vrasti", "originalName": "Γίδα βραστή", "readableName": "Boiled goat", "section": "From the pot",
@@ -142,7 +164,8 @@
       "price": { "amount": 14.0, "currency": "EUR", "asPrinted": "14,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": false, "vegan": false, "large": true, "shareable": false, "localSpecialty": true },
       "allergens": { "likelyContains": ["eggs", "celery"], "mayContain": [], "note": null },
-      "adventureLevel": 4, "effortLevel": 4, "confidence": 0.86
+      "adventureLevel": 4, "effortLevel": 4, "confidence": 0.86,
+      "nutrition": { "kcal": 540, "proteinG": 55, "carbsG": 8, "fatG": 31 }
     },
     {
       "id": "sfouggato", "originalName": "Σφουγγάτο", "readableName": "Sfougato", "section": "From the pot",
@@ -153,7 +176,8 @@
       "price": { "amount": 8.0, "currency": "EUR", "asPrinted": "8,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": false, "localSpecialty": true },
       "allergens": { "likelyContains": ["eggs", "milk"], "mayContain": [], "note": null },
-      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.45
+      "adventureLevel": 2, "effortLevel": 2, "confidence": 0.45,
+      "nutrition": { "kcal": 380, "proteinG": 18, "carbsG": 16, "fatG": 27 }
     },
     {
       "id": "galaktoboureko", "originalName": "Γαλακτομπούρεκο", "readableName": "Galaktoboureko", "section": "Sweets",
@@ -164,7 +188,9 @@
       "price": { "amount": 6.0, "currency": "EUR", "asPrinted": "6,00€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": false, "large": false, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": ["milk", "gluten", "eggs"], "mayContain": ["nuts"], "note": null },
-      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95
+      "adventureLevel": 1, "effortLevel": 4, "confidence": 0.95,
+      "wikiTitle": "Galaktoboureko",
+      "nutrition": { "kcal": 480, "proteinG": 9, "carbsG": 58, "fatG": 23 }
     },
     {
       "id": "loukoumades", "originalName": "Λουκουμάδες", "readableName": "Honey doughnuts", "section": "Sweets",
@@ -175,7 +201,9 @@
       "price": { "amount": 5.5, "currency": "EUR", "asPrinted": "5,50€" },
       "flags": { "spicy": 0, "raw": false, "offal": false, "pork": false, "vegetarian": true, "vegan": true, "large": false, "shareable": true, "localSpecialty": false },
       "allergens": { "likelyContains": ["gluten", "nuts"], "mayContain": [], "note": null },
-      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.96
+      "adventureLevel": 1, "effortLevel": 2, "confidence": 0.96,
+      "wikiTitle": "Lokma",
+      "nutrition": { "kcal": 520, "proteinG": 7, "carbsG": 74, "fatG": 22 }
     }
   ]
 }

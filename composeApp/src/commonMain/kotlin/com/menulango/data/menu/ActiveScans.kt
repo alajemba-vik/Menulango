@@ -18,8 +18,20 @@ internal class ActiveScans {
         val pagesTotal: Int,
     )
 
+    /** A scan that ended with nothing saved after the diner had left its screen. */
+    data class Failure(
+        val id: Long,
+        /** True when the photos were read but held no dishes; false when reading itself failed. */
+        val nothingFound: Boolean,
+    )
+
     private val state = MutableStateFlow<Map<Long, Scan>>(emptyMap())
     val scans: StateFlow<Map<Long, Scan>> = state.asStateFlow()
+
+    private val unseen = MutableStateFlow<List<Failure>>(emptyList())
+
+    /** Kept until told, so the diner hears about it even if no screen was listening at the time. */
+    val failures: StateFlow<List<Failure>> = unseen.asStateFlow()
 
     fun update(scan: Scan) {
         state.value = state.value + (scan.id to scan)
@@ -27,5 +39,13 @@ internal class ActiveScans {
 
     fun finish(id: Long) {
         state.value = state.value - id
+    }
+
+    fun fail(failure: Failure) {
+        unseen.value += failure
+    }
+
+    fun told(id: Long) {
+        unseen.value = unseen.value.filterNot { it.id == id }
     }
 }

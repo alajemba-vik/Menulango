@@ -66,6 +66,8 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
+            // QR codes for sharing a menu with the table.
+            implementation(libs.qrose)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
@@ -93,6 +95,8 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.koin.android)
             implementation(libs.kotlinx.coroutines.play.services)
+            // Phone-to-phone table sharing (Bluetooth and Wi-Fi, no internet needed).
+            implementation(libs.play.services.nearby)
             implementation(libs.kotlinx.mlkit.translate)
         }
         iosMain.dependencies {

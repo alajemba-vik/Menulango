@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * The little notes that point at what makes MenuLango different, in the order a first evening
  * meets them. Each is shown once, where it is useful, never as a carousel up front.
+ *
+ * Only for what the screen can't say for itself: a hidden gesture, a purpose that isn't obvious,
+ * a habit worth suggesting. A labelled button, a "+" or a pencil gets no note.
  */
 internal enum class Tip(
     /** False for moments that are not a note: the welcome page, the swipe hint. */
@@ -16,14 +19,7 @@ internal enum class Tip(
     /** Test builds only: points testers at the free Plus switch. */
     TesterSettings,
     TesterPlus,
-    Scan,
-    TapDish,
-    AddDish,
-    HelpChoose,
     Picks,
-
-    /** On a menu, once the diner has seen the basics: the pencil beside the title renames it. */
-    RenameMenu,
 
     /** Shown only after scrolling back and forth over a long menu without picking: swipe to hide. */
     HideDish,
@@ -51,6 +47,10 @@ internal enum class Tip(
 
     /** Not a note: the info mark beside Restore purchases, until its explanation has been read. */
     RestoreInfo(isNote = false),
+    ;
+
+    /** Shown only in test builds, never to real diners. */
+    val isTesterOnly: Boolean get() = this == TesterSettings || this == TesterPlus
 }
 
 /** Which tips the diner has already read, kept between launches. Settings can bring them back. */
@@ -58,8 +58,17 @@ internal class Tips(
     private val settings: Settings,
 ) {
     private val seenState = MutableStateFlow(read())
+    private val enabledState = MutableStateFlow(settings.getBoolean(KEY_ENABLED, true))
 
     val seen: StateFlow<Set<Tip>> = seenState.asStateFlow()
+
+    /** Whether notes appear at all. The diner chooses on the welcome page, on a note, or in Settings. */
+    val enabled: StateFlow<Boolean> = enabledState.asStateFlow()
+
+    fun setEnabled(on: Boolean) {
+        settings.putBoolean(KEY_ENABLED, on)
+        enabledState.value = on
+    }
 
     fun markSeen(tip: Tip) {
         val next = seenState.value + tip
@@ -75,9 +84,20 @@ internal class Tips(
         Tip.entries.filter { it.name in names }.forEach(::markSeen)
     }
 
+    /**
+     * Whether any note is still to come. Once all have been read the Tips switch shows off, so
+     * turning it on plainly means "show them again". Tester notes count only in test builds.
+     */
+    fun notesLeft(
+        seen: Set<Tip>,
+        testBuild: Boolean,
+    ): Boolean = Tip.entries.any { it.isNote && it !in seen && (testBuild || !it.isTesterOnly) }
+
+    /** Every note again, from the start: what "Tips" switched back on in Settings does. */
     fun reset() {
         settings.remove(KEY)
         seenState.value = emptySet()
+        setEnabled(true)
     }
 
     private fun read(): Set<Tip> {
@@ -92,6 +112,7 @@ internal class Tips(
 
     private companion object {
         const val KEY = "tips.seen"
+        const val KEY_ENABLED = "tips.enabled"
         const val SEPARATOR = ","
     }
 }

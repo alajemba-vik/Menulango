@@ -44,6 +44,11 @@ internal fun currencyPrefix(code: String?): String =
         "THB" -> "฿"
         "VND" -> "₫"
         "ILS" -> "₪"
+        "NGN" -> "₦"
+        "PHP" -> "₱"
+        "UAH" -> "₴"
+        "RUB" -> "₽"
+        "XOF", "XAF" -> "CFA "
         else -> "$code "
     }
 

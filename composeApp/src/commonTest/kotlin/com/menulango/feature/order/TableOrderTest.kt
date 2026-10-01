@@ -1,5 +1,6 @@
 package com.menulango.feature.order
 
+import com.menulango.data.menu.model.Nutrition
 import com.menulango.data.menu.model.Price
 import com.menulango.testDish
 import kotlin.test.Test
@@ -31,6 +32,25 @@ class TableOrderTest {
     fun takingTheLastOneAwayRemovesTheLine() {
         val order = TableOrder().add(salad).change(salad, TableOrder.OWNER, -1)
         assertTrue(order.isEmpty)
+    }
+
+    @Test
+    fun nutritionAddsUpEachPersonsEstimatedPlatesAndCountsTheRest() {
+        val soup = testDish("soup").copy(nutrition = Nutrition(kcal = 300, proteinG = 10, carbsG = 30, fatG = 12))
+        val wine = testDish("wine")
+        val order =
+            TableOrder()
+                .add(soup)
+                .add(soup)
+                .add(wine)
+                .addDiner("Ana")
+        val mine = order.nutritionFor(TableOrder.OWNER)!!
+        assertEquals(600, mine.kcal)
+        assertEquals(20, mine.proteinG)
+        assertEquals(2, mine.platesCounted)
+        assertEquals(3, mine.plates)
+        assertTrue(mine.isPartial)
+        assertNull(order.nutritionFor(order.diners.last().id))
     }
 
     @Test

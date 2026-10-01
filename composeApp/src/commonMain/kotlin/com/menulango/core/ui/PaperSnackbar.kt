@@ -56,7 +56,7 @@ internal fun PaperSnackbar(
             Text(
                 action,
                 style = Paper.type.button,
-                color = colors.seal,
+                color = colors.sealOnInk,
                 maxLines = 1,
                 modifier =
                     Modifier

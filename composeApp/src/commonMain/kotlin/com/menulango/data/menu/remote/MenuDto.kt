@@ -45,6 +45,16 @@ internal data class DishDto(
     val effortLevel: Int? = null,
     val confidence: Double? = null,
     val emoji: String? = null,
+    val nutrition: NutritionDto? = null,
+    val wikiTitle: String? = null,
+)
+
+@Serializable
+internal data class NutritionDto(
+    val kcal: Int? = null,
+    val proteinG: Int? = null,
+    val carbsG: Int? = null,
+    val fatG: Int? = null,
 )
 
 @Serializable
@@ -65,6 +75,9 @@ internal data class FlagsDto(
     val large: Boolean? = null,
     val shareable: Boolean? = null,
     val localSpecialty: Boolean? = null,
+    val alcohol: Boolean? = null,
+    val shellfish: Boolean? = null,
+    val meatWithDairy: Boolean? = null,
 )
 
 @Serializable

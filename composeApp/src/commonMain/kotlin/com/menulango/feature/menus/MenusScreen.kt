@@ -67,11 +67,10 @@ import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.DishPlate
-import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.InlineSearchRow
 import com.menulango.core.ui.MenuSnapshot
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.ScrollTitleBar
-import com.menulango.core.ui.SearchField
 import com.menulango.core.ui.SearchTag
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.bigTitleFade
@@ -84,7 +83,6 @@ import com.menulango.data.menu.model.Dish
 import com.menulango.data.search.TextSearch
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
-import com.menulango.feature.dish.DishSheet
 import com.menulango.feature.menu.FilterPill
 import com.menulango.feature.menu.menuTitle
 import com.menulango.resources.Res
@@ -98,6 +96,7 @@ import com.menulango.resources.menus_deleted
 import com.menulango.resources.menus_empty_action
 import com.menulango.resources.menus_empty_body
 import com.menulango.resources.menus_empty_title
+import com.menulango.resources.menus_journal_earlier_open
 import com.menulango.resources.menus_journal_open
 import com.menulango.resources.menus_reading_body
 import com.menulango.resources.menus_reading_page
@@ -112,9 +111,9 @@ import com.menulango.resources.menus_when_older
 import com.menulango.resources.menus_when_week
 import com.menulango.resources.menus_yesterday
 import com.menulango.resources.search_menus_hint
+import com.menulango.resources.search_menus_in_dishes
 import com.menulango.resources.search_menus_none
 import com.menulango.resources.search_open
-import com.menulango.resources.search_tag_dishes
 import com.menulango.resources.separator_dot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -173,7 +172,6 @@ internal fun MenusScreen(
         var searchDishes by rememberSaveable { mutableStateOf(false) }
         var period by rememberSaveable { mutableStateOf(MenuPeriod.All) }
         var journalFor by remember { mutableStateOf<String?>(null) }
-        var viewing by remember { mutableStateOf<Pair<String, Dish>?>(null) }
         val dishes by viewModel.dishes.collectAsState()
         val marks by viewModel.marks.collectAsState()
         val titles =
@@ -197,6 +195,14 @@ internal fun MenusScreen(
                     )
             }
         val list = rememberLazyListState()
+        // Arriving on the page, the list is simply in its current order: changes made while the
+        // diner was elsewhere don't all slide into place at once. Only what changes while they
+        // watch (a delete, a scan finishing) animates.
+        var settled by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            delay(SETTLE_MS)
+            settled = true
+        }
         val titleGone = with(LocalDensity.current) { TITLE_SCROLL_AWAY.roundToPx() }
         val progress = {
             if (list.firstVisibleItemIndex >
@@ -222,16 +228,6 @@ internal fun MenusScreen(
                             color = colors.ink,
                             modifier = Modifier.weight(1f).bigTitleFade(progress).semantics { heading() },
                         )
-                        // Search waits behind its icon until wanted, as in Mail or Notes.
-                        if (ready.menus.isNotEmpty() && !searching) {
-                            IconAction(
-                                PaperIcons.Search,
-                                stringResource(Res.string.search_open),
-                                { searching = true },
-                                tint = colors.ink,
-                                background = colors.raised,
-                            )
-                        }
                     }
                     Text(
                         stringResource(Res.string.menus_subtitle),
@@ -240,34 +236,31 @@ internal fun MenusScreen(
                     )
                 }
             }
-            if (searching) {
-                item(key = "search") {
-                    SearchField(
-                        query = query,
-                        onQuery = { query = it },
-                        placeholder = stringResource(Res.string.search_menus_hint),
-                        tags =
-                            listOf(
-                                SearchTag(stringResource(Res.string.search_tag_dishes), searchDishes) {
-                                    searchDishes = !searchDishes
-                                },
-                            ),
-                        onCancel = {
+            // Search leads the date filters: tapped, it grows into a full-width field and the
+            // filters move down beneath it, as on a menu's own page.
+            if (ready.menus.isNotEmpty()) {
+                item(key = "filters") {
+                    InlineSearchRow(
+                        open = searching,
+                        onOpen = { searching = true },
+                        onClose = {
                             searching = false
                             query = ""
                             searchDishes = false
                         },
+                        query = query,
+                        onQuery = { query = it },
+                        label = stringResource(Res.string.search_open),
+                        placeholder = stringResource(Res.string.search_menus_hint),
+                        tags =
+                            listOf(
+                                SearchTag(stringResource(Res.string.search_menus_in_dishes), searchDishes) {
+                                    searchDishes = !searchDishes
+                                },
+                            ),
                         modifier = Modifier.padding(bottom = Space.xs),
-                    )
-                }
-            }
-            // Filtering by when, as Photos and Files do, once there are enough menus to need it.
-            if (ready.menus.size >= PERIOD_FILTER_FROM) {
-                item(key = "period") {
-                    Row(
-                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(Space.related),
                     ) {
+                        // Filtering by when, as Photos and Files do.
                         MenuPeriod.entries.forEach { option ->
                             FilterPill(
                                 text = stringResource(option.label),
@@ -300,12 +293,12 @@ internal fun MenusScreen(
                 }
             }
             items(scans.filter { it.cacheKey == null }, key = { "scan-${it.id}" }) { scan ->
-                ReadingMenuCard(scan, Modifier.animateItem())
+                ReadingMenuCard(scan, if (settled) Modifier.animateItem() else Modifier)
             }
             items(shown, key = { it.cacheKey }) { menu ->
                 SwipeToDelete(
                     onDelete = { onDelete(menu.cacheKey) },
-                    modifier = Modifier.animateItem(),
+                    modifier = if (settled) Modifier.animateItem() else Modifier,
                     hint = menu == ready.menus.first() && Tip.SwipeToDelete !in seenTips,
                     onHinted = { tips.markSeen(Tip.SwipeToDelete) },
                 ) {
@@ -314,6 +307,7 @@ internal fun MenusScreen(
                         title = titles[menu.cacheKey].orEmpty(),
                         summary = dishes[menu.cacheKey]?.let { summaryOf(it) },
                         picked = marks[menu.cacheKey]?.picked?.size ?: 0,
+                        pickedBefore = marks[menu.cacheKey]?.earlierPicks?.isNotEmpty() == true,
                         onJournal = { journalFor = menu.cacheKey },
                         nowMillis = ready.nowMillis,
                         stillReading = menu.cacheKey in readingKeys,
@@ -330,28 +324,20 @@ internal fun MenusScreen(
             PickJournalSheet(
                 title = titles[key].orEmpty(),
                 picked = mark?.picked.orEmpty().mapNotNull { id -> all.firstOrNull { it.id == id } },
+                earlier = mark?.earlierPicks.orEmpty().mapNotNull { id -> all.firstOrNull { it.id == id } },
                 notes = mark?.notes.orEmpty(),
                 onNote = { dishId, text -> viewModel.note(key, dishId, text) },
-                onOpen = { dish ->
+                onOpenMenu = {
                     journalFor = null
-                    viewing = key to dish
+                    navigate(Route.Menu(MenuSource.Saved(key)))
                 },
                 onDismiss = { journalFor = null },
-            )
-        }
-        viewing?.let { (key, dish) ->
-            DishSheet(
-                dish = dish,
-                onDismiss = {
-                    viewing = null
-                    journalFor = key
-                },
             )
         }
     }
 }
 
-/** Swipe a card away to delete it; the coral behind it says what the swipe will do. */
+/** Swipe a card away to delete it; the aubergine behind it says what the swipe will do. */
 @Composable
 private fun SwipeToDelete(
     onDelete: () -> Unit,
@@ -362,6 +348,11 @@ private fun SwipeToDelete(
 ) {
     val colors = Paper.colors
     val state = rememberSwipeToDismissBoxState()
+    // The list saves this state under the menu's key, so a card brought back by Undo would return
+    // still swiped away; it always comes back settled.
+    LaunchedEffect(Unit) {
+        if (state.currentValue != SwipeToDismissBoxValue.Settled) state.snapTo(SwipeToDismissBoxValue.Settled)
+    }
     // The first time there is a menu to delete, the card slides aside by itself and springs back,
     // showing the Delete behind it: the gesture is taught by doing it, once, with no words.
     val peek = remember { Animatable(0f) }
@@ -401,6 +392,7 @@ private fun SavedMenuCard(
     title: String,
     summary: String?,
     picked: Int,
+    pickedBefore: Boolean,
     onJournal: () -> Unit,
     nowMillis: Long,
     stillReading: Boolean = false,
@@ -470,9 +462,13 @@ private fun SavedMenuCard(
             if (stillReading) ReadingNote(Modifier.padding(top = Space.xs))
             // The dishes picked here, and the diner's notes on them: a quiet way back to "what was
             // that great thing we had?".
-            if (picked > 0) {
+            if (picked > 0 || pickedBefore) {
                 Text(
-                    stringResource(Res.string.menus_journal_open, picked),
+                    if (picked > 0) {
+                        stringResource(Res.string.menus_journal_open, picked)
+                    } else {
+                        stringResource(Res.string.menus_journal_earlier_open)
+                    },
                     style = Paper.type.caption.copy(fontWeight = FontWeight.SemiBold),
                     color = colors.sealInk,
                     modifier = Modifier.clip(Shapes.chip).pressable(onJournal).padding(vertical = Space.xs),
@@ -595,7 +591,7 @@ internal enum class MenuPeriod(
 }
 
 private const val DAY_MS = 24 * 60 * 60 * 1000L
-private const val PERIOD_FILTER_FROM = 4
+private const val SETTLE_MS = 400L
 
 /**
  * The few ingredients that run through a menu, in the words the menu was explained in:

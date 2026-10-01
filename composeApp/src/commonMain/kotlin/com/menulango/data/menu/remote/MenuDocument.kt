@@ -49,6 +49,9 @@ private fun Dish.toDto(): DishDto =
                 large = flags.large,
                 shareable = flags.shareable,
                 localSpecialty = flags.localSpecialty,
+                alcohol = flags.alcohol,
+                shellfish = flags.shellfish,
+                meatWithDairy = flags.meatWithDairy,
             ),
         allergens =
             AllergensDto(
@@ -60,4 +63,6 @@ private fun Dish.toDto(): DishDto =
         effortLevel = effortLevel,
         confidence = confidence,
         emoji = emoji,
+        nutrition = nutrition?.let { NutritionDto(it.kcal, it.proteinG, it.carbsG, it.fatG) },
+        wikiTitle = wikiTitle,
     )

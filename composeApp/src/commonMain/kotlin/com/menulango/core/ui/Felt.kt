@@ -1,5 +1,6 @@
 package com.menulango.core.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -57,6 +58,23 @@ import kotlin.random.Random
 internal fun Modifier.felt(
     base: Color,
     shape: Shape? = null,
+): Modifier =
+    if (!SURFACE_TEXTURE) {
+        // Clipped like the textured felt, so content inside keeps the shape's corners.
+        (if (shape != null) clip(shape) else this).background(base)
+    } else {
+        feltTextured(base, shape)
+    }
+
+/**
+ * The single switch for every textured surface in the app (felt, paper, weave, suede). Off, each
+ * becomes a plain fill of the same colour: the flat look some prefer.
+ */
+internal const val SURFACE_TEXTURE: Boolean = true
+
+private fun Modifier.feltTextured(
+    base: Color,
+    shape: Shape?,
 ): Modifier =
     composed {
         val density = LocalDensity.current

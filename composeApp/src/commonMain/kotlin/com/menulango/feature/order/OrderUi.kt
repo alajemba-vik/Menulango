@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -59,8 +60,10 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import com.menulango.core.ui.CoverTips
 import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.PopIn
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SegmentedControl
@@ -68,6 +71,7 @@ import com.menulango.core.ui.TipNote
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperFieldColors
+import com.menulango.core.ui.paperShimmer
 import com.menulango.core.ui.pressable
 import com.menulango.core.ui.suede
 import com.menulango.data.menu.model.Dish
@@ -75,9 +79,15 @@ import com.menulango.data.preferences.Preferences
 import com.menulango.data.tips.Tip
 import com.menulango.data.tips.Tips
 import com.menulango.feature.menu.FilterPill
+import com.menulango.feature.menu.formatEstimate
+import com.menulango.feature.menu.rememberPriceConverter
 import com.menulango.platform.urlQueryComponent
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
+import com.menulango.resources.dish_nutrition_carbs
+import com.menulango.resources.dish_nutrition_fat
+import com.menulango.resources.dish_nutrition_kcal
+import com.menulango.resources.dish_nutrition_protein
 import com.menulango.resources.menu_choose_title
 import com.menulango.resources.note_add
 import com.menulango.resources.note_allergic
@@ -94,6 +104,8 @@ import com.menulango.resources.order_for
 import com.menulango.resources.order_guest
 import com.menulango.resources.order_less
 import com.menulango.resources.order_more
+import com.menulango.resources.order_nutrition_note
+import com.menulango.resources.order_nutrition_partial
 import com.menulango.resources.order_remove_person
 import com.menulango.resources.order_rename
 import com.menulango.resources.order_rename_hint
@@ -138,6 +150,39 @@ internal fun formatMoney(
 }
 
 /**
+ * Under one person's dishes: "≈ 1,450 kcal · Protein 62 g · Carbs 140 g · Fat 58 g", plus how
+ * many plates that covers when some had no estimate. Plain numbers, no targets or judgement.
+ */
+@Composable
+private fun NutritionLine(summary: NutritionSummary) {
+    val colors = Paper.colors
+    val text =
+        listOf(
+            "≈ ${formatEstimate(summary.kcal.toDouble())} ${stringResource(Res.string.dish_nutrition_kcal)}",
+            "${stringResource(Res.string.dish_nutrition_protein)} ${summary.proteinG} g",
+            "${stringResource(Res.string.dish_nutrition_carbs)} ${summary.carbsG} g",
+            "${stringResource(Res.string.dish_nutrition_fat)} ${summary.fatG} g",
+        ).joinToString("  ·  ")
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(colors.sunk, Shapes.chip)
+            .padding(horizontal = Space.sm, vertical = Space.xs),
+    ) {
+        Text(text, style = Paper.type.caption.copy(fontWeight = FontWeight.SemiBold), color = colors.ink)
+        Text(
+            if (summary.isPartial) {
+                stringResource(Res.string.order_nutrition_partial, summary.platesCounted, summary.plates)
+            } else {
+                stringResource(Res.string.order_nutrition_note)
+            },
+            style = Paper.type.caption,
+            color = colors.inkMuted,
+        )
+    }
+}
+
+/**
  * The add button on a dish's plate: a plus, or — once the dish is in the order — how many.
  * Tapping always adds one more for whoever is being ordered for.
  */
@@ -172,7 +217,7 @@ internal fun AddToOrderBadge(
 }
 
 /**
- * Once something is ordered, the basket bar: the brand's coral, what is in the order and roughly
+ * Once something is ordered, the basket bar: the brand's aubergine, what is in the order and roughly
  * what it costs. "Help me choose" rides alongside it as a round button.
  */
 @Composable
@@ -203,7 +248,7 @@ internal fun OrderBar(
                 .semantics { contentDescription = chooseLabel },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.seal, modifier = Modifier.size(24.dp))
+            Icon(PaperIcons.Cloche, contentDescription = null, tint = colors.sealOnInk, modifier = Modifier.size(24.dp))
         }
         Row(
             Modifier
@@ -249,6 +294,9 @@ internal fun OrderBar(
                 ).joinToString("  ·  "),
                 style = Paper.type.price.copy(fontWeight = FontWeight.Bold),
                 color = colors.onSeal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 160.dp),
             )
             // Clearing is one tap, and undoable from the message that follows.
             IconAction(
@@ -274,8 +322,13 @@ internal fun OrderSheet(
     onChange: ((TableOrder) -> TableOrder) -> Unit,
     onShowWaiter: () -> Unit,
     onDismiss: () -> Unit,
+    /** The menu's currency code, so the total can also be shown in the diner's own. */
+    currencyCode: String? = null,
 ) {
     val colors = Paper.colors
+    val converter = rememberPriceConverter()
+    // People already at the table when the sheet opened just sit there; one added now grows in.
+    val dinersAtOpen = remember { order.diners.map { it.id }.toSet() }
     var renaming by remember { mutableStateOf<Diner?>(null) }
     var noting by remember { mutableStateOf<OrderLine?>(null) }
     ModalBottomSheet(
@@ -311,13 +364,17 @@ internal fun OrderSheet(
             ) {
                 order.diners.forEach { diner ->
                     val active = diner.id == order.activeDinerId
-                    FilterPill(
-                        text = order.label(diner),
-                        selected = active,
-                        // Tapping the person already selected renames them.
-                        onClick = { if (active) renaming = diner else onChange { it.activate(diner.id) } },
-                        unselected = colors.sunk,
-                    )
+                    key(diner.id) {
+                        PopIn(animate = diner.id !in dinersAtOpen) {
+                            FilterPill(
+                                text = order.label(diner),
+                                selected = active,
+                                // Tapping the person already selected renames them.
+                                onClick = { if (active) renaming = diner else onChange { it.activate(diner.id) } },
+                                unselected = colors.sunk,
+                            )
+                        }
+                    }
                 }
                 FilterPill(
                     text = stringResource(Res.string.order_add_person),
@@ -374,6 +431,7 @@ internal fun OrderSheet(
                         onNote = { noting = line },
                     )
                 }
+                order.nutritionFor(diner.id)?.let { NutritionLine(it) }
             }
 
             order.total?.let {
@@ -384,11 +442,16 @@ internal fun OrderSheet(
                         color = colors.inkMuted,
                         modifier = Modifier.weight(1f),
                     )
-                    Text(
-                        formatMoney(it, currencyPrefix),
-                        style = Paper.type.price.copy(fontWeight = FontWeight.Bold),
-                        color = colors.ink,
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            formatMoney(it, currencyPrefix),
+                            style = Paper.type.price.copy(fontWeight = FontWeight.Bold),
+                            color = colors.ink,
+                        )
+                        converter?.convert(it, currencyCode)?.let { converted ->
+                            Text(converted, style = Paper.type.caption, color = colors.inkMuted)
+                        }
+                    }
                 }
             }
             // An estimate, not a bill, and not an order either: say so where the total is read.
@@ -531,6 +594,7 @@ internal fun WaiterView(
 ) {
     val colors = Paper.colors
     val type = Paper.type
+    CoverTips()
     val translator = koinInject<NoteTranslator>()
     val dinerLanguageTag = koinInject<Preferences>().contentLanguageTag
     val targetLanguageTag = restaurantLanguageTag?.takeIf(::isLanguageTag)
@@ -706,6 +770,7 @@ internal fun WaiterView(
                             dinerNote = line.note,
                             restaurantNote = order.waiterNote(line.dish.id, line.dinerId),
                             restaurantCopy = restaurantCopy,
+                            translating = translationState == WaiterTranslationState.Preparing,
                         )
                     }
                 }
@@ -721,6 +786,7 @@ private fun WaiterLine(
     dinerNote: String?,
     restaurantNote: String?,
     restaurantCopy: Boolean,
+    translating: Boolean = false,
 ) {
     val colors = Paper.colors
     Row(verticalAlignment = Alignment.Top) {
@@ -737,6 +803,17 @@ private fun WaiterLine(
                 style = Paper.type.dishTitle,
                 color = colors.ink,
             )
+            // While its translation is on the way, the note is a soft shimmer rather than the wrong words.
+            if (restaurantCopy && translating && dinerNote != null && restaurantNote == null) {
+                Box(
+                    Modifier
+                        .padding(top = Space.xs)
+                        .fillMaxWidth(NOTE_PLACEHOLDER_WIDTH)
+                        .height(22.dp)
+                        .paperShimmer(),
+                )
+                return@Column
+            }
             // For the restaurant, the translated note; if there isn't one, the note as written.
             (if (restaurantCopy) restaurantNote ?: dinerNote else dinerNote)?.let {
                 Text(
@@ -760,6 +837,8 @@ private fun googleTranslateUrl(
 }
 
 private enum class WaiterTranslationState { NotNeeded, Preparing, Ready, Unavailable }
+
+private const val NOTE_PLACEHOLDER_WIDTH = 0.7f
 
 private fun isLanguageTag(tag: String): Boolean = LANGUAGE_TAG.matches(tag)
 

@@ -20,6 +20,12 @@
 	<false/>
 	<key>MenuLangoBetaTools</key>
 	<string>$(BETA_TOOLS)</string>
+	<key>MenuLangoFirebaseAPIKey</key>
+	<string>$(FIREBASE_API_KEY)</string>
+	<key>MenuLangoFirebaseAppID</key>
+	<string>$(FIREBASE_IOS_APP_ID)</string>
+	<key>MenuLangoFirebaseProjectID</key>
+	<string>$(FIREBASE_PROJECT_ID)</string>
 	<key>MenuLangoProxyURL</key>
 	<string>$(PROXY_URL)</string>
 	<key>MenuLangoRevenueCatKey</key>

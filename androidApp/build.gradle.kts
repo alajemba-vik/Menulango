@@ -36,10 +36,15 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 3
-        versionName = "1.0.0"
+        versionCode = 7
+        versionName = "1.0.2"
         buildConfigField("String", "PROXY_URL", "\"${secret("PROXY_URL")}\"")
         buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"${secret("REVENUECAT_ANDROID_KEY")}\"")
+        // Firebase App Check (Play Integrity), which proves scans come from this app. Empty turns it off.
+        // Firebase console → Project settings → Your apps → the Android app.
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${secret("FIREBASE_ANDROID_APP_ID")}\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${secret("FIREBASE_API_KEY")}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${secret("FIREBASE_PROJECT_ID")}\"")
         // Test builds for friends only: sample menu + Plus toggle. Never true for a store release.
         buildConfigField(
             "boolean",
@@ -98,4 +103,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.ui)
     implementation(libs.koin.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
 }

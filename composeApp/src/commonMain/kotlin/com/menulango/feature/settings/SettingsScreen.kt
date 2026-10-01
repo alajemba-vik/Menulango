@@ -1,5 +1,10 @@
 package com.menulango.feature.settings
 
+import com.menulango.core.design.Motion
+import com.menulango.feature.menu.FILTER_PILL_HEIGHT
+import com.menulango.core.ui.FIELD_HEIGHT
+import com.menulango.core.ui.flyInFrom
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -85,6 +90,8 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
+import androidx.compose.runtime.key
+import com.menulango.core.ui.PillField
 import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.QuietButton
@@ -112,6 +119,7 @@ import com.menulango.feature.paywall.TERMS_URL
 import com.menulango.platform.feedbackMailUri
 import com.menulango.platform.rememberBackupFileTransfer
 import com.menulango.platform.subscriptionSettingsUrl
+import com.menulango.feature.menu.currencyPrefix
 import com.menulango.resources.Res
 import com.menulango.resources.filter_avoid
 import com.menulango.resources.paywall_privacy
@@ -139,6 +147,10 @@ import com.menulango.resources.settings_backup_title
 import com.menulango.resources.settings_backup_unsupported
 import com.menulango.resources.settings_backup_wrong_passphrase
 import com.menulango.resources.settings_calm_motion
+import com.menulango.resources.settings_convert_prices
+import com.menulango.resources.settings_convert_prices_body
+import com.menulango.resources.settings_home_currency
+import com.menulango.resources.settings_rates_credit
 import com.menulango.resources.settings_calm_motion_body
 import com.menulango.resources.settings_cancel
 import com.menulango.resources.settings_data
@@ -152,6 +164,7 @@ import com.menulango.resources.settings_featured
 import com.menulango.resources.settings_featured_body
 import com.menulango.resources.settings_language
 import com.menulango.resources.settings_language_body
+import com.menulango.resources.settings_menu_languages
 import com.menulango.resources.settings_language_row
 import com.menulango.resources.settings_language_system
 import com.menulango.resources.settings_menus
@@ -171,7 +184,9 @@ import com.menulango.resources.settings_restore_backup_title
 import com.menulango.resources.settings_restore_confirm
 import com.menulango.resources.settings_restore_failed
 import com.menulango.resources.settings_restored
-import com.menulango.resources.settings_show_tips
+import com.menulango.resources.settings_tips
+import com.menulango.resources.settings_tips_body
+import com.menulango.resources.settings_tips_off_body
 import com.menulango.resources.settings_something_wrong
 import com.menulango.resources.settings_start_camera
 import com.menulango.resources.settings_start_menus
@@ -179,6 +194,7 @@ import com.menulango.resources.settings_start_page
 import com.menulango.resources.settings_tester
 import com.menulango.resources.settings_tester_plus
 import com.menulango.resources.settings_tester_plus_body
+import com.menulango.resources.settings_tester_plus_paid
 import com.menulango.resources.settings_tester_sample
 import com.menulango.resources.settings_tips_reset
 import com.menulango.resources.settings_title
@@ -227,7 +243,8 @@ internal fun SettingsScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .felt(colors.paper)
+                // Plain, not felt: Settings is mostly words, so the page stays quiet behind them.
+                .background(colors.paper)
                 .verticalScroll(scroll)
                 .statusBarsPadding()
                 .padding(horizontal = Space.gutter)
@@ -252,10 +269,13 @@ internal fun SettingsScreen(
                 onManage = { uriHandler.openUri(subscriptionSettingsUrl) },
                 perform = viewModel.performPlusCard,
             )
+            // A text button has no fill to show its edges, so its padding would make the words
+            // look indented: shifted left by that padding, they line up with the page's text.
             RestoreButton(
                 stringResource(Res.string.settings_restore),
                 viewModel::restore,
                 color = colors.sealInk,
+                modifier = Modifier.offset(x = -Space.sm),
             )
 
             if (viewModel.showsTestTools) {
@@ -263,11 +283,17 @@ internal fun SettingsScreen(
                     SettingsRow(stringResource(Res.string.settings_tester_sample)) {
                         navigate(Route.Menu(MenuSource.Sample))
                     }
+                    // Bought for real, Plus can't be switched off here: say so, rather than a switch that ignores taps.
+                    val paid by viewModel.paidPlus.collectAsStateWithLifecycle()
                     SwitchRow(
                         title = stringResource(Res.string.settings_tester_plus),
-                        body = stringResource(Res.string.settings_tester_plus_body),
+                        body =
+                            stringResource(
+                                if (paid) Res.string.settings_tester_plus_paid else Res.string.settings_tester_plus_body,
+                            ),
                         checked = state.isPlus,
                         onChange = viewModel::setTestPlus,
+                        enabled = !paid,
                         modifier = Modifier.tipTarget(Tip.TesterPlus),
                     )
                 }
@@ -310,6 +336,12 @@ internal fun SettingsScreen(
                     stringResource(Res.string.settings_language_row),
                     value = language.label(),
                 ) { choosing = true }
+                Text(
+                    stringResource(Res.string.settings_menu_languages),
+                    style = Paper.type.caption,
+                    color = colors.inkMuted,
+                    modifier = Modifier.padding(top = Space.xs),
+                )
                 if (choosing) {
                     LanguageDialog(
                         selected = language,
@@ -354,6 +386,35 @@ internal fun SettingsScreen(
                     checked = state.showFeatured,
                     onChange = viewModel::setShowFeatured,
                 )
+                GroupDivider()
+                val convert by viewModel.convertPrices.collectAsStateWithLifecycle()
+                val home by viewModel.homeCurrency.collectAsStateWithLifecycle()
+                var choosingCurrency by remember { mutableStateOf(false) }
+                SwitchRow(
+                    title = stringResource(Res.string.settings_convert_prices),
+                    body = stringResource(Res.string.settings_convert_prices_body),
+                    checked = convert,
+                    onChange = viewModel::setConvertPrices,
+                )
+                if (convert) {
+                    SettingsRow(stringResource(Res.string.settings_home_currency), value = home) { choosingCurrency = true }
+                    Text(
+                        stringResource(Res.string.settings_rates_credit),
+                        style = Paper.type.caption,
+                        color = colors.inkMuted,
+                    )
+                }
+                if (choosingCurrency) {
+                    CurrencyDialog(
+                        choices = viewModel.currencyChoices(),
+                        selected = home,
+                        onSelect = {
+                            viewModel.setHomeCurrency(it)
+                            choosingCurrency = false
+                        },
+                        onDismiss = { choosingCurrency = false },
+                    )
+                }
             }
 
             Section(stringResource(Res.string.settings_data)) {
@@ -386,10 +447,25 @@ internal fun SettingsScreen(
                     SettingsRow(stringResource(Res.string.paywall_privacy)) { uriHandler.openUri(url) }
                 }
                 SettingsRow(stringResource(Res.string.paywall_terms)) { uriHandler.openUri(TERMS_URL) }
-                SettingsRow(stringResource(Res.string.settings_show_tips)) {
-                    tips.reset()
-                    scope.launch { snackbar.showSnackbar(tipsReset) }
-                }
+                // On brings every note back from the start; off stops them all.
+                // On while tips are still to come; off once turned off or once every tip has been
+                // shown, so switching it on always means "show them to me again".
+                val tipsOn by tips.enabled.collectAsStateWithLifecycle()
+                val seenTips by tips.seen.collectAsStateWithLifecycle()
+                val tipsComing = tipsOn && tips.notesLeft(seenTips, viewModel.showsTestTools)
+                SwitchRow(
+                    title = stringResource(Res.string.settings_tips),
+                    body = stringResource(if (tipsComing) Res.string.settings_tips_body else Res.string.settings_tips_off_body),
+                    checked = tipsComing,
+                    onChange = { on ->
+                        if (on) {
+                            tips.reset()
+                            scope.launch { snackbar.showSnackbar(tipsReset) }
+                        } else {
+                            tips.setEnabled(false)
+                        }
+                    },
+                )
                 Text(
                     stringResource(Res.string.settings_ai_note),
                     style = Paper.type.caption,
@@ -447,7 +523,12 @@ internal fun SettingsScreen(
                 },
             )
         }
-        ScrollTitleBar(stringResource(Res.string.settings_title), progress, Modifier.align(Alignment.TopCenter))
+        ScrollTitleBar(
+            stringResource(Res.string.settings_title),
+            progress,
+            Modifier.align(Alignment.TopCenter),
+            felt = false,
+        )
     }
 }
 
@@ -521,7 +602,7 @@ private fun BackupPassphraseDialog(
 }
 
 /**
- * The subscription as a stitched label: charcoal felt with a coral running stitch just inside the
+ * The subscription as a stitched label: charcoal felt with an aubergine running stitch just inside the
  * edge, like the woven label in a good coat. No emoji, no sparkle — the material does the work.
  */
 @Composable
@@ -532,7 +613,7 @@ private fun PlusCard(
     perform: Boolean,
 ) {
     val colors = Paper.colors
-    val stitch = colors.seal.copy(alpha = 0.7f)
+    val stitch = colors.sealOnInk.copy(alpha = 0.7f)
     val ink = rememberPlusCardInk(circleTarget = !isPlus, perform = perform)
     var cardAt by remember { mutableStateOf(Offset.Zero) }
     var titleAt by remember { mutableStateOf(Offset.Zero) }
@@ -541,7 +622,7 @@ private fun PlusCard(
             .fillMaxWidth()
             .onGloballyPositioned { cardAt = it.positionInRoot() }
             .felt(colors.ink, Shapes.card)
-            .plusCardInk(ink, pen = colors.seal, titleOrigin = { titleAt - cardAt })
+            .plusCardInk(ink, pen = colors.sealOnInk, titleOrigin = { titleAt - cardAt })
             .drawBehind {
                 val inset = 7.dp.toPx()
                 drawRoundRect(
@@ -560,18 +641,14 @@ private fun PlusCard(
     ) {
         SectionLabel(
             stringResource(if (isPlus) Res.string.settings_plus_label_member else Res.string.settings_plus_label),
-            color = colors.seal,
+            color = colors.sealOnInk,
         )
         // Written out by hand each time: an invitation, not a banner.
         HandwrittenText(
             stringResource(if (isPlus) Res.string.settings_plus_active_title else Res.string.settings_plus_title),
-            style =
-                Paper.type.method.copy(
-                    fontSize = Paper.type.headline.fontSize,
-                    lineHeight = Paper.type.headline.lineHeight,
-                ),
+            style = Paper.type.hand,
             color = colors.paper,
-            nib = colors.seal,
+            nib = colors.sealOnInk,
             ink = ink,
             modifier = Modifier.onGloballyPositioned { titleAt = it.positionInRoot() },
         )
@@ -585,7 +662,7 @@ private fun PlusCard(
                     Icon(
                         PaperIcons.Check,
                         contentDescription = null,
-                        tint = colors.seal,
+                        tint = colors.sealOnInk,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(Space.related))
@@ -662,6 +739,58 @@ private fun LanguageDialog(
                             modifier = Modifier.weight(1f),
                         )
                         if (language == selected) {
+                            Icon(
+                                PaperIcons.Check,
+                                contentDescription = null,
+                                tint = colors.sealInk,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel), color = colors.ink) }
+        },
+    )
+}
+
+@Composable
+private fun CurrencyDialog(
+    choices: List<String>,
+    selected: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = Paper.colors
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.raised,
+        title = {
+            Text(stringResource(Res.string.settings_home_currency), style = Paper.type.dishName, color = colors.ink)
+        },
+        text = {
+            Column(Modifier.selectableGroup().verticalScroll(rememberScrollState())) {
+                choices.forEach { code ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Space.touchTarget)
+                            .clip(Shapes.chip)
+                            .selectable(
+                                selected = code == selected,
+                                role = Role.RadioButton,
+                                onClick = { onSelect(code) },
+                            ).padding(horizontal = Space.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(code, style = Paper.type.body, color = colors.ink, modifier = Modifier.weight(1f))
+                        val symbol = currencyPrefix(code).trim()
+                        if (symbol != code) {
+                            Text(symbol, style = Paper.type.body, color = colors.inkMuted, modifier = Modifier.padding(end = Space.sm))
+                        }
+                        if (code == selected) {
                             Icon(
                                 PaperIcons.Check,
                                 contentDescription = null,
@@ -764,8 +893,16 @@ private fun AvoidWords(
     onRemove: (String) -> Unit,
 ) {
     val colors = Paper.colors
+    val density = LocalDensity.current
     var draft by remember { mutableStateOf("") }
+    // Where the typed word sits in the field, and which word was just added: that chip starts
+    // there and drops into its place, as if the word fell out of the field onto the list.
+    var fieldText by remember { mutableStateOf(Offset.Zero) }
+    var landing by remember { mutableStateOf<Pair<String, Offset>?>(null) }
     val add = {
+        val word = draft.trim().lowercase()
+        // A word already listed stays put; only a new one drops in from the field.
+        if (word !in words) landing = word to fieldText
         onAdd(draft)
         draft = ""
     }
@@ -775,55 +912,59 @@ private fun AvoidWords(
         color = colors.inkMuted,
     )
     Spacer(Modifier.height(Space.sm))
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            colors = paperFieldColors(),
-            value = draft,
-            onValueChange = { draft = it.take(30) },
-            singleLine = true,
-            placeholder = {
-                Text(
-                    stringResource(Res.string.settings_avoid_hint),
-                    style = Paper.type.bodySmall,
-                    color = Paper.colors.inkFaint,
-                )
-            },
-            shape = Shapes.button,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { add() }),
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(Modifier.width(Space.related))
-        IconAction(
-            PaperIcons.Plus,
-            stringResource(Res.string.settings_avoid_add),
-            add,
-            tint = colors.onSeal,
-            background = colors.seal,
-            // Nothing to add until a word is typed.
-            enabled = draft.isNotBlank(),
-        )
-    }
-    if (words.isNotEmpty()) {
-        Spacer(Modifier.height(Space.sm))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(Space.related),
-            verticalArrangement = Arrangement.spacedBy(Space.related),
-        ) {
-            words.sorted().forEach { word ->
-                FilterPill(
-                    text = stringResource(Res.string.filter_avoid, word),
-                    selected = true,
-                    onClick = { onRemove(word) },
-                )
-            }
+    Column(Modifier.animateContentSize(tween(Motion.SHEET_MS, easing = Motion.standard))) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // The same capsule as search, so every field in the app looks alike.
+            PillField(
+                value = draft,
+                onValueChange = { draft = it.take(30) },
+                placeholder = stringResource(Res.string.settings_avoid_hint),
+                onDone = { add() },
+                modifier =
+                    Modifier.weight(1f).onGloballyPositioned {
+                        // The text's start: inside the capsule's padding, centred like a chip.
+                        fieldText =
+                            it.positionInRoot() +
+                            with(density) { Offset(Space.md.toPx(), ((FIELD_HEIGHT - FILTER_PILL_HEIGHT) / 2).toPx()) }
+                    },
+            )
+            Spacer(Modifier.width(Space.related))
+            IconAction(
+                PaperIcons.Plus,
+                stringResource(Res.string.settings_avoid_add),
+                add,
+                tint = colors.onSeal,
+                background = colors.seal,
+                // Nothing to add until a word is typed.
+                enabled = draft.isNotBlank(),
+            )
         }
-        Text(
-            stringResource(Res.string.settings_avoid_remove_hint),
-            style = Paper.type.caption,
-            color = colors.inkFaint,
-            modifier = Modifier.padding(top = Space.related),
-        )
+        if (words.isNotEmpty()) {
+            Spacer(Modifier.height(Space.sm))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Space.related),
+                verticalArrangement = Arrangement.spacedBy(Space.related),
+            ) {
+                words.sorted().forEach { word ->
+                    key(word) {
+                        val from = landing?.takeIf { it.first == word }?.second
+                        Box(Modifier.flyInFrom(from)) {
+                            FilterPill(
+                                text = stringResource(Res.string.filter_avoid, word),
+                                selected = true,
+                                onClick = { onRemove(word) },
+                            )
+                        }
+                    }
+                }
+            }
+            Text(
+                stringResource(Res.string.settings_avoid_remove_hint),
+                style = Paper.type.caption,
+                color = colors.inkFaint,
+                modifier = Modifier.padding(top = Space.related),
+            )
+        }
     }
 }
 
@@ -849,12 +990,13 @@ private fun SwitchRow(
     checked: Boolean,
     onChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val colors = Paper.colors
     Row(
         modifier
             .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
             .padding(vertical = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -866,13 +1008,14 @@ private fun SwitchRow(
         Switch(
             checked = checked,
             onCheckedChange = null,
+            enabled = enabled,
             colors =
                 SwitchDefaults.colors(
                     checkedTrackColor = colors.seal,
                     checkedThumbColor = colors.onSeal,
                     uncheckedTrackColor = colors.sunk,
                     uncheckedThumbColor = colors.inkFaint,
-                    uncheckedBorderColor = colors.rule,
+                    uncheckedBorderColor = colors.outline,
                 ),
         )
     }

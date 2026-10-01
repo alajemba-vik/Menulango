@@ -2,8 +2,8 @@ package com.menulango.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
@@ -11,8 +11,11 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import platform.AVFoundation.AVAuthorizationStatusAuthorized
 import platform.AVFoundation.AVAuthorizationStatusNotDetermined
@@ -197,20 +200,29 @@ private class PreviewView(
 
 @Composable
 internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit {
-    val scope = rememberCoroutineScope()
     val delegate =
         remember {
-            PickerDelegate { picked ->
-                scope.launch {
-                    if (picked == null) {
-                        onPicked(PickedPhoto.Cancelled)
-                    } else {
-                        val pages = picked.mapNotNull { compressForUpload(it) }
-                        onPicked(if (pages.isEmpty()) PickedPhoto.Unreadable else PickedPhoto.Chosen(pages))
-                    }
-                }
-            }
+            PickerDelegate(
+                onCancel = { onPicked(PickedPhoto.Cancelled) },
+                onPicked = { loaded ->
+                    // Its own scope: the photos keep loading after the camera gives way to the menu.
+                    val pages =
+                        CoroutineScope(
+                            Dispatchers.Default,
+                        ).async { loaded.await().mapNotNull { compressForUpload(it) } }
+                    onPicked(PickedPhoto.Chosen(pages))
+                },
+            )
         }
+    // The picker runs in its own process, which iOS starts on first use: the first tap on the
+    // gallery used to hang for a moment. Built once, unseen, soon after the camera screen settles,
+    // so the process is already running when the diner reaches for it.
+    LaunchedEffect(Unit) {
+        if (pickerWarmed) return@LaunchedEffect
+        delay(PICKER_WARM_DELAY_MS)
+        pickerWarmed = true
+        PHPickerViewController(PHPickerConfiguration().apply { filter = PHPickerFilter.imagesFilter }).view
+    }
     return remember(delegate) {
         { maxPhotos ->
             val configuration =
@@ -226,9 +238,17 @@ internal actual fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPh
     }
 }
 
-/** Loads every picked photo, then hands them over together in the order they were picked. */
+/** Once per launch is enough: after the first picker, iOS keeps its process around. */
+private var pickerWarmed = false
+private const val PICKER_WARM_DELAY_MS = 1_200L
+
+/**
+ * Reports the pick as soon as the picker closes, then loads every photo and hands them over
+ * together, in the order they were picked.
+ */
 private class PickerDelegate(
-    private val onData: (List<ByteArray>?) -> Unit,
+    private val onCancel: () -> Unit,
+    private val onPicked: (Deferred<List<ByteArray>>) -> Unit,
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
     override fun picker(
@@ -238,9 +258,11 @@ private class PickerDelegate(
         picker.dismissViewControllerAnimated(true, completion = null)
         val results = didFinishPicking.filterIsInstance<PHPickerResult>()
         if (results.isEmpty()) {
-            onData(null)
+            onCancel()
             return
         }
+        val all = CompletableDeferred<List<ByteArray>>()
+        onPicked(all)
         val loaded = arrayOfNulls<ByteArray>(results.size)
         var remaining = results.size
         results.forEachIndexed { index, result ->
@@ -250,7 +272,7 @@ private class PickerDelegate(
                 dispatch_async(dispatch_get_main_queue()) {
                     loaded[index] = bytes
                     remaining--
-                    if (remaining == 0) onData(loaded.map { it ?: ByteArray(0) })
+                    if (remaining == 0) all.complete(loaded.map { it ?: ByteArray(0) })
                 }
             }
         }

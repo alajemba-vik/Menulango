@@ -67,6 +67,7 @@ import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.QuietButton
 import com.menulango.core.ui.SectionHeading
 import com.menulango.core.ui.SectionLabel
+import com.menulango.core.ui.ShowIfFits
 import com.menulango.core.ui.StateMessage
 import com.menulango.core.ui.chips
 import com.menulango.core.ui.felt
@@ -96,6 +97,7 @@ import com.menulango.resources.choose_read_more
 import com.menulango.resources.choose_swipe_hint
 import com.menulango.resources.choose_title
 import com.menulango.resources.choose_why
+import com.menulango.resources.dish_ingredients
 import com.menulango.resources.mode_new_hint
 import com.menulango.resources.mode_only_here_hint
 import com.menulango.resources.mode_simple_hint
@@ -274,15 +276,17 @@ private fun Deck(
     val drag = remember(top.id, state.mode) { Animatable(0f) }
     val keepLabel = stringResource(Res.string.choose_keep)
     val passLabel = stringResource(Res.string.choose_pass)
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         val width = with(LocalDensity.current) { maxWidth.toPx() }
+        // On a tall phone the card stops growing, so its content isn't spread thin.
+        val cardSize = Modifier.fillMaxWidth().height(minOf(maxHeight, CARD_MAX_HEIGHT))
         val threshold = width / 3f
         // Behind: deepest first, so the top card is drawn last.
         for (depth in state.deck.lastIndex downTo 1) {
             val dish = state.deck[depth]
             DeckCard(
                 dish,
-                Modifier.fillMaxSize().graphicsLayer {
+                cardSize.graphicsLayer {
                     // The card behind rises to meet the finger as the top one leaves.
                     val lift = if (depth == 1) (abs(drag.value) / width).coerceIn(0f, 1f) else 0f
                     val step = depth - lift
@@ -297,8 +301,7 @@ private fun Deck(
         }
         DeckCard(
             top,
-            Modifier
-                .fillMaxSize()
+            cardSize
                 .graphicsLayer {
                     translationX = drag.value
                     rotationZ = if (reduceMotion) 0f else drag.value / width * 12f
@@ -375,48 +378,61 @@ private fun DeckCard(
                 .semantics { if (interactive) liveRegion = LiveRegionMode.Polite },
             verticalArrangement = Arrangement.spacedBy(Space.related),
         ) {
-            DishPlate(dish, size = 104.dp)
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                dish.readableName,
-                style = type.dishTitle,
-                color = colors.ink,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.semantics { heading() },
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(Modifier.weight(1f))
-                dish.price?.let {
-                    Text(it.asPrinted, style = type.price.copy(fontWeight = FontWeight.Bold), color = colors.ink)
+            // Name and price on the left, the plate on the right: the card reads like a menu line.
+            Row(verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    Text(
+                        dish.readableName,
+                        style = type.dishTitle,
+                        color = colors.ink,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    dish.price?.let {
+                        Text(it.asPrinted, style = type.price.copy(fontWeight = FontWeight.Bold), color = colors.ink)
+                    }
                 }
+                Spacer(Modifier.width(Space.sm))
+                DishPlate(dish, size = 88.dp)
             }
             FlagChips(dish.chips(), container = colors.raised.copy(alpha = if (colors.isDark) 0.12f else 0.7f))
-            Spacer(Modifier.weight(1f))
-            // On a short phone the reason gives way first, a line at a time, so "Read about it"
-            // always keeps its full height at the bottom of the card.
+            // Why this dish is the card's whole case; what it is lives behind "Read about it".
             dish.pitch?.let {
+                Spacer(Modifier.height(Space.xs))
                 SectionLabel(stringResource(Res.string.choose_why))
                 Text(
                     it,
                     style = type.method,
                     color = colors.ink,
-                    maxLines = 4,
+                    maxLines = 5,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
-            if (interactive) {
-                QuietButton(
-                    stringResource(Res.string.choose_read_more),
-                    onRead,
-                    color = colors.sealInk,
-                    singleLine = true,
-                )
+            // Tall phones leave room between "Why this one" and the button: the ingredients go there,
+            // but only when they fit whole. On smaller screens the card stays as it is.
+            ShowIfFits(Modifier.weight(1f).fillMaxWidth()) {
+                if (dish.ingredients.isNotEmpty()) {
+                    Spacer(Modifier.height(Space.sm))
+                    SectionLabel(stringResource(Res.string.dish_ingredients))
+                    Text(
+                        dish.ingredients.joinToString(", "),
+                        style = type.method,
+                        color = colors.ink,
+                        modifier = Modifier.padding(top = Space.related),
+                    )
+                }
             }
+            // On every card, so nothing appears as a card comes to the top.
+            QuietButton(
+                stringResource(Res.string.choose_read_more),
+                onRead,
+                color = colors.sealInk,
+                singleLine = true,
+            )
         }
         if (interactive) {
-            // The stamps that answer the swipe: coral "add" on the left, ink "pass" on the right.
+            // The stamps that answer the swipe: aubergine "add" on the left, ink "pass" on the right.
             SwipeStamp(Res.string.choose_keep, colors.seal, colors.onSeal, -8f, Modifier.align(Alignment.TopStart)) {
                 verdict().coerceAtLeast(0f)
             }
@@ -524,6 +540,8 @@ private fun RoundAction(
         Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(if (large) 30.dp else 24.dp))
     }
 }
+
+private val CARD_MAX_HEIGHT = 440.dp
 
 internal fun ChoiceMode.hint(): StringResource =
     when (this) {

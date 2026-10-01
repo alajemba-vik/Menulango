@@ -1,5 +1,10 @@
 package com.menulango.core.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,7 +41,7 @@ import com.menulango.core.design.Paper
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 
-/** The one filled button style: a coral pill. Used for the single primary action on a screen. */
+/** The one filled button style: an aubergine pill. Used for the single primary action on a screen. */
 @Composable
 internal fun PrimaryButton(
     text: String,
@@ -41,15 +49,49 @@ internal fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     busy: Boolean = false,
+    sheen: Boolean = false,
 ) {
     val colors = Paper.colors
+    // The same passing light as the Plus card, for the one button that buys Plus: every few
+    // seconds a soft band crosses it, then it rests. Never under reduce motion.
+    val light =
+        if (sheen && enabled && !Paper.reduceMotion) {
+            rememberInfiniteTransition(label = "button-sheen").animateFloat(
+                initialValue = -0.6f,
+                targetValue = 1.6f,
+                animationSpec =
+                    infiniteRepeatable(
+                        keyframes {
+                            durationMillis = SHEEN_CYCLE_MS
+                            -0.6f at 0
+                            -0.6f at SHEEN_REST_MS
+                            1.6f at SHEEN_CYCLE_MS using FastOutSlowInEasing
+                        },
+                    ),
+                label = "button-sheen-x",
+            )
+        } else {
+            null
+        }
     Box(
         modifier =
             modifier
                 .heightIn(min = 56.dp)
                 .clip(Shapes.button)
                 .suede(colors.seal)
-                .alpha(if (enabled) 1f else 0.5f)
+                .drawWithContent {
+                    drawContent()
+                    light?.value?.let { at ->
+                        val x = size.width * at
+                        drawRect(
+                            Brush.linearGradient(
+                                listOf(Color.Transparent, Color.White.copy(alpha = 0.28f), Color.Transparent),
+                                start = Offset(x - size.width * 0.25f, 0f),
+                                end = Offset(x + size.width * 0.05f, size.height),
+                            ),
+                        )
+                    }
+                }.alpha(if (enabled) 1f else 0.5f)
                 .clickable(enabled = enabled && !busy, role = Role.Button, onClick = onClick)
                 .padding(horizontal = Space.gutter, vertical = Space.sm),
         contentAlignment = Alignment.Center,
@@ -152,3 +194,6 @@ internal fun BottomAction(
 ) {
     PrimaryButton(text = text, onClick = onClick, busy = busy, modifier = modifier.fillMaxWidth())
 }
+
+private const val SHEEN_CYCLE_MS = 4_600
+private const val SHEEN_REST_MS = 3_000

@@ -1,5 +1,6 @@
 package com.menulango.feature.capture
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,6 +38,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -64,6 +66,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -79,9 +82,12 @@ import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.DishPlate
 import com.menulango.core.ui.IconAction
+import com.menulango.core.ui.LogoAubergine
+import com.menulango.core.ui.LogoSaffron
 import com.menulango.core.ui.PrimaryButton
 import com.menulango.core.ui.SecondaryButton
 import com.menulango.core.ui.StateMessage
+import com.menulango.core.ui.drawMenuLangoMark
 import com.menulango.core.ui.felt
 import com.menulango.core.ui.paper
 import com.menulango.core.ui.tipTarget
@@ -112,6 +118,8 @@ import com.menulango.resources.capture_last_menu_description
 import com.menulango.resources.capture_preparing
 import com.menulango.resources.capture_quota
 import com.menulango.resources.capture_quota_none
+import com.menulango.resources.capture_sample
+import com.menulango.resources.capture_sample_description
 import com.menulango.resources.capture_shutter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -155,9 +163,19 @@ internal fun CaptureScreen(
     val picker =
         rememberPhotoPicker { picked ->
             when (picked) {
-                is PickedPhoto.Chosen -> onPhotos(picked.pages)
-                PickedPhoto.Cancelled -> viewModel.onPhotoCancelled()
-                PickedPhoto.Unreadable -> onPhotos(null)
+                is PickedPhoto.Chosen -> {
+                    if (addPage != null) {
+                        // The menu is already open underneath; its pages join once they are ready.
+                        viewModel.onPreparingPhoto()
+                        scope.launch { onPhotos(picked.pages.await()) }
+                    } else {
+                        navigate(viewModel.onPhotosPicked(picked.pages))
+                    }
+                }
+
+                PickedPhoto.Cancelled -> {
+                    viewModel.onPhotoCancelled()
+                }
             }
         }
     // The menu being added to has already passed the free-scan gate.
@@ -169,7 +187,6 @@ internal fun CaptureScreen(
     if (addPage == null && Tip.Welcome !in seenTips) {
         Welcome(
             onOpenCamera = { tips.markSeen(Tip.Welcome) },
-            onSample = { navigate(Route.Menu(MenuSource.Sample)) },
             bottomInset = bottomInset,
         )
         return
@@ -194,6 +211,7 @@ internal fun CaptureScreen(
                 },
                 onGallery = { gate()?.let(navigate) ?: picker(addPage?.maxPages ?: viewModel.galleryLimit()) },
                 onLastMenu = { key -> navigate(Route.Menu(MenuSource.Saved(key))) },
+                onSample = { navigate(Route.Menu(MenuSource.Sample)) },
                 onAllowance = { navigate(Route.Paywall(PaywallReason.Upgrade)) },
                 onBack = if (addPage != null) onPagesAdded else null,
             ),
@@ -205,6 +223,8 @@ internal data class CaptureActions(
     val onGallery: () -> Unit,
     val onLastMenu: (String) -> Unit,
     val onAllowance: () -> Unit,
+    /** The bundled example menu, offered where the last menu goes until there is one. */
+    val onSample: () -> Unit = {},
     /** Present only when adding a page: back to the menu without one. */
     val onBack: (() -> Unit)? = null,
 ) {
@@ -300,14 +320,19 @@ internal fun CaptureContent(
                         actions.onGallery,
                     )
                 }
-                Box(Modifier.tipTarget(Tip.Scan)) {
+                Box {
                     Shutter(
                         enabled = camera.state == CameraState.Ready && ready?.isPreparingPhoto != true,
                         onClick = actions.onShutter,
                     )
                 }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    ready?.lastMenu?.let { last -> LastMenuButton(last, actions.onLastMenu) }
+                    // Someone who hasn't scanned yet has no last menu: a sample shows them what
+                    // MenuLango does, right beside the shutter.
+                    when {
+                        ready?.lastMenu != null -> LastMenuButton(ready.lastMenu, actions.onLastMenu)
+                        ready != null && !addingPage -> SampleMenuButton(actions.onSample)
+                    }
                 }
             }
         }
@@ -372,7 +397,7 @@ private fun AllowanceLine(
 }
 
 /**
- * The shutter is the MenuLango mark itself: the amber bubble, the coral bubble and the fork,
+ * The shutter is the MenuLango mark itself: the saffron bubble, the aubergine bubble and the fork,
  * the thing the thumb learns to find. A soft diffused glow sits behind it, and every few
  * seconds a band of light drifts across the bubbles, like a sheen on glazed tile. Pressing
  * presses the mark in and springs it back. Under reduce motion it is still and only dims.
@@ -440,64 +465,12 @@ private fun Shutter(
             // A diffused warm glow behind the mark, so it lifts off any camera image.
             drawCircle(
                 Brush.radialGradient(
-                    listOf(LOGO_CORAL.copy(alpha = 0.45f), LOGO_AMBER.copy(alpha = 0.18f), Color.Transparent),
+                    listOf(LogoAubergine.copy(alpha = 0.45f), LogoSaffron.copy(alpha = 0.18f), Color.Transparent),
                     center = center,
                     radius = size.minDimension * 0.62f,
                 ),
             )
-            // The logo's 108-unit canvas, with the mark (x 28..80, y 30..80) centred and filling it.
-            val unit = size.minDimension * 0.78f / 52f
-            val ox = (size.width - 52f * unit) / 2f - 28f * unit
-            val oy = (size.height - 50f * unit) / 2f - 30f * unit
-
-            fun bubble(
-                x0: Float,
-                y0: Float,
-                x1: Float,
-                y1: Float,
-                r: Float,
-                sharpBottomLeft: Boolean,
-            ) = Path().apply {
-                val round = CornerRadius(r * unit)
-                addRoundRect(
-                    RoundRect(
-                        left = ox + x0 * unit,
-                        top = oy + y0 * unit,
-                        right = ox + x1 * unit,
-                        bottom = oy + y1 * unit,
-                        topLeftCornerRadius = round,
-                        topRightCornerRadius = round,
-                        bottomRightCornerRadius = if (sharpBottomLeft) round else CornerRadius.Zero,
-                        bottomLeftCornerRadius = if (sharpBottomLeft) CornerRadius.Zero else round,
-                    ),
-                )
-            }
-            val back = bubble(47f, 30f, 80f, 61f, 13f, sharpBottomLeft = false)
-            val front = bubble(28f, 44f, 68f, 80f, 15f, sharpBottomLeft = true)
-            val gap = bubble(25.4f, 41.4f, 70.6f, 82.6f, 17.6f, sharpBottomLeft = true)
-            val backCut = Path.combine(PathOperation.Difference, back, gap)
-            val mark = Path.combine(PathOperation.Union, backCut, front)
-            drawPath(backCut, LOGO_AMBER)
-            drawPath(front, LOGO_CORAL)
-
-            // The fork, in white.
-            fun bar(
-                x0: Float,
-                y0: Float,
-                x1: Float,
-                y1: Float,
-                r: Float,
-            ) = drawRoundRect(
-                Color.White,
-                topLeft = Offset(ox + x0 * unit, oy + y0 * unit),
-                size = Size((x1 - x0) * unit, (y1 - y0) * unit),
-                cornerRadius = CornerRadius(r * unit),
-            )
-            bar(42.6f, 50f, 45f, 59f, 1.2f)
-            bar(46.8f, 50f, 49.2f, 59f, 1.2f)
-            bar(51f, 50f, 53.4f, 59f, 1.2f)
-            bar(42.6f, 57f, 53.4f, 62.5f, 2.7f)
-            bar(46.5f, 60f, 49.5f, 73.5f, 1.5f)
+            val mark = drawMenuLangoMark(fill = 0.78f)
             // The sheen: a soft diagonal band of light, only over the bubbles.
             sheen?.value?.let { at ->
                 val x = size.width * at
@@ -519,10 +492,6 @@ private val SHUTTER_SIZE = 84.dp
 private const val SHUTTER_PRESS_MS = 120
 private const val SHEEN_CYCLE_MS = 4_200
 private const val SHEEN_REST_MS = 2_600
-
-/** The logo's own colours, the same in light and dark: it is a mark, not a theme colour. */
-private val LOGO_CORAL = Color(0xFFE4572E)
-private val LOGO_AMBER = Color(0xFFF4B63F)
 
 @Composable
 private fun ChromeButton(
@@ -547,7 +516,16 @@ private fun ChromeButton(
             Icon(icon, contentDescription = null, tint = colors.onPhoto)
         }
         if (caption != null) {
-            Text(caption, style = Paper.type.label, color = colors.onPhoto, modifier = Modifier.padding(top = Space.xs))
+            // One line, centred under the icon: on a narrow phone it shortens rather than wrapping.
+            Text(
+                caption,
+                style = Paper.type.label,
+                color = colors.onPhoto,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = Space.xs),
+            )
         }
     }
 }
@@ -562,6 +540,16 @@ private fun LastMenuButton(
         description = stringResource(Res.string.capture_last_menu_description, last.dishCount),
         caption = stringResource(Res.string.capture_last_menu).uppercase(),
         onClick = { onOpen(last.cacheKey) },
+    )
+}
+
+@Composable
+private fun SampleMenuButton(onOpen: () -> Unit) {
+    ChromeButton(
+        icon = PaperIcons.Menu,
+        description = stringResource(Res.string.capture_sample_description),
+        caption = stringResource(Res.string.capture_sample).uppercase(),
+        onClick = onOpen,
     )
 }
 
@@ -637,10 +625,18 @@ private fun CameraProblem(
                     Modifier.fillMaxWidth(),
                 )
             }
-            state?.lastMenu?.let { last ->
+            val last = state?.lastMenu
+            if (last != null) {
                 SecondaryButton(
                     stringResource(Res.string.capture_last_menu_description, last.dishCount),
                     { actions.onLastMenu(last.cacheKey) },
+                    Modifier.fillMaxWidth(),
+                    icon = PaperIcons.Menu,
+                )
+            } else if (!addingPage) {
+                SecondaryButton(
+                    stringResource(Res.string.capture_sample_description),
+                    actions.onSample,
                     Modifier.fillMaxWidth(),
                     icon = PaperIcons.Menu,
                 )
@@ -652,24 +648,19 @@ private fun CameraProblem(
 
 /**
  * What MenuLango does, shown rather than told: a menu pinned to the felt, printed in a language
- * you can't read, and a coral line reading down it. Each line it passes gains a small note in your
+ * you can't read, and an aubergine line reading down it. Each line it passes gains a small note in your
  * own words. Motion that explains, never motion for its own sake; still under reduce-motion.
  */
 @Composable
 internal fun PlateCluster() {
     val colors = Paper.colors
     val reduceMotion = Paper.reduceMotion
-    val progress =
-        if (reduceMotion) {
-            null
-        } else {
-            rememberInfiniteTransition(label = "reading").animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(tween(READ_CYCLE_MS, easing = LinearEasing)),
-                label = "reading-line",
-            )
-        }
+    // Reads down the page once and then rests, fully read: a demonstration, not a loop that
+    // keeps pulling the eye away from the words beside it.
+    val progress = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!reduceMotion) progress.animateTo(1f, tween(READ_CYCLE_MS, easing = LinearEasing))
+    }
     // Soft linen rather than bright white, and print in a warm pencil-brown rather than grey:
     // an impression of a menu, not a diagram of one.
     val sheet = lerp(colors.raised, colors.paper, 0.6f)
@@ -695,8 +686,7 @@ internal fun PlateCluster() {
             val pad = 18.dp.toPx()
             val line = 7.dp.toPx()
             val gap = 22.dp.toPx()
-            // All the way down and a pause at the bottom, then round again.
-            val reach = (progress?.value ?: 1f).let { (it * 1.25f).coerceAtMost(1f) }
+            val reach = (progress.value * 1.25f).coerceAtMost(1f)
             val scanY = pad + (size.height - pad * 2) * reach
             // A heading in the restaurant's print, then lines of dishes with prices.
             drawRoundRect(heading, Offset(pad, pad), Size(size.width * 0.45f, line * 1.4f), CornerRadius(line))

@@ -1,5 +1,10 @@
 package com.menulango.feature.paywall
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +32,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -39,10 +55,12 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.menulango.PaywallReason
+import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
@@ -60,9 +78,9 @@ import com.menulango.core.ui.paper
 import com.menulango.core.ui.paperShimmer
 import com.menulango.data.billing.PlanKind
 import com.menulango.data.billing.PlanOffer
+import com.menulango.data.preferences.Preferences
 import com.menulango.di.AppConfig
 import com.menulango.platform.feedbackMailUri
-import com.menulango.data.preferences.Preferences
 import com.menulango.resources.Res
 import com.menulango.resources.action_close
 import com.menulango.resources.action_try_again
@@ -71,18 +89,18 @@ import com.menulango.resources.paywall_annual_detail
 import com.menulango.resources.paywall_benefit_history
 import com.menulango.resources.paywall_benefit_modes
 import com.menulango.resources.paywall_benefit_scans
+import com.menulango.resources.paywall_benefit_share
 import com.menulango.resources.paywall_cta
-import com.menulango.resources.paywall_cta_trip
 import com.menulango.resources.paywall_cta_free_trial
-import com.menulango.resources.paywall_trial_line
+import com.menulango.resources.paywall_cta_trip
 import com.menulango.resources.paywall_free_note
 import com.menulango.resources.paywall_lifetime
 import com.menulango.resources.paywall_lifetime_detail
 import com.menulango.resources.paywall_monthly
 import com.menulango.resources.paywall_monthly_detail
-import com.menulango.resources.paywall_nothing_to_restore
 import com.menulango.resources.paywall_not_allowed
 import com.menulango.resources.paywall_not_from_store
+import com.menulango.resources.paywall_nothing_to_restore
 import com.menulango.resources.paywall_offline
 import com.menulango.resources.paywall_pending
 import com.menulango.resources.paywall_plans_failed_body
@@ -91,18 +109,21 @@ import com.menulango.resources.paywall_privacy
 import com.menulango.resources.paywall_reason_choose
 import com.menulango.resources.paywall_reason_pages
 import com.menulango.resources.paywall_reason_scans
+import com.menulango.resources.paywall_reason_share
 import com.menulango.resources.paywall_report_issue
 import com.menulango.resources.paywall_restore
 import com.menulango.resources.paywall_store_error
 import com.menulango.resources.paywall_subtitle
 import com.menulango.resources.paywall_terms
 import com.menulango.resources.paywall_title
+import com.menulango.resources.paywall_trial_line
 import com.menulango.resources.paywall_trip_pass
 import com.menulango.resources.paywall_trip_pass_detail
 import com.menulango.resources.paywall_unavailable_body
 import com.menulango.resources.paywall_unavailable_title
 import com.menulango.resources.paywall_unlocked
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -301,11 +322,18 @@ internal fun PaywallContent(
                             ?.takeIf { it > 0 }
                             ?.let { stringResource(Res.string.paywall_cta_free_trial, it) }
                             ?: stringResource(
-                                if (ready.selected?.kind == PlanKind.TripPass) Res.string.paywall_cta_trip else Res.string.paywall_cta,
+                                if (ready.selected?.kind ==
+                                    PlanKind.TripPass
+                                ) {
+                                    Res.string.paywall_cta_trip
+                                } else {
+                                    Res.string.paywall_cta
+                                },
                             ),
                     onClick = actions.onPurchase,
                     busy = ready.busy == Busy.Purchasing,
                     modifier = Modifier.fillMaxWidth(),
+                    sheen = true,
                 )
             }
             // On a narrow phone a link that doesn't fit moves to the next line whole, never split
@@ -344,33 +372,90 @@ private fun Benefits() {
             .paper(colors.raised, Shapes.card)
             .padding(horizontal = Space.cardPadding, vertical = Space.sm),
     ) {
+        // A check per benefit, as on the Plus card in Settings: one promise, one look.
         listOf(
-            Res.string.paywall_benefit_scans to "📸",
-            Res.string.paywall_benefit_modes to "🍽️",
-            Res.string.paywall_benefit_history to "📖",
-        ).forEach { (benefit, emoji) ->
-            Row(Modifier.padding(vertical = Space.sm), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.size(44.dp).background(colors.sealWash, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(emoji, fontSize = 20.sp, modifier = Modifier.clearAndSetSemantics { })
-                }
+            Res.string.paywall_benefit_scans,
+            Res.string.paywall_benefit_modes,
+            Res.string.paywall_benefit_history,
+            Res.string.paywall_benefit_share,
+        ).forEach { benefit ->
+            Row(Modifier.padding(vertical = Space.sm), verticalAlignment = Alignment.Top) {
+                Icon(
+                    PaperIcons.Check,
+                    contentDescription = null,
+                    tint = colors.sealInk,
+                    modifier = Modifier.padding(top = 2.dp).size(20.dp),
+                )
                 Spacer(Modifier.width(Space.sm))
-                Text(stringResource(benefit), style = Paper.type.bodySmall, color = colors.ink)
+                Text(stringResource(benefit), style = Paper.type.body, color = colors.ink)
             }
         }
     }
 }
 
+/**
+ * The plans as one group with one highlight, like the tab bar's lens: choosing another plan slides
+ * the highlight there, its leading edge first, rather than one card going dark as another lights.
+ */
 @Composable
 private fun Plans(
     state: PaywallUiState.Ready,
     onSelect: (PlanOffer) -> Unit,
 ) {
-    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(Space.related)) {
+    val colors = Paper.colors
+    val reduceMotion = Paper.reduceMotion
+    val bounds = remember { mutableStateMapOf<String, Rect>() }
+    val top = remember { Animatable(0f) }
+    val bottom = remember { Animatable(0f) }
+    var placed by remember { mutableStateOf(false) }
+    val target = bounds[state.selectedId]
+    LaunchedEffect(target) {
+        val to = target ?: return@LaunchedEffect
+        if (!placed || reduceMotion) {
+            top.snapTo(to.top)
+            bottom.snapTo(to.bottom)
+            placed = true
+            return@LaunchedEffect
+        }
+        val downward = to.top > top.value
+        val lead = spring<Float>(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)
+        val trail = spring<Float>(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
+        launch { top.animateTo(to.top, if (downward) trail else lead) }
+        launch { bottom.animateTo(to.bottom, if (downward) lead else trail) }
+    }
+    val card = colors.raised
+    val wash = colors.sealWash
+    val edge = colors.seal
+    Column(
+        Modifier
+            .selectableGroup()
+            .drawBehind {
+                // Every plan's card first, then the highlight over whichever is chosen.
+                val radius = CornerRadius(PLAN_CORNER.toPx())
+                bounds.values.forEach { drawRoundRect(card, it.topLeft, it.size, radius) }
+                val at = target ?: return@drawBehind
+                if (!placed) return@drawBehind
+                val stroke = 2.dp.toPx()
+                val topLeft = Offset(at.left, top.value)
+                val size = Size(at.width, bottom.value - top.value)
+                drawRoundRect(wash, topLeft, size, radius)
+                drawRoundRect(
+                    edge,
+                    topLeft + Offset(stroke / 2, stroke / 2),
+                    Size(size.width - stroke, size.height - stroke),
+                    CornerRadius(radius.x - stroke / 2),
+                    style = Stroke(stroke),
+                )
+            },
+        verticalArrangement = Arrangement.spacedBy(Space.related),
+    ) {
         state.offers.forEach { offer ->
-            PlanOption(offer, isSelected = offer.id == state.selectedId, onClick = { onSelect(offer) })
+            PlanOption(
+                offer,
+                isSelected = offer.id == state.selectedId,
+                onClick = { onSelect(offer) },
+                modifier = Modifier.onGloballyPositioned { bounds[offer.id] = it.boundsInParent() },
+            )
         }
     }
 }
@@ -380,15 +465,19 @@ private fun PlanOption(
     offer: PlanOffer,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = Paper.colors
     val (title, detail) = offer.kind.copy()
+    val titleInk by animateColorAsState(
+        if (isSelected) colors.sealInk else colors.ink,
+        tween(Motion.QUICK_MS, easing = Motion.standard),
+        label = "plan-title",
+    )
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .clip(Shapes.card)
-            .background(if (isSelected) colors.sealWash else colors.raised)
-            .border(2.dp, if (isSelected) colors.seal else Color.Transparent, Shapes.card)
             .selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
             .padding(Space.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -397,7 +486,7 @@ private fun PlanOption(
             Text(
                 stringResource(title),
                 style = Paper.type.dishName,
-                color = if (isSelected) colors.sealInk else colors.ink,
+                color = titleInk,
             )
             Text(stringResource(detail), style = Paper.type.caption, color = colors.inkMuted)
             // The trial's terms in full, as the stores require: how long it's free, then the price.
@@ -442,6 +531,7 @@ private fun PaywallReason.label(): StringResource? =
         PaywallReason.OutOfScans -> Res.string.paywall_reason_scans
         PaywallReason.Choosing -> Res.string.paywall_reason_choose
         PaywallReason.MorePages -> Res.string.paywall_reason_pages
+        PaywallReason.Share -> Res.string.paywall_reason_share
         PaywallReason.Upgrade -> null
     }
 
@@ -460,3 +550,6 @@ internal const val TERMS_URL = "https://www.apple.com/legal/internet-services/it
 
 /** Long enough to read "Welcome to Plus", short enough not to feel like a delay. */
 private const val UNLOCKED_PAUSE_MS = 900L
+
+/** Matches [Shapes.card], which the highlight and the cards under it are drawn to. */
+private val PLAN_CORNER = 14.dp

@@ -1,5 +1,12 @@
 package com.menulango.feature.menus
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,17 +43,22 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.menulango.core.design.Motion
 import com.menulango.core.design.Paper
 import com.menulango.core.design.PaperIcons
 import com.menulango.core.design.Shapes
 import com.menulango.core.design.Space
 import com.menulango.core.ui.DishPlate
+import com.menulango.core.ui.IconAction
 import com.menulango.core.ui.paperFieldColors
 import com.menulango.core.ui.pressable
 import com.menulango.data.menu.model.Dish
+import com.menulango.feature.dish.DishDetails
 import com.menulango.resources.Res
+import com.menulango.resources.action_back
 import com.menulango.resources.dish_sheet_description
 import com.menulango.resources.menus_journal_body
+import com.menulango.resources.menus_journal_earlier
 import com.menulango.resources.menus_journal_hint
 import com.menulango.resources.menus_journal_title
 import org.jetbrains.compose.resources.stringResource
@@ -61,12 +73,17 @@ import org.jetbrains.compose.resources.stringResource
 internal fun PickJournalSheet(
     title: String,
     picked: List<Dish>,
+    earlier: List<Dish>,
     notes: Map<String, String>,
     onNote: (dishId: String, text: String) -> Unit,
-    onOpen: (Dish) -> Unit,
+    onOpenMenu: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = Paper.colors
+    // A dish opens inside this same sheet, sliding in over the list with a way back, the way
+    // Maps and other apps move within a sheet, rather than stacking a second sheet on top.
+    var viewing by remember { mutableStateOf<Dish?>(null) }
+    val reduceMotion = Paper.reduceMotion
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -75,23 +92,90 @@ internal fun PickJournalSheet(
         scrimColor = colors.scrim.copy(alpha = 0.4f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.rule) },
     ) {
-        Column(
-            Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Space.gutter)
-                .padding(bottom = Space.gutter)
-                .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(Space.sm),
-        ) {
-            Text(
-                stringResource(Res.string.menus_journal_title),
-                style = Paper.type.headline,
-                color = colors.ink,
-                modifier = Modifier.semantics { heading() },
-            )
-            Text(title, style = Paper.type.bodySmall, color = colors.inkMuted)
-            Text(stringResource(Res.string.menus_journal_body), style = Paper.type.caption, color = colors.inkMuted)
-            picked.forEach { dish -> JournalEntry(dish, notes[dish.id].orEmpty(), onNote, onOpen) }
+        AnimatedContent(
+            targetState = viewing,
+            transitionSpec = {
+                if (reduceMotion) {
+                    fadeIn(tween(Motion.QUICK_MS)) togetherWith fadeOut(tween(Motion.QUICK_MS))
+                } else {
+                    val forward = targetState != null
+                    (
+                        slideInHorizontally(tween(Motion.SHEET_MS, easing = Motion.standard)) {
+                            if (forward) it else -it / 3
+                        } +
+                            fadeIn(tween(Motion.SHEET_MS))
+                    ) togetherWith
+                        (
+                            slideOutHorizontally(tween(Motion.SHEET_MS, easing = Motion.standard)) {
+                                if (forward) -it / 3 else it
+                            } +
+                                fadeOut(tween(Motion.QUICK_MS))
+                        )
+                }
+            },
+            label = "journal",
+        ) { dish ->
+            if (dish != null) {
+                Column(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.padding(horizontal = Space.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconAction(
+                            PaperIcons.Back,
+                            stringResource(Res.string.action_back),
+                            { viewing = null },
+                            background = colors.sunk,
+                        )
+                        Text(
+                            stringResource(Res.string.menus_journal_title),
+                            style = Paper.type.title,
+                            color = colors.inkMuted,
+                            modifier = Modifier.padding(start = Space.sm),
+                        )
+                    }
+                    DishDetails(dish, onOpenMenu = onOpenMenu)
+                }
+            } else {
+                Column(
+                    Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = Space.gutter)
+                        .padding(bottom = Space.gutter)
+                        .navigationBarsPadding(),
+                    verticalArrangement = Arrangement.spacedBy(Space.sm),
+                ) {
+                    Text(
+                        stringResource(Res.string.menus_journal_title),
+                        style = Paper.type.headline,
+                        color = colors.ink,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    Text(title, style = Paper.type.bodySmall, color = colors.inkMuted)
+                    Text(
+                        stringResource(Res.string.menus_journal_body),
+                        style = Paper.type.caption,
+                        color = colors.inkMuted,
+                    )
+                    picked.forEach { JournalEntry(it, notes[it.id].orEmpty(), onNote) { opened -> viewing = opened } }
+                    // Picks from before this menu was scanned again: history, not this visit's order.
+                    if (earlier.isNotEmpty()) {
+                        Text(
+                            stringResource(Res.string.menus_journal_earlier),
+                            style = Paper.type.label,
+                            color = colors.inkMuted,
+                            modifier = Modifier.padding(top = Space.md).semantics { heading() },
+                        )
+                        earlier.forEach {
+                            JournalEntry(
+                                it,
+                                notes[it.id].orEmpty(),
+                                onNote,
+                            ) { opened -> viewing = opened }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -112,7 +196,7 @@ private fun JournalEntry(
         onDispose { if (latest != saved) onNote(dish.id, latest) }
     }
     val openLabel = stringResource(Res.string.dish_sheet_description, dish.readableName)
-    Column(Modifier.fillMaxWidth().padding(top = Space.sm), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+    Column(Modifier.fillMaxWidth().padding(top = Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
         Row(
             Modifier
                 .fillMaxWidth()

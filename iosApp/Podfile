@@ -8,4 +8,7 @@ target 'iosApp' do
   # ML Kit 6+ needs iOS 15.5 and still excludes arm64 simulators. Version 5 supports the
   # app's iOS 15.0 deployment floor and physical iPhones.
   pod 'GoogleMLKit/Translate', '5.0.0'
+  # App Check proves to the proxy that scans come from this app (App Attest). Firebase 10 is the
+  # newest line that shares ML Kit 5's GoogleUtilities 7.
+  pod 'FirebaseAppCheck', '~> 10.29'
 end

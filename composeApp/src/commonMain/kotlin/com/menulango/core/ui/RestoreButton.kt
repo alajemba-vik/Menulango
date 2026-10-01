@@ -1,6 +1,7 @@
 package com.menulango.core.ui
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -35,8 +36,7 @@ import org.koin.compose.koinInject
 
 /**
  * "Restore purchases", which Apple requires wherever subscriptions are sold, with a small info
- * mark beside it until the diner has read what it does. Once read, the mark goes; the button,
- * as the store rules require, stays.
+ * mark beside it that explains what it does. Both always stay.
  */
 @Composable
 internal fun RestoreButton(
@@ -46,26 +46,26 @@ internal fun RestoreButton(
     color: Color = Paper.colors.ink,
 ) {
     val tips = koinInject<Tips>()
-    val seen by tips.seen.collectAsState()
     var explaining by remember { mutableStateOf(false) }
     val infoLabel = stringResource(Res.string.restore_info_label)
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         QuietButton(text, onRestore, color = color, singleLine = true)
-        if (Tip.RestoreInfo !in seen) {
-            Icon(
-                PaperIcons.Info,
-                contentDescription = null,
-                tint = Paper.colors.inkMuted,
-                modifier =
-                    Modifier
-                        .clip(Shapes.pill)
-                        .pressable({ explaining = true })
-                        .semantics { contentDescription = infoLabel }
-                        // A 18dp mark with a 46dp tap area around it.
-                        .padding(14.dp)
-                        .size(18.dp),
-            )
-        }
+        Icon(
+            PaperIcons.Info,
+            contentDescription = null,
+            tint = Paper.colors.inkMuted,
+            modifier =
+                Modifier
+                    // Pulled in over the button's own padding, so the mark sits beside the words
+                    // (about 6 dp away) while keeping its full tap area.
+                    .offset(x = -ICON_PULL)
+                    .clip(Shapes.pill)
+                    .pressable({ explaining = true })
+                    .semantics { contentDescription = infoLabel }
+                    // A 18dp mark with a 46dp tap area around it.
+                    .padding(14.dp)
+                    .size(18.dp),
+        )
     }
     if (explaining) {
         val colors = Paper.colors
@@ -75,7 +75,13 @@ internal fun RestoreButton(
                 tips.markSeen(Tip.RestoreInfo)
             },
             containerColor = colors.raised,
-            title = { Text(stringResource(Res.string.restore_info_title), style = Paper.type.dishName, color = colors.ink) },
+            title = {
+                Text(
+                    stringResource(Res.string.restore_info_title),
+                    style = Paper.type.dishName,
+                    color = colors.ink,
+                )
+            },
             text = { Text(stringResource(Res.string.restore_info_body), style = Paper.type.body, color = colors.ink) },
             confirmButton = {
                 TextButton(onClick = {
@@ -86,3 +92,6 @@ internal fun RestoreButton(
         )
     }
 }
+
+/** The button's end padding plus the mark's tap padding, less the 6 dp gap that should remain. */
+private val ICON_PULL = 20.dp

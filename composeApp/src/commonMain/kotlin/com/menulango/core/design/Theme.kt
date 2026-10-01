@@ -22,19 +22,21 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.menulango.resources.Res
-import com.menulango.resources.figtree_medium
-import com.menulango.resources.figtree_regular
-import com.menulango.resources.figtree_semibold
-import com.menulango.resources.petrona_bold
-import com.menulango.resources.petrona_italic
-import com.menulango.resources.petrona_semibold
+import com.menulango.resources.bricolage_bold
+import com.menulango.resources.bricolage_semibold
+import com.menulango.resources.caveat_semibold
+import com.menulango.resources.nunito_italic
+import com.menulango.resources.nunito_medium
+import com.menulango.resources.nunito_regular
+import com.menulango.resources.nunito_semibold
 import org.jetbrains.compose.resources.Font
 
 /**
  * MenuLango's type roles.
  *
- * Dish names and headings are Petrona Bold and large — they are the content, so they are set like
- * headlines. Everything else is Figtree and quiet. Scale: 40 / 30 / 24 / 20 / 17 / 15 / 13 / 11.
+ * Dish names and headings are Bricolage Grotesque Bold and large — they are the content, so they
+ * are set like headlines. Everything else is Nunito, rounded and friendly; "how it's made" is
+ * Nunito italic. Scale: 40 / 30 / 24 / 20 / 17 / 15 / 13 / 11.
  */
 @Immutable
 internal data class PaperType(
@@ -56,6 +58,8 @@ internal data class PaperType(
     val button: TextStyle,
     /** Pill chips: sentence case, never shouted. */
     val chip: TextStyle,
+    /** Handwriting, for the one line the app writes out by hand: the Plus card's title. */
+    val hand: TextStyle,
 )
 
 private val tightLines =
@@ -66,43 +70,44 @@ private fun rememberPaperType(latinScript: Boolean): PaperType {
     // Tracking is tuned for Latin and Cyrillic; Arabic, Devanagari and CJK set it to zero, or
     // joined scripts come apart and lines break in the middle of words.
     fun tracking(value: Float) = if (latinScript) value.em else 0.em
-    val petrona =
+    val bricolage =
         FontFamily(
-            Font(Res.font.petrona_semibold, FontWeight.SemiBold),
-            Font(Res.font.petrona_bold, FontWeight.Bold),
-            Font(Res.font.petrona_italic, FontWeight.Normal, FontStyle.Italic),
+            Font(Res.font.bricolage_semibold, FontWeight.SemiBold),
+            Font(Res.font.bricolage_bold, FontWeight.Bold),
         )
-    val figtree =
+    val nunito =
         FontFamily(
-            Font(Res.font.figtree_regular, FontWeight.Normal),
-            Font(Res.font.figtree_medium, FontWeight.Medium),
-            Font(Res.font.figtree_semibold, FontWeight.SemiBold),
+            Font(Res.font.nunito_regular, FontWeight.Normal),
+            Font(Res.font.nunito_medium, FontWeight.Medium),
+            Font(Res.font.nunito_semibold, FontWeight.SemiBold),
+            Font(Res.font.nunito_italic, FontWeight.Normal, FontStyle.Italic),
         )
-    return remember(petrona, figtree) {
+    val caveat = FontFamily(Font(Res.font.caveat_semibold, FontWeight.SemiBold))
+    return remember(bricolage, nunito, caveat) {
         val base = TextStyle(lineHeightStyle = tightLines)
-        val serif = base.copy(fontFamily = petrona, fontWeight = FontWeight.SemiBold)
-        val sans = base.copy(fontFamily = figtree, fontWeight = FontWeight.Normal)
+        val display = base.copy(fontFamily = bricolage, fontWeight = FontWeight.SemiBold)
+        val sans = base.copy(fontFamily = nunito, fontWeight = FontWeight.Normal)
         PaperType(
             hero =
-                serif.copy(
+                display.copy(
                     fontSize = 40.sp,
                     lineHeight = 44.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = tracking(-0.01f),
                 ),
             dishTitle =
-                serif.copy(
+                display.copy(
                     fontSize = 30.sp,
                     lineHeight = 35.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = tracking(-0.01f),
                 ),
-            headline = serif.copy(fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold),
-            dishName = serif.copy(fontSize = 20.sp, lineHeight = 25.sp, fontWeight = FontWeight.Bold),
+            headline = display.copy(fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold),
+            dishName = display.copy(fontSize = 20.sp, lineHeight = 25.sp, fontWeight = FontWeight.Bold),
             method =
-                serif.copy(
-                    fontSize = 20.sp,
-                    lineHeight = 31.sp,
+                sans.copy(
+                    fontSize = 19.sp,
+                    lineHeight = 29.sp,
                     fontWeight = FontWeight.Normal,
                     fontStyle = FontStyle.Italic,
                 ),
@@ -133,6 +138,14 @@ private fun rememberPaperType(latinScript: Boolean): PaperType {
                     letterSpacing = tracking(0.01f),
                 ),
             chip = sans.copy(fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
+            // Caveat is small for its size, so it is set large to sit level with a headline.
+            hand =
+                base.copy(
+                    fontFamily = caveat,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 34.sp,
+                    lineHeight = 38.sp,
+                ),
         )
     }
 }
@@ -163,7 +176,7 @@ internal object Paper {
  *
  * Material 3 is kept only for its text, ripple and accessibility plumbing. Its tonal elevation
  * overlay is neutralised by tinting surfaces with their own colour — otherwise every raised
- * surface would pick up a coral cast and the app would look like a stock Android app.
+ * surface would pick up an aubergine cast and the app would look like a stock Android app.
  */
 @Composable
 internal fun MenuLangoTheme(
@@ -194,7 +207,7 @@ internal fun MenuLangoTheme(
                 surfaceVariant = colors.sunk,
                 onSurfaceVariant = colors.inkMuted,
                 surfaceTint = colors.raised,
-                outline = colors.rule,
+                outline = colors.outline,
                 outlineVariant = colors.rule,
                 error = colors.alarm,
                 scrim = colors.scrim,
@@ -211,7 +224,7 @@ internal fun MenuLangoTheme(
                 surfaceVariant = colors.sunk,
                 onSurfaceVariant = colors.inkMuted,
                 surfaceTint = colors.raised,
-                outline = colors.rule,
+                outline = colors.outline,
                 outlineVariant = colors.rule,
                 error = colors.alarm,
                 scrim = colors.scrim,

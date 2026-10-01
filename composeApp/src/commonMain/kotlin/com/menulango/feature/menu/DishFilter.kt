@@ -12,6 +12,12 @@ internal enum class DishFilter {
     Vegetarian,
     Vegan,
     NoPork,
+
+    /** No pork and no alcohol, by ingredients. Never a claim that the kitchen is halal. */
+    HalalFriendly,
+
+    /** No pork, shellfish, or meat served with dairy, by ingredients. Never a claim of kashrut. */
+    KosherFriendly,
     NotSpicy,
     NothingRaw,
     NoOffal,
@@ -48,6 +54,8 @@ internal class DishFilters(
             DishFilter.Vegetarian -> flags.vegetarian || flags.vegan
             DishFilter.Vegan -> flags.vegan
             DishFilter.NoPork -> !flags.pork
+            DishFilter.HalalFriendly -> !flags.pork && flags.alcohol == false
+            DishFilter.KosherFriendly -> !flags.pork && flags.shellfish == false && flags.meatWithDairy == false
             DishFilter.NotSpicy -> flags.spicy <= 1
             DishFilter.NothingRaw -> !flags.raw
             DishFilter.NoOffal -> !flags.offal
@@ -87,6 +95,8 @@ internal val DietaryFilters: List<DishFilter> =
         DishFilter.Vegetarian,
         DishFilter.Vegan,
         DishFilter.NoPork,
+        DishFilter.HalalFriendly,
+        DishFilter.KosherFriendly,
         DishFilter.NotSpicy,
         DishFilter.NothingRaw,
         DishFilter.NoOffal,

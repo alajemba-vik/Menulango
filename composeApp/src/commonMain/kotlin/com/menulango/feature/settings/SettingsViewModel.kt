@@ -6,6 +6,8 @@ import com.menulango.data.backup.BackupRestoreResult
 import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
 import com.menulango.data.billing.PurchaseOutcome
+import com.menulango.data.currency.COMMON_CURRENCIES
+import com.menulango.data.currency.ExchangeRates
 import com.menulango.data.marks.MenuMarks
 import com.menulango.data.menu.MenuRepository
 import com.menulango.data.preferences.AppLanguage
@@ -62,11 +64,15 @@ internal class SettingsViewModel(
     private val backup: BackupService,
     config: AppConfig,
     private val marks: MenuMarks,
+    private val rates: ExchangeRates,
 ) : ViewModel() {
     /** Test builds only: the sample menu and a free Plus switch live in Settings. */
     val showsTestTools: Boolean = config.showsTestTools
 
     fun setTestPlus(on: Boolean) = billing.setDebugUnlock(on)
+
+    /** A real subscription keeps Plus on whatever the test switch says. */
+    val paidPlus: StateFlow<Boolean> = billing.hasPurchase
 
     private val messages = MutableSharedFlow<SettingsMessage>(extraBufferCapacity = 1)
     val message: SharedFlow<SettingsMessage> = messages.asSharedFlow()
@@ -101,6 +107,27 @@ internal class SettingsViewModel(
     val calmMotion: StateFlow<Boolean> = preferences.calmMotion
 
     fun setCalmMotion(value: Boolean) = preferences.setCalmMotion(value)
+
+    val convertPrices: StateFlow<Boolean> = preferences.convertPrices
+    val homeCurrency: StateFlow<String> = preferences.homeCurrency
+
+    fun setConvertPrices(value: Boolean) {
+        preferences.setConvertPrices(value)
+        if (value) viewModelScope.launch { rates.refresh() }
+    }
+
+    fun setHomeCurrency(code: String) = preferences.setHomeCurrency(code)
+
+    /** Every currency there is a rate for, the common ones first; just those until rates arrive. */
+    fun currencyChoices(): List<String> {
+        val known =
+            rates.table.value
+                ?.rates
+                ?.keys
+                .orEmpty()
+        val common = COMMON_CURRENCIES.filter { known.isEmpty() || it in known }
+        return common + known.sorted().filterNot { it in common }
+    }
 
     val startPage: StateFlow<StartPage> = preferences.startPage
 

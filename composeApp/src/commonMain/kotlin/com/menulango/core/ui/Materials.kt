@@ -27,7 +27,7 @@ import kotlin.random.Random
  *
  *   paper  — cards: heavy cotton paper, a fine tooth and the odd fibre
  *   weave  — chips: woven labels, a close warp and weft
- *   suede  — coral buttons: a soft nap
+ *   suede  — aubergine buttons: a soft nap
  */
 
 /** A card's surface: [base] with the fine tooth of heavy cotton paper. */
@@ -51,6 +51,17 @@ internal fun Modifier.suede(
 private enum class Material { Paper, Weave, Suede }
 
 private fun Modifier.material(
+    base: Color,
+    shape: Shape,
+    material: Material,
+): Modifier =
+    if (!SURFACE_TEXTURE) {
+        background(base, shape)
+    } else {
+        textured(base, shape, material)
+    }
+
+private fun Modifier.textured(
     base: Color,
     shape: Shape,
     material: Material,

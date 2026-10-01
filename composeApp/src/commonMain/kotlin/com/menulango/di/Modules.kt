@@ -3,6 +3,7 @@ package com.menulango.di
 import com.menulango.data.DeviceIdentity
 import com.menulango.data.backup.BackupService
 import com.menulango.data.billing.BillingRepository
+import com.menulango.data.currency.ExchangeRates
 import com.menulango.data.db.MenuLangoDatabase
 import com.menulango.data.history.EatenHistory
 import com.menulango.data.marks.MenuMarks
@@ -12,9 +13,11 @@ import com.menulango.data.menu.local.MenuCache
 import com.menulango.data.menu.remote.MenuApi
 import com.menulango.data.menu.remote.MenuResponseParser
 import com.menulango.data.menu.remote.ProxyMenuApi
+import com.menulango.data.photo.DishPhotos
 import com.menulango.data.preferences.Preferences
 import com.menulango.data.quota.QuotaStorage
 import com.menulango.data.quota.ScanQuota
+import com.menulango.data.share.MenuSharing
 import com.menulango.data.tips.Tips
 import com.menulango.feature.capture.CaptureViewModel
 import com.menulango.feature.choose.ChooseViewModel
@@ -26,6 +29,7 @@ import com.menulango.feature.order.OrderBook
 import com.menulango.feature.order.onDeviceNoteTranslator
 import com.menulango.feature.paywall.PaywallViewModel
 import com.menulango.feature.settings.SettingsViewModel
+import com.menulango.feature.table.TableSession
 import com.menulango.resources.Res
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
@@ -58,7 +62,10 @@ internal fun sharedModule(config: AppConfig): Module =
         single { DeviceIdentity(get()) }
         single { MenuResponseParser(failLoudly = config.isDebug) }
         single { proxyHttpClient() }
-        single<MenuApi> { ProxyMenuApi(get(), get(), get(), get()) }
+        single<MenuApi> { ProxyMenuApi(get(), get(), get(), get(), get()) }
+        single { DishPhotos(get(), get(), get(), get()) }
+        single { ExchangeRates(get(), get(), get(), get(), get(), ::nowMillis) }
+        single { MenuSharing(get(), get(), get(), get()) }
         single { MenuLangoDatabase(get()) }
         single { MenuCache(get(), get(), Dispatchers.IO, ::nowMillis) }
         single { EatenHistory(get(), Dispatchers.IO, ::nowMillis) }
@@ -81,13 +88,14 @@ internal fun sharedModule(config: AppConfig): Module =
         single { Preferences(get()) }
         single { Tips(get()) }
         single { OrderBook(get()) }
+        single { TableSession(get(), get(), get(), get(AppScope)) }
         single { MenuMarks(get()) }
         single<NoteTranslator> { onDeviceNoteTranslator() }
         viewModel { params ->
             MenuViewModel(params.get(), get(), get(), get(), get(), get(), get(), get(), get(AppScope), get(), get())
         }
         viewModel { MenusViewModel(get(), ::nowMillis, get()) }
-        viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+        viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }
         viewModel { params -> ChooseViewModel(params.get(), params.get(), params.get(), get(), get(), get()) }
         viewModel { params -> PaywallViewModel(params.get(), get()) }
     }

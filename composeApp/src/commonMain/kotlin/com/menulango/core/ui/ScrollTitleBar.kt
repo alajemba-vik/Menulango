@@ -25,23 +25,26 @@ import com.menulango.core.design.Space
  * rises into it, frame by frame with the finger. Nothing slides in on its own.
  *
  * @param progress 0 with the big title fully shown, 1 once it has scrolled under the bar.
+ * @param felt false on pages whose background is plain, so the bar matches the page.
  */
 @Composable
 internal fun ScrollTitleBar(
     title: String,
     progress: () -> Float,
     modifier: Modifier = Modifier,
+    felt: Boolean = true,
 ) {
     val colors = Paper.colors
+    val surface = if (felt) Modifier.felt(colors.paper) else Modifier.background(colors.paper)
     Column(modifier.fillMaxWidth()) {
         // Always paper behind the status bar, so the clock never sits on a card.
-        Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).felt(colors.paper))
+        Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).then(surface))
         Box(
             Modifier
                 .fillMaxWidth()
                 .height(BAR_HEIGHT)
                 .graphicsLayer { alpha = progress() }
-                .felt(colors.paper),
+                .then(surface),
             contentAlignment = Alignment.Center,
         ) {
             Text(

@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.Deferred
 
 /*
  * Image capture and image compression are the only two things MenuLango implements per platform.
@@ -53,20 +54,22 @@ internal expect fun CameraViewfinder(
 
 /** The outcome of the system photo picker. */
 internal sealed interface PickedPhoto {
-    /** Upload-ready, already passed through [compressForUpload], in the order they were picked. */
+    /**
+     * Reported the moment the picker closes, so the menu can open at once. The photos arrive
+     * through [pages] once loaded and passed through [compressForUpload], in the order they were
+     * picked; empty when none could be read.
+     */
     class Chosen(
-        val pages: List<ByteArray>,
+        val pages: Deferred<List<ByteArray>>,
     ) : PickedPhoto
 
     data object Cancelled : PickedPhoto
-
-    data object Unreadable : PickedPhoto
 }
 
 /**
  * Returns a launcher for the system photo picker, so a menu's pages can be chosen together.
  * Launch it with the most photos to accept, or null for no limit. Photos that cannot be read are
- * skipped; [PickedPhoto.Unreadable] means none could.
+ * skipped.
  */
 @Composable
 internal expect fun rememberPhotoPicker(onPicked: (PickedPhoto) -> Unit): (maxPhotos: Int?) -> Unit

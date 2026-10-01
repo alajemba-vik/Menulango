@@ -12,9 +12,9 @@ import androidx.compose.ui.unit.dp
 /**
  * Every colour in MenuLango. No hex literal appears anywhere else in the codebase.
  *
- * "Felt board": cream felt, coral as the brand, charcoal for the hero moments. [seal] is the brand
- * colour for the primary action and the selected state; [sealInk] is the same coral darkened so it
- * reads as text. [alarm] is reserved for allergens — never decoration.
+ * "Felt board": pale felt, aubergine as the brand, charcoal for the hero moments. [seal] is the
+ * brand colour for the primary action and the selected state; [sealInk] is the same aubergine
+ * deepened so it reads as text. [alarm] is reserved for allergens — never decoration.
  *
  * Soft colours have exactly one job: [food] says what kind of food a dish is — sea, garden, grill,
  * sweet, drink, hearth. Nothing else in the app uses them, so matching colours always mean the
@@ -29,11 +29,24 @@ internal data class PaperColors(
     val inkMuted: Color,
     val inkFaint: Color,
     val rule: Color,
+    /**
+     * The edge of a control people need to find: a text field, an unchecked switch. At least 3:1
+     * against every surface (WCAG 1.4.11), where [rule] is only for decorative lines.
+     */
+    val outline: Color,
     val seal: Color,
-    /** Coral dark enough to be read as text on [paper] and [raised]. */
+    /** Aubergine dark enough to be read as text on [paper] and [raised]. */
     val sealInk: Color,
     /** Text and icons on a [seal] fill. */
     val onSeal: Color,
+    /**
+     * The brand colour on an [ink] surface (the Help me choose pill, the basket, the snackbar, the
+     * Plus card). [ink] flips between themes, so this is the other theme's brand colour: lavender
+     * on the near-black of light mode, aubergine on the near-white of dark mode.
+     */
+    val sealOnInk: Color,
+    /** Text on a [sealOnInk] fill. */
+    val onSealOnInk: Color,
     val ember: Color,
     val alarm: Color,
     /** Behind the menu photo when it dims. Warm, like a room with the lights down. */
@@ -70,9 +83,12 @@ internal data class PaperColors(
             inkMuted = mix(inkMuted, to.inkMuted),
             inkFaint = mix(inkFaint, to.inkFaint),
             rule = mix(rule, to.rule),
+            outline = mix(outline, to.outline),
             seal = mix(seal, to.seal),
             sealInk = mix(sealInk, to.sealInk),
             onSeal = mix(onSeal, to.onSeal),
+            sealOnInk = mix(sealOnInk, to.sealOnInk),
+            onSealOnInk = mix(onSealOnInk, to.onSealOnInk),
             ember = mix(ember, to.ember),
             alarm = mix(alarm, to.alarm),
             scrim = mix(scrim, to.scrim),
@@ -82,7 +98,7 @@ internal data class PaperColors(
         )
     }
 
-    /** A peach tint of the brand colour: selected cards, fact tiles, the stepper. */
+    /** A soft tint of the brand colour: selected cards, fact tiles, the stepper. */
     val sealWash: Color get() = seal.copy(alpha = if (isDark) 0.18f else 0.12f)
 
     /** The allergen panel's wash. Derived, so the panel can never drift from [alarm]. */
@@ -93,17 +109,21 @@ internal data class PaperColors(
 
 internal val LightPaper =
     PaperColors(
-        paper = Color(0xFFF7F3EE),
+        paper = Color(0xFFFAF8FC),
         raised = Color(0xFFFFFFFF),
-        sunk = Color(0xFFF0E9E2),
-        ink = Color(0xFF201917),
-        inkMuted = Color(0xFF6B5F5A),
-        inkFaint = Color(0xFF9A8D86),
-        rule = Color(0xFFEBE2DA),
-        seal = Color(0xFFE4572E),
-        sealInk = Color(0xFFC24323),
+        sunk = Color(0xFFF2EEF6),
+        ink = Color(0xFF1E1624),
+        // Every text colour meets WCAG AA (4.5:1) on paper, raised and sunk, faint included.
+        inkMuted = Color(0xFF564B5E),
+        inkFaint = Color(0xFF736A7A),
+        rule = Color(0xFFE9E3EF),
+        outline = Color(0xFF8F8895),
+        seal = Color(0xFF6B2E83),
+        sealInk = Color(0xFF5A2470),
         onSeal = Color(0xFFFFFFFF),
-        ember = Color(0xFFA3670F),
+        sealOnInk = Color(0xFFC9A2E3),
+        onSealOnInk = Color(0xFF1E1624),
+        ember = Color(0xFF925C0D),
         alarm = Color(0xFF8E3037),
         scrim = Color(0xFF14100E),
         onPhoto = Color(0xFFFFFFFF),
@@ -113,7 +133,7 @@ internal val LightPaper =
                 Color(0xFFD7EDD3), // garden
                 Color(0xFFFFDCCB), // grill
                 Color(0xFFFBEBA8), // sweet
-                Color(0xFFE3DEFF), // drink
+                Color(0xFFD4EEEA), // drink
                 Color(0xFFEFE2CA), // hearth
             ),
         isDark = false,
@@ -122,16 +142,19 @@ internal val LightPaper =
 /** "The menu by candlelight": charcoal, like the onboarding cards of a good food app. */
 internal val DarkPaper =
     PaperColors(
-        paper = Color(0xFF181311),
-        raised = Color(0xFF241D1A),
-        sunk = Color(0xFF2D2522),
-        ink = Color(0xFFF5EEE9),
-        inkMuted = Color(0xFFB5A8A1),
-        inkFaint = Color(0xFF85776F),
-        rule = Color(0xFF362D29),
-        seal = Color(0xFFFF7A59),
-        sealInk = Color(0xFFFF8A6B),
-        onSeal = Color(0xFF201917),
+        paper = Color(0xFF151118),
+        raised = Color(0xFF211A26),
+        sunk = Color(0xFF2A2230),
+        ink = Color(0xFFF3EEF6),
+        inkMuted = Color(0xFFB3A8BB),
+        inkFaint = Color(0xFF92889A),
+        rule = Color(0xFF352C3B),
+        outline = Color(0xFF746C79),
+        seal = Color(0xFFB98AD6),
+        sealInk = Color(0xFFC9A2E3),
+        onSeal = Color(0xFF1E1624),
+        sealOnInk = Color(0xFF6B2E83),
+        onSealOnInk = Color(0xFFFFFFFF),
         ember = Color(0xFFF5B348),
         alarm = Color(0xFFE08790),
         scrim = Color(0xFF14100E),
@@ -142,7 +165,7 @@ internal val DarkPaper =
                 Color(0xFF243726), // garden
                 Color(0xFF4A2D23), // grill
                 Color(0xFF443A1C), // sweet
-                Color(0xFF302B4B), // drink
+                Color(0xFF1F3A38), // drink
                 Color(0xFF3A3226), // hearth
             ),
         isDark = true,
@@ -162,7 +185,7 @@ internal enum class FoodGroup {
     /** Desserts, fruit and pastries: butter yellow, honey. */
     Sweet,
 
-    /** Wine, beer, coffee and cocktails: lavender. */
+    /** Wine, beer, coffee and cocktails: mint, kept clear of the aubergine brand. */
     Drink,
 
     /** Everything from the kitchen's heart — cheese, eggs, bread, pasta, rice, soups: oat. */

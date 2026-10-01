@@ -17,8 +17,10 @@ internal data class MenuMark(
     val name: String? = null,
     /** Dishes swiped out of view on this menu. */
     val hidden: Set<String> = emptySet(),
-    /** Every dish picked from this menu, oldest first: the diner may well have ordered these. */
+    /** Every dish picked from this menu on the latest visit, oldest first: the diner may well have ordered these. */
     val picked: List<String> = emptyList(),
+    /** Picks from earlier visits, kept apart so they never pass for this visit's order. */
+    val earlierPicks: List<String> = emptyList(),
     /** A line the diner wrote about a picked dish, afterwards. */
     val notes: Map<String, String> = emptyMap(),
 )
@@ -66,6 +68,15 @@ internal class MenuMarks(
         val clean = text.trim().take(MAX_NOTE)
         mark.copy(notes = if (clean.isEmpty()) mark.notes - dishId else mark.notes + (dishId to clean))
     }
+
+    /**
+     * The same menu scanned again: a new visit. This visit's picks start empty and the earlier
+     * ones move aside, notes and all, so the Menus card never counts yesterday's order as today's.
+     */
+    fun newVisit(menuKey: String) =
+        update(menuKey) { mark ->
+            mark.copy(picked = emptyList(), earlierPicks = (mark.picked + mark.earlierPicks).distinct())
+        }
 
     /** Called when a saved menu is deleted, so nothing about it lingers. */
     fun forget(menuKey: String) {

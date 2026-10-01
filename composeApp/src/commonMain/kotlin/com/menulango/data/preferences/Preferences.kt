@@ -1,5 +1,6 @@
 package com.menulango.data.preferences
 
+import com.menulango.platform.deviceCurrencyCode
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,8 @@ internal data class PreferenceBackup(
     val language: AppLanguage = AppLanguage.System,
     val calmMotion: Boolean = false,
     val startPage: StartPage = StartPage.Menus,
+    val convertPrices: Boolean = false,
+    val homeCurrency: String? = null,
 )
 
 /**
@@ -61,6 +64,25 @@ internal class Preferences(
     private val avoidState = MutableStateFlow(readList(KEY_AVOID))
     private val featuredState = MutableStateFlow(settings.getBoolean(KEY_FEATURED, true))
     private val calmMotionState = MutableStateFlow(settings.getBoolean(KEY_CALM_MOTION, false))
+    private val convertPricesState = MutableStateFlow(settings.getBoolean(KEY_CONVERT_PRICES, false))
+    private val homeCurrencyState =
+        MutableStateFlow(settings.getStringOrNull(KEY_HOME_CURRENCY) ?: deviceCurrencyCode() ?: DEFAULT_CURRENCY)
+
+    /** Off until the diner asks: then each printed price is followed by "≈" and [homeCurrency]. */
+    val convertPrices: StateFlow<Boolean> = convertPricesState.asStateFlow()
+
+    /** The currency prices are converted into: the phone's region's until the diner picks one. */
+    val homeCurrency: StateFlow<String> = homeCurrencyState.asStateFlow()
+
+    fun setConvertPrices(value: Boolean) {
+        settings.putBoolean(KEY_CONVERT_PRICES, value)
+        convertPricesState.value = value
+    }
+
+    fun setHomeCurrency(code: String) {
+        settings.putString(KEY_HOME_CURRENCY, code)
+        homeCurrencyState.value = code
+    }
 
     /**
      * The app's own "reduce motion", for diners who want the texture still and the cards flat
@@ -156,6 +178,8 @@ internal class Preferences(
             language = language.value,
             calmMotion = calmMotion.value,
             startPage = startPage.value,
+            convertPrices = convertPrices.value,
+            homeCurrency = settings.getStringOrNull(KEY_HOME_CURRENCY),
         )
 
     /** Keep stricter food choices from either device; leave an explicit appearance choice intact. */
@@ -168,6 +192,8 @@ internal class Preferences(
         // A comfort setting from either device holds; a start page only fills in the default.
         if (incoming.calmMotion) setCalmMotion(true)
         if (startPage.value == StartPage.Menus) setStartPage(incoming.startPage)
+        if (incoming.convertPrices) setConvertPrices(true)
+        if (settings.getStringOrNull(KEY_HOME_CURRENCY) == null) incoming.homeCurrency?.let(::setHomeCurrency)
     }
 
     private fun readAppearance(): Appearance =
@@ -198,6 +224,9 @@ internal class Preferences(
         const val KEY_CALM_MOTION = "prefs.calmMotion"
         const val KEY_PLUS_INK = "prefs.plusInkAt"
         const val KEY_START = "prefs.startPage"
+        const val KEY_CONVERT_PRICES = "prefs.convertPrices"
+        const val KEY_HOME_CURRENCY = "prefs.homeCurrency"
+        const val DEFAULT_CURRENCY = "USD"
         const val KEY_LANGUAGE = "prefs.language"
         const val KEY_CAMERA_FIRST = "prefs.cameraFirstLaunches"
 

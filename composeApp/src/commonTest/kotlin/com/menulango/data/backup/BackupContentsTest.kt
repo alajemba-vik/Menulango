@@ -62,9 +62,16 @@ class BackupContentsTest {
     @Test
     fun readTipsTravel() {
         val old = Tips(MapSettings())
-        old.markSeen(Tip.Scan)
+        old.markSeen(Tip.Picks)
         val fresh = Tips(MapSettings())
         fresh.merge(old.backup())
-        assertTrue(Tip.Scan in fresh.seen.value)
+        assertTrue(Tip.Picks in fresh.seen.value)
+    }
+
+    @Test
+    fun retiredTipsInAnOldBackupAreIgnored() {
+        val fresh = Tips(MapSettings())
+        fresh.merge(setOf("Scan", "TapDish", "Picks"))
+        assertEquals(setOf(Tip.Picks), fresh.seen.value)
     }
 }
