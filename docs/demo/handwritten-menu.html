@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chez Margot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fbf6ea; --ink: #1f2a44; --red: #a3262a; --rule: #d9cfb8; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #3b3a36; padding: 16px;
+  }
+  .menu {
+    width: min(620px, 100%);
+    background: var(--paper);
+    background-image: repeating-linear-gradient(transparent 0 38px, var(--rule) 38px 39px);
+    color: var(--ink);
+    padding: 40px 44px 48px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+    transform: rotate(-1.2deg);
+    font-family: "Kalam", cursive;
+    font-size: 21px; line-height: 39px;
+  }
+  h1 { font-family: "Caveat", cursive; font-size: 58px; line-height: 1; margin: 0 0 4px; text-align: center; color: var(--red); }
+  .sub { text-align: center; font-family: "Caveat", cursive; font-size: 26px; margin-bottom: 14px; }
+  h2 { font-family: "Caveat", cursive; font-size: 36px; margin: 18px 0 0; text-decoration: underline; text-decoration-thickness: 2px; }
+  .row { display: flex; justify-content: space-between; gap: 16px; }
+  .row span:last-child { white-space: nowrap; }
+  .tilt { transform: rotate(.6deg); }
+  .tilt2 { transform: rotate(-.8deg); }
+  .gone { text-decoration: line-through; opacity: .6; }
+  .note { font-family: "Caveat", cursive; font-size: 24px; color: var(--red); }
+  .jour { border: 2px solid var(--red); border-radius: 14px 8px 16px 10px; padding: 0 12px; margin-top: 16px; transform: rotate(1deg); }
+  @media (max-width: 520px) { .menu { padding: 28px 20px 32px; font-size: 17px; } h1 { font-size: 44px; } }
+</style>
+</head>
+<body>
+  <div class="menu">
+    <h1>Chez Margot</h1>
+    <div class="sub">bistrot · depuis 1987</div>
+
+    <h2>Entrées</h2>
+    <div class="row"><span>Salade niçoise</span><span>12 €</span></div>
+    <div class="row tilt"><span>Croque monsieur</span><span>9,50 €</span></div>
+    <div class="row"><span>Steak tartare au couteau</span><span>18 €</span></div>
+
+    <h2>Plats</h2>
+    <div class="row tilt2"><span>Confit de canard, pommes sarladaises</span><span>21 €</span></div>
+    <div class="row"><span>Cassoulet de Castelnaudary</span><span>20 €</span></div>
+    <div class="row tilt"><span>Bouillabaisse marseillaise</span><span>26 €</span></div>
+    <div class="row"><span>Steak frites, sauce au poivre</span><span>18 €</span></div>
+    <div class="row tilt2"><span>Andouillette AAAAA, sauce moutarde</span><span>17 €</span></div>
+    <div class="row"><span>Ratatouille niçoise (végétarien)</span><span>15 €</span></div>
+    <div class="row"><span class="gone">Blanquette de veau</span><span class="gone">18,50 €</span></div>
+
+    <div class="jour">
+      <div class="note">Plat du jour ~ Coq au vin 17 €</div>
+    </div>
+
+    <h2>Desserts</h2>
+    <div class="row"><span>Crème brûlée</span><span>8 €</span></div>
+    <div class="row tilt"><span>Île flottante</span><span>8 €</span></div>
+    <div class="row"><span>Mousse au chocolat</span><span>7 €</span></div>
+    <div class="row tilt2"><span>Crêpe au sucre</span><span>6 €</span></div>
+    <div class="row"><span>Macarons (les 3)</span><span>6 €</span></div>
+
+    <div class="note" style="text-align:center;margin-top:14px">prix nets, service compris</div>
+  </div>
+</body>
+</html>
