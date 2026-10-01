@@ -163,8 +163,10 @@ PROXY_URL=https://menulango-proxy.<you>.workers.dev
 MENULANGO_BETA_TOOLS=true
 ```
 
-`MENULANGO_BETA_TOOLS=true` adds a **Tester** section to Settings with a **Free Plus** switch, so
-every paid feature can be tried without RevenueCat. Leave it out for a normal build.
+`MENULANGO_BETA_TOOLS=true` adds a **Tester tools** section to Settings with a **Free Plus for
+testing** switch, so every paid feature can be tried without RevenueCat (see
+[Trying the paid features](#trying-the-paid-features-menulango-plus)). Leave it out for a normal
+build.
 
 **iPhone:** copy `iosApp/Configuration/Secrets.xcconfig.example` to
 `iosApp/Configuration/Secrets.xcconfig`, then:
@@ -172,7 +174,7 @@ every paid feature can be tried without RevenueCat. Leave it out for a normal bu
 - set `TEAM_ID` to your Apple developer team ID,
 - set `PROXY_URL`, writing `$()` between the two slashes, because xcconfig files treat `//` as the
   start of a comment: `PROXY_URL=https:/$()/menulango-proxy.<you>.workers.dev`,
-- add `BETA_TOOLS=YES` if you want the Free Plus switch,
+- add `BETA_TOOLS=YES` if you want the **Free Plus for testing** switch in release builds,
 - **delete the lines you are not using** (the RevenueCat and Firebase ones), rather than leaving
   the example values in.
 
@@ -210,6 +212,18 @@ take a screenshot, and use that.
 Things worth trying: a menu in a language you cannot read, the halal-friendly and vegetarian
 filters, adding a second page, price conversion (Settings → Show prices in my currency), picking
 dishes for two people with a note, then **Show the waiter**, and **Help me choose**.
+
+### Trying the paid features (MenuLango Plus)
+
+You do not need to buy anything, or set up RevenueCat, to try Plus. Open **Settings**, scroll down to
+**Tester tools**, and turn on **Free Plus for testing**. Every Plus feature unlocks straight away:
+unlimited menus and pages, **Help me choose**, the record of dishes you have eaten, and sharing a
+menu as a link. Turn it off to see the free version and the paywall again.
+
+**Tester tools** appear in every debug build, which is what you get from Android Studio's ▶,
+`./gradlew :androidApp:installDebug` or Xcode's Run. For a release build, add
+`MENULANGO_BETA_TOOLS=true` (Android) or `BETA_TOOLS=YES` (iPhone) as described in step 3. The same
+section also has **Open the sample menu**, for trying the app without scanning anything.
 
 ### Optional: payments with RevenueCat
 
