@@ -91,7 +91,11 @@ menus through your own server and your own Gemini key.
 
 - **For Android:** [Android Studio](https://developer.android.com/studio) (it includes JDK 17 and
   the Android SDK; install SDK platform 37 when it asks), and an emulator or an Android phone with
-  USB debugging on.
+  USB debugging on. **For an emulator, choose a system image that includes Google Play** (in
+  Android Studio's Device Manager, these show the Play Store icon). Translating your notes for the
+  waiter uses Google's on-device ML Kit, which needs Google Play services, so on an image without
+  Google Play the app falls back to showing your notes untranslated. The first time, the phone
+  downloads the restaurant's language pack, and only over Wi-Fi.
 - **For iPhone:** a Mac with Xcode 26 and [CocoaPods](https://cocoapods.org), a **physical iPhone**
   (the on-device translation library does not run on Apple-silicon simulators), and an Apple
   developer account to sign the app.
