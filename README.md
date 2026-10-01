@@ -27,7 +27,11 @@ Kotlin Multiplatform · Compose Multiplatform · Android and iOS from one codeba
 *A full run through MenuLango, sped up 2.5×: scanning a handwritten menu, the dishes, filters, picks for two people, Show the waiter, the paywall and Help me choose.*
 
 
-https://github.com/user-attachments/assets/dbc61474-567c-4e29-b583-281725af8112
+| Light mode | Dark mode | 
+|---|---|
+https://github.com/user-attachments/assets/dbc61474-567c-4e29-b583-281725af8112 | https://github.com/user-attachments/assets/34f489cb-c4c8-413f-9212-04390a96b06e |
+
+
 
 
 
